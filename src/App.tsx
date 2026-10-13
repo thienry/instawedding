@@ -4,6 +4,7 @@ import { FeedPage } from './pages/FeedPage';
 import { CapturePage } from './pages/CapturePage';
 import { ChallengesPage } from './pages/ChallengesPage';
 import { ProjectorPage } from './pages/ProjectorPage';
+import { AdminPage } from './pages/AdminPage';
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
           <Route path="/" element={<FeedPage />} />
           <Route path="/capture" element={<CapturePage />} />
           <Route path="/challenges" element={<ChallengesPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
 
         {/* Projector Display (Full Screen, No Mobile App Frame) */}

@@ -141,6 +141,61 @@ export class MockPostRepository implements PostRepository {
     return likesSet.has(`${postId}:${sessionId}`);
   }
 
+  async getAllPostsForModeration(): Promise<Post[]> {
+    if (typeof localStorage === 'undefined') return [...SEED_POSTS];
+    const data = localStorage.getItem(POSTS_STORAGE_KEY);
+    const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS];
+
+    const challenges = await this.challengeRepo.getChallenges();
+    const challengeMap = new Map(challenges.map((c) => [c.id, c]));
+
+    return rawPosts
+      .map((post) => ({
+        ...post,
+        challenge: post.challengeId ? challengeMap.get(post.challengeId) : undefined,
+      }))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async togglePostApproval(postId: string): Promise<boolean> {
+    const posts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
+      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+      : [];
+
+    let newStatus = false;
+    const updated = posts.map((p) => {
+      if (p.id === postId) {
+        newStatus = !p.isApproved;
+        return { ...p, isApproved: newStatus };
+      }
+      return p;
+    });
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated));
+    }
+
+    return newStatus;
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    const posts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
+      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+      : [];
+
+    const filtered = posts.filter((p) => p.id !== postId);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(filtered));
+    }
+  }
+
+  async clearAllPosts(): Promise<void> {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify([]));
+      localStorage.removeItem(LIKES_STORAGE_KEY);
+    }
+  }
+
   private getLikesSet(): Set<string> {
     if (typeof localStorage === 'undefined') return new Set();
     const data = localStorage.getItem(LIKES_STORAGE_KEY);

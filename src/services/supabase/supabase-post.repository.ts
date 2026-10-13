@@ -100,6 +100,49 @@ export class SupabasePostRepository implements PostRepository {
     return true;
   }
 
+  async getAllPostsForModeration(): Promise<Post[]> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch moderation posts: ${error.message}`);
+    }
+
+    return (data as unknown as SupabasePostRow[]).map(this.mapRowToPost);
+  }
+
+  async togglePostApproval(postId: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    const { data: post } = await supabase
+      .from('posts')
+      .select('is_approved')
+      .eq('id', postId)
+      .single();
+
+    if (!post) throw new Error('Post not found');
+    const newStatus = !post.is_approved;
+
+    await supabase
+      .from('posts')
+      .update({ is_approved: newStatus })
+      .eq('id', postId);
+
+    return newStatus;
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    const supabase = getSupabaseClient();
+    await supabase.from('posts').delete().eq('id', postId);
+  }
+
+  async clearAllPosts(): Promise<void> {
+    const supabase = getSupabaseClient();
+    await supabase.from('posts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  }
+
   private mapRowToPost(row: SupabasePostRow): Post {
     return {
       id: row.id,

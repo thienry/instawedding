@@ -5,6 +5,7 @@ import { compressPhoto } from '../utils/compressor';
 import { getStorageService } from '../services/storage.factory';
 import { getPostRepository, getChallengeRepository } from '../services/repositories.factory';
 import { getGuestName, setGuestName } from '../utils/session';
+import { OfflineQueueService } from '../services/offline-queue.service';
 import type { Challenge } from '../types/domain';
 
 export function CapturePage() {
@@ -102,12 +103,33 @@ export function CapturePage() {
       // Persist author name for next uploads
       setGuestName(finalAuthor);
 
-      // 1. Upload to storage (Mock or R2)
+      // 1. Check if device is offline
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const base64Url = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(fileToUpload);
+        });
+
+        OfflineQueueService.enqueue({
+          authorName: finalAuthor,
+          mediaUrl: base64Url,
+          caption: caption.trim() || null,
+          challengeId: selectedChallengeId,
+        });
+
+        alert('Você está offline no momento. Sua foto foi salva no aparelho e será publicada automaticamente assim que a conexão voltar!');
+        navigate('/');
+        return;
+      }
+
+      // 2. Upload to storage (Mock or R2)
       const mediaUrl = await storageService.uploadFile(fileToUpload, (pct) => {
         setUploadProgress(pct);
       });
 
-      // 2. Persist post
+      // 3. Persist post
       await postRepo.createPost({
         authorName: finalAuthor,
         mediaUrl,
@@ -115,7 +137,7 @@ export function CapturePage() {
         challengeId: selectedChallengeId,
       });
 
-      // 3. Navigate back to feed
+      // 4. Navigate back to feed
       navigate('/');
     } catch (err) {
       setErrorMessage(
