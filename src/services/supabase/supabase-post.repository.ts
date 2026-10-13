@@ -9,6 +9,7 @@ interface SupabasePostRow {
   media_url: string
   caption: string | null
   challenge_id: number | null
+  client_session_id?: string
   likes_count: number
   is_approved: boolean
   created_at: string
@@ -28,7 +29,7 @@ export class SupabasePostRepository implements PostRepository {
     const { data, error } = await supabase
       .from('posts')
       .select(
-        'id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
+        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
       )
       .eq('is_approved', true)
       .order('created_at', { ascending: false })
@@ -49,9 +50,10 @@ export class SupabasePostRepository implements PostRepository {
         media_url: dto.mediaUrl,
         caption: dto.caption?.trim() || null,
         challenge_id: dto.challengeId ?? null,
+        client_session_id: dto.clientSessionId || 'anonymous',
       })
       .select(
-        'id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
+        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
       )
       .single()
 
@@ -121,7 +123,7 @@ export class SupabasePostRepository implements PostRepository {
     const { data, error } = await supabase
       .from('posts')
       .select(
-        'id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
+        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
       )
       .order('created_at', { ascending: false })
 
@@ -171,6 +173,7 @@ export class SupabasePostRepository implements PostRepository {
       mediaUrl: row.media_url,
       caption: row.caption,
       challengeId: row.challenge_id,
+      clientSessionId: row.client_session_id,
       likesCount: row.likes_count,
       isApproved: row.is_approved,
       createdAt: row.created_at,

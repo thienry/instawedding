@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Camera,
   CheckCircle,
+  ExternalLink,
   Image as ImageIcon,
   Loader2,
   Sparkles,
@@ -10,6 +11,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import { TermsModal } from '@/components/common/TermsModal'
 import { OfflineQueueService } from '@/services/offline-queue.service'
 import {
   getChallengeRepository,
@@ -17,7 +19,13 @@ import {
 } from '@/services/repositories.factory'
 import { getStorageService } from '@/services/storage.factory'
 import { compressPhoto } from '@/utils/compressor'
-import { getGuestName, setGuestName } from '@/utils/session'
+import {
+  getGuestName,
+  getGuestSession,
+  getTermsAcceptedAt,
+  setGuestName,
+  setTermsAccepted,
+} from '@/utils/session'
 
 import type { Challenge } from '@/types/domain'
 
@@ -42,6 +50,10 @@ export function CapturePage() {
     preselectedChallengeId
   )
   const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [termsAccepted, setTermsAcceptedState] = useState(() =>
+    Boolean(getTermsAcceptedAt())
+  )
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -106,6 +118,13 @@ export function CapturePage() {
       return
     }
 
+    if (!termsAccepted) {
+      setErrorMessage(
+        'É necessário aceitar os termos de uso e privacidade para publicar no telão.'
+      )
+      return
+    }
+
     const fileToUpload = compressedFile || selectedFile
     if (!fileToUpload) {
       setErrorMessage('Nenhuma foto selecionada.')
@@ -117,8 +136,10 @@ export function CapturePage() {
     setUploadProgress(0)
 
     try {
-      // Persist author name for next uploads
+      // Persist author name and terms consent
       setGuestName(finalAuthor)
+      setTermsAccepted(true)
+      const session = getGuestSession()
 
       // 1. Check if device is offline
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -134,6 +155,7 @@ export function CapturePage() {
           mediaUrl: base64Url,
           caption: caption.trim() || null,
           challengeId: selectedChallengeId,
+          clientSessionId: session.sessionId,
         })
 
         alert(
@@ -154,6 +176,7 @@ export function CapturePage() {
         mediaUrl,
         caption: caption.trim() || null,
         challengeId: selectedChallengeId,
+        clientSessionId: session.sessionId,
       })
 
       // 4. Navigate back to feed
@@ -331,6 +354,37 @@ export function CapturePage() {
             </select>
           </div>
 
+          {/* Terms & LGPD Consent Checkbox */}
+          <div className="pt-1 pb-1">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none text-left">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAcceptedState(e.target.checked)
+                  if (errorMessage) setErrorMessage('')
+                }}
+                className="mt-0.5 w-4 h-4 rounded border-sage-300 text-sage-900 focus:ring-sage-800/20"
+              />
+              <span className="text-[11px] text-sage-800/80 leading-snug">
+                Concordo com os{' '}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsTermsModalOpen(true)
+                  }}
+                  className="font-semibold text-sage-900 underline hover:text-gold-600 inline-flex items-center gap-0.5"
+                >
+                  <span>Termos de Uso & Privacidade</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </button>
+                . Autorizo a exibição da foto no telão da festa e álbum dos
+                noivos.
+              </span>
+            </label>
+          </div>
+
           {/* Error Message */}
           {errorMessage && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs">
@@ -358,8 +412,8 @@ export function CapturePage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting || isCompressing}
-            className="w-full py-3.5 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white font-semibold text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2"
+            disabled={isSubmitting || isCompressing || !termsAccepted}
+            className="w-full py-3.5 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2"
           >
             {isSubmitting ? (
               <>
@@ -375,6 +429,15 @@ export function CapturePage() {
           </button>
         </form>
       )}
+
+      <TermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onAccept={() => {
+          setTermsAcceptedState(true)
+          if (errorMessage) setErrorMessage('')
+        }}
+      />
     </div>
   )
 }

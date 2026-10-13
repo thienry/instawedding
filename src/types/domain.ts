@@ -13,6 +13,7 @@ export interface Post {
   readonly mediaUrl: string
   readonly caption: string | null
   readonly challengeId: number | null
+  readonly clientSessionId?: string
   readonly likesCount: number
   readonly isApproved: boolean
   readonly createdAt: string
@@ -24,6 +25,7 @@ export interface CreatePostDTO {
   readonly mediaUrl: string
   readonly caption?: string | null
   readonly challengeId?: number | null
+  readonly clientSessionId?: string
 }
 
 export interface ToggleLikeResult {
@@ -34,6 +36,7 @@ export interface ToggleLikeResult {
 export interface GuestSession {
   readonly sessionId: string
   readonly guestName: string
+  readonly termsAcceptedAt: string | null
 }
 
 export type UploadProgressCallback = (percentage: number) => void

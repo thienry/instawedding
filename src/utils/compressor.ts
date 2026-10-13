@@ -14,12 +14,14 @@ export interface CompressionOptions {
   readonly maxSizeMB?: number
   readonly maxWidthOrHeight?: number
   readonly fileType?: string
+  readonly preserveExif?: boolean
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
   maxSizeMB: 0.8,
   maxWidthOrHeight: 1280,
   fileType: 'image/webp',
+  preserveExif: false,
 }
 
 /**

@@ -2,6 +2,7 @@ import type { GuestSession } from '../types/domain'
 
 const SESSION_STORAGE_KEY = 'instawedding_guest_session_id'
 const GUEST_NAME_KEY = 'instawedding_guest_name'
+const TERMS_ACCEPTED_KEY = 'instawedding_terms_accepted_at'
 
 /**
  * Retrieves the guest's session id, generating and persisting a new UUID if none exists.
@@ -35,11 +36,30 @@ export function setGuestName(name: string): void {
 }
 
 /**
+ * Retrieves the ISO timestamp when the guest accepted the terms, or null if pending.
+ */
+export function getTermsAcceptedAt(): string | null {
+  return localStorage.getItem(TERMS_ACCEPTED_KEY)
+}
+
+/**
+ * Persists the guest's consent to the terms of service and privacy policy.
+ */
+export function setTermsAccepted(accepted: boolean = true): void {
+  if (accepted) {
+    localStorage.setItem(TERMS_ACCEPTED_KEY, new Date().toISOString())
+  } else {
+    localStorage.removeItem(TERMS_ACCEPTED_KEY)
+  }
+}
+
+/**
  * Returns the current active guest session information.
  */
 export function getGuestSession(): GuestSession {
   return {
     sessionId: getOrCreateSessionId(),
     guestName: getGuestName(),
+    termsAcceptedAt: getTermsAcceptedAt(),
   }
 }

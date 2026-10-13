@@ -1,7 +1,17 @@
-import { Heart, RefreshCw, Sparkles } from 'lucide-react'
+import {
+  Heart,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  User,
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { GuestNameModal } from '@/components/common/GuestNameModal'
+import { TermsModal } from '@/components/common/TermsModal'
 import {
   getPostRepository,
   getRealtimeService,
@@ -33,10 +43,16 @@ export function FeedPage() {
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isTermsOpen, setIsTermsOpen] = useState(false)
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false)
+
+  const session = getGuestSession()
+  const [guestName, setGuestNameState] = useState(session.guestName)
 
   const postRepo = getPostRepository()
   const realtimeService = getRealtimeService()
-  const session = getGuestSession()
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
@@ -143,13 +159,38 @@ export function FeedPage() {
     }
   }
 
+  const handleConfirmDelete = async () => {
+    if (!postToDelete) return
+    setIsDeleting(true)
+    try {
+      await postRepo.deletePost(postToDelete.id)
+      setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id))
+      setLikedPostIds((prev) => {
+        const next = new Set(prev)
+        next.delete(postToDelete.id)
+        return next
+      })
+      setPostToDelete(null)
+    } catch {
+      alert('Não foi possível excluir a publicação. Tente novamente.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="p-4 space-y-4">
       {/* Top Banner / Pull to Refresh */}
       <div className="flex items-center justify-between pb-1">
-        <span className="text-xs font-medium text-sage-800/70">
-          Feed de Momentos
-        </span>
+        <button
+          type="button"
+          onClick={() => setIsNameModalOpen(true)}
+          className="flex items-center gap-1.5 text-xs text-sage-800/80 hover:text-sage-900 font-medium transition-colors"
+        >
+          <User className="w-3.5 h-3.5 text-sage-700" />
+          <span>{guestName ? `Olá, ${guestName}` : 'Identifique-se'}</span>
+        </button>
+
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
@@ -158,23 +199,30 @@ export function FeedPage() {
           <RefreshCw
             className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
           />
-          <span>Atualizar</span>
+          <span className="text-[11px]">Atualizar</span>
         </button>
       </div>
 
+      {/* Feed Content */}
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2].map((n) => (
+          {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className="bg-white rounded-2xl p-4 border border-sage-200/60 animate-pulse space-y-3"
+              className="bg-white rounded-2xl overflow-hidden border border-sage-200/60 shadow-xs animate-pulse"
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-sage-200 rounded-full" />
-                <div className="h-4 bg-sage-200 rounded w-24" />
+              <div className="p-3 flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full bg-sage-200" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="w-24 h-3 bg-sage-200 rounded-sm" />
+                  <div className="w-16 h-2 bg-sage-100 rounded-sm" />
+                </div>
               </div>
-              <div className="h-64 bg-sage-200 rounded-xl" />
-              <div className="h-4 bg-sage-200 rounded w-48" />
+              <div className="aspect-4/3 bg-sage-100" />
+              <div className="p-3 space-y-2">
+                <div className="w-12 h-4 bg-sage-200 rounded-sm" />
+                <div className="w-3/4 h-3 bg-sage-100 rounded-sm" />
+              </div>
             </div>
           ))}
         </div>
@@ -199,6 +247,9 @@ export function FeedPage() {
         <div className="space-y-5">
           {posts.map((post) => {
             const isLiked = likedPostIds.has(post.id)
+            const isOwner =
+              Boolean(post.clientSessionId) &&
+              post.clientSessionId === session.sessionId
 
             return (
               <article
@@ -221,12 +272,26 @@ export function FeedPage() {
                     </div>
                   </div>
 
-                  {post.challenge && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/30">
-                      <span>{post.challenge.icon}</span>
-                      <span>{post.challenge.title}</span>
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {post.challenge && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/30">
+                        <span>{post.challenge.icon}</span>
+                        <span>{post.challenge.title}</span>
+                      </span>
+                    )}
+
+                    {/* LGPD Right to Erasure: Owner deletion trigger */}
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => setPostToDelete(post)}
+                        title="Excluir minha publicação (LGPD Art. 18)"
+                        className="p-1 rounded-full text-sage-800/40 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Media Image */}
@@ -278,6 +343,81 @@ export function FeedPage() {
           })}
         </div>
       )}
+
+      {/* LGPD and Compliance Footer */}
+      <footer className="pt-6 pb-2 text-center space-y-1.5 border-t border-sage-200/50">
+        <button
+          type="button"
+          onClick={() => setIsTermsOpen(true)}
+          className="inline-flex items-center gap-1.5 text-[11px] text-sage-800/70 hover:text-sage-900 font-medium underline underline-offset-2 transition-colors"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-sage-700" />
+          <span>Termos de Uso & Privacidade (LGPD)</span>
+        </button>
+        <p className="text-[10px] text-sage-800/50">
+          InstaWedding • Thiago & Priscila © 2026
+        </p>
+      </footer>
+
+      {/* LGPD Self-Deletion Confirmation Modal */}
+      {postToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-sage-200 space-y-3.5">
+            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-serif text-base font-bold text-sage-900">
+                Excluir publicação?
+              </h3>
+              <p className="text-xs text-sage-800/70">
+                Esta foto será removida permanentemente do feed e do telão da
+                festa (Direito de eliminação - LGPD Art. 18).
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setPostToDelete(null)}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 hover:bg-sage-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Excluindo...</span>
+                  </>
+                ) : (
+                  <span>Excluir Foto</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms and Privacy Modal */}
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
+      {/* Guest Identification Modal */}
+      <GuestNameModal
+        isOpen={isNameModalOpen}
+        initialName={guestName}
+        onClose={() => setIsNameModalOpen(false)}
+        onSaved={(newName) => setGuestNameState(newName)}
+      />
     </div>
   )
 }
