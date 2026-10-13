@@ -1,0 +1,125 @@
+import type { PostRepository } from '../contracts/post-repository.contract';
+import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain';
+import { getSupabaseClient } from './supabase.client';
+
+interface SupabasePostRow {
+  id: string;
+  author_name: string;
+  media_url: string;
+  caption: string | null;
+  challenge_id: number | null;
+  likes_count: number;
+  is_approved: boolean;
+  created_at: string;
+  challenges?: {
+    id: number;
+    title: string;
+    description: string;
+    icon: string;
+    is_active: boolean;
+    created_at: string;
+  } | null;
+}
+
+export class SupabasePostRepository implements PostRepository {
+  async getPosts(): Promise<Post[]> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch posts from Supabase: ${error.message}`);
+    }
+
+    return (data as unknown as SupabasePostRow[]).map(this.mapRowToPost);
+  }
+
+  async createPost(dto: CreatePostDTO): Promise<Post> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        author_name: dto.authorName.trim(),
+        media_url: dto.mediaUrl,
+        caption: dto.caption?.trim() || null,
+        challenge_id: dto.challengeId ?? null,
+      })
+      .select('id, author_name, media_url, caption, challenge_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to create post in Supabase: ${error?.message ?? 'Unknown error'}`);
+    }
+
+    return this.mapRowToPost(data as unknown as SupabasePostRow);
+  }
+
+  async toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult> {
+    const supabase = getSupabaseClient();
+
+    // Check existing like
+    const { data: existingLike } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('client_session_id', sessionId)
+      .maybeSingle();
+
+    if (existingLike) {
+      // Remove like
+      await supabase.from('likes').delete().eq('id', existingLike.id);
+      const { data: post } = await supabase.rpc('decrement_likes', { target_post_id: postId });
+      return {
+        isLiked: false,
+        likesCount: post?.likes_count ?? 0,
+      };
+    } else {
+      // Add like
+      await supabase.from('likes').insert({ post_id: postId, client_session_id: sessionId });
+      const { data: post } = await supabase.rpc('increment_likes', { target_post_id: postId });
+      return {
+        isLiked: true,
+        likesCount: post?.likes_count ?? 1,
+      };
+    }
+  }
+
+  async hasUserLiked(postId: string, sessionId: string): Promise<boolean> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('client_session_id', sessionId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    return true;
+  }
+
+  private mapRowToPost(row: SupabasePostRow): Post {
+    return {
+      id: row.id,
+      authorName: row.author_name,
+      mediaUrl: row.media_url,
+      caption: row.caption,
+      challengeId: row.challenge_id,
+      likesCount: row.likes_count,
+      isApproved: row.is_approved,
+      createdAt: row.created_at,
+      challenge: row.challenges
+        ? {
+            id: row.challenges.id,
+            title: row.challenges.title,
+            description: row.challenges.description,
+            icon: row.challenges.icon,
+            isActive: row.challenges.is_active,
+            createdAt: row.challenges.created_at,
+          }
+        : undefined,
+    };
+  }
+}
