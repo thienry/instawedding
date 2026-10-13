@@ -8,9 +8,10 @@ interface ModerateRequestBody {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  // 1. Authorize admin session token
+  // 1. Authorize session token
   const token = getAdminTokenFromRequest(req)
-  if (!token || !verifyAdminToken(token)) {
+  const payload = token ? verifyAdminToken(token) : null
+  if (!payload) {
     return new Response(JSON.stringify({ error: 'Não autorizado.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -26,6 +27,23 @@ export async function POST(req: Request): Promise<Response> {
       JSON.stringify({ error: 'Corpo da requisição inválido.' }),
       {
         status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+  }
+
+  // 3. RBAC Enforcement: Only 'admin' role can execute destructive actions
+  if (
+    (body.action === 'delete_post' || body.action === 'clear_all') &&
+    payload.role !== 'admin'
+  ) {
+    return new Response(
+      JSON.stringify({
+        error:
+          'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.',
+      }),
+      {
+        status: 403,
         headers: { 'Content-Type': 'application/json' },
       }
     )

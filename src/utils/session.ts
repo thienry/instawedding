@@ -1,3 +1,5 @@
+import { generateUUID } from './uuid'
+
 import type { GuestSession } from '../types/domain'
 
 const SESSION_STORAGE_KEY = 'instawedding_guest_session_id'
@@ -10,7 +12,7 @@ const TERMS_ACCEPTED_KEY = 'instawedding_terms_accepted_at'
 export function getOrCreateSessionId(): string {
   let sessionId = localStorage.getItem(SESSION_STORAGE_KEY)
   if (!sessionId) {
-    sessionId = crypto.randomUUID()
+    sessionId = generateUUID()
     localStorage.setItem(SESSION_STORAGE_KEY, sessionId)
   }
   return sessionId

@@ -1,3 +1,5 @@
+import { generateUUID } from '@/utils/uuid'
+
 import { getPostRepository } from './repositories.factory'
 
 import type { CreatePostDTO } from '../types/domain'
@@ -26,7 +28,7 @@ export class OfflineQueueService {
     if (typeof localStorage === 'undefined') return
     const queue = this.getQueue()
     const item: QueuedPost = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       dto,
       queuedAt: new Date().toISOString(),
     }

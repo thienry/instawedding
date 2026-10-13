@@ -1,3 +1,5 @@
+import { generateUUID } from '@/utils/uuid'
+
 import type {
   PresignedUploadResult,
   UploadProgressCallback,
@@ -9,7 +11,7 @@ export class MockStorageService implements StorageService {
     fileName: string,
     _fileType: string
   ): Promise<PresignedUploadResult> {
-    const mockId = crypto.randomUUID()
+    const mockId = generateUUID()
     const sanitizedName = fileName.replace(/\s+/g, '-')
     const mockKey = `${mockId}-${sanitizedName}`
 

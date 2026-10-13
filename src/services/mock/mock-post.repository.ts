@@ -1,3 +1,5 @@
+import { generateUUID } from '@/utils/uuid'
+
 import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain'
 import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
 import type { PostRepository } from '../contracts/post-repository.contract'
@@ -90,7 +92,7 @@ export class MockPostRepository implements PostRepository {
       : null
 
     const newPost: Post = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       authorName: dto.authorName.trim(),
       mediaUrl: dto.mediaUrl,
       caption: dto.caption?.trim() || null,

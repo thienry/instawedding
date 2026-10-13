@@ -1,3 +1,5 @@
+import { generateUUID } from '@/utils/uuid'
+
 import { getSupabaseClient } from './supabase.client'
 
 import type { Post } from '../../types/domain'
@@ -10,7 +12,7 @@ import type {
 export class SupabaseRealtimeService implements RealtimeService {
   subscribeToNewPosts(callback: PostSubscriptionCallback): UnsubscribeFunction {
     const supabase = getSupabaseClient()
-    const channelName = `realtime-posts-${crypto.randomUUID()}`
+    const channelName = `realtime-posts-${generateUUID()}`
 
     const channel = supabase
       .channel(channelName)
