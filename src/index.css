@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sage-50: #F2F7F3;
+  --color-sage-100: #E5EFE8;
+  --color-sage-200: #D5E4D8;
+  --color-sage-800: #2F4F38;
+  --color-sage-900: #233A2A;
+
+  --color-gold-400: #C5A880;
+  --color-gold-500: #8C704B;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
