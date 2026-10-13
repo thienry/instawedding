@@ -27,7 +27,17 @@ import {
   setTermsAccepted,
 } from '@/utils/session'
 
+import {
+  PHOTO_FILTERS,
+  PHOTO_FRAMES,
+  getFilterById,
+  renderFilteredAndFramedPhoto,
+} from '@/utils/photo-filters'
+import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
 import type { Challenge } from '@/types/domain'
+
+const CURRENT_DATE_STR = new Date().toLocaleDateString('pt-BR')
+const CURRENT_YEAR = new Date().getFullYear()
 
 export function CapturePage() {
   const navigate = useNavigate()
@@ -43,6 +53,9 @@ export function CapturePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [compressedFile, setCompressedFile] = useState<File | null>(null)
   const [isCompressing, setIsCompressing] = useState(false)
+  const [selectedFilter, setSelectedFilter] = useState<PhotoFilterId>('none')
+  const [selectedFrame, setSelectedFrame] = useState<PhotoFrameId>('none')
+  const [studioTab, setStudioTab] = useState<'filters' | 'frames'>('filters')
 
   const [authorName, setAuthorName] = useState(getGuestName())
   const [caption, setCaption] = useState('')
@@ -103,6 +116,8 @@ export function CapturePage() {
     setSelectedFile(null)
     setPreviewUrl(null)
     setCompressedFile(null)
+    setSelectedFilter('none')
+    setSelectedFrame('none')
     setUploadProgress(null)
     setErrorMessage('')
   }
@@ -125,17 +140,36 @@ export function CapturePage() {
       return
     }
 
-    const fileToUpload = compressedFile || selectedFile
-    if (!fileToUpload) {
-      setErrorMessage('Nenhuma foto selecionada.')
-      return
-    }
-
     setIsSubmitting(true)
     setErrorMessage('')
     setUploadProgress(0)
 
     try {
+      let fileToUpload: File
+      if (
+        previewUrl &&
+        (selectedFilter !== 'none' || selectedFrame !== 'none')
+      ) {
+        setIsCompressing(true)
+        fileToUpload = await renderFilteredAndFramedPhoto(
+          previewUrl,
+          selectedFile?.name || 'wedding-photo.jpg',
+          {
+            filterId: selectedFilter,
+            frameId: selectedFrame,
+            weddingTitle: 'Thiago & Noiva',
+          }
+        )
+        setIsCompressing(false)
+      } else {
+        const fallback = compressedFile || selectedFile
+        if (!fallback) {
+          setErrorMessage('Nenhuma foto selecionada.')
+          setIsSubmitting(false)
+          return
+        }
+        fileToUpload = fallback
+      }
       // Persist author name and terms consent
       setGuestName(finalAuthor)
       setTermsAccepted(true)
@@ -277,25 +311,172 @@ export function CapturePage() {
       ) : (
         /* Preview & Details Form */
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative aspect-4/3 rounded-2xl overflow-hidden bg-black/5 border border-sage-200 shadow-xs">
-            <img
-              src={previewUrl}
-              alt="Prévia da foto"
-              className="w-full h-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={handleResetPhoto}
-              disabled={isSubmitting}
-              className="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/80 text-white text-[11px] px-3 py-1.5 rounded-full backdrop-blur-xs transition-colors"
-            >
-              Trocar Foto
-            </button>
+          {/* Photo Preview Container */}
+          <div
+            className={`relative rounded-2xl overflow-hidden transition-all shadow-xs ${
+              selectedFrame === 'polaroid'
+                ? 'bg-white p-3 pb-7 border border-sage-200'
+                : 'border border-sage-200 bg-black/5'
+            }`}
+          >
+            <div className="relative aspect-4/3 rounded-xl overflow-hidden bg-black/10">
+              <img
+                src={previewUrl}
+                alt="Prévia da foto"
+                className="w-full h-full object-cover transition-all duration-150"
+                style={{ filter: getFilterById(selectedFilter).cssFilter }}
+              />
 
-            {isCompressing && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-xs text-white text-xs font-medium space-x-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Otimizando imagem para envio...</span>
+              {/* Overlays for Frame preview */}
+              {selectedFrame === 'cinema' && (
+                <>
+                  <div className="absolute top-0 inset-x-0 h-6 bg-[#05070a] pointer-events-none" />
+                  <div className="absolute bottom-0 inset-x-0 h-6 bg-[#05070a] flex items-center justify-between px-3 text-[9px] text-white/80 font-mono pointer-events-none">
+                    <span className="font-semibold text-white">● REC THIAGO & NOIVA</span>
+                    <span>{CURRENT_DATE_STR}</span>
+                  </div>
+                </>
+              )}
+
+              {selectedFrame === 'golden-border' && (
+                <div className="absolute inset-2 border-2 border-amber-400 rounded-lg pointer-events-none shadow-[0_0_8px_rgba(251,191,36,0.5)]">
+                  <div className="absolute inset-1 border border-amber-200/60 rounded-md" />
+                </div>
+              )}
+
+              {selectedFrame === 'minimal-floral' && (
+                <div className="absolute bottom-0 inset-x-0 h-9 bg-gradient-to-t from-black/75 to-transparent flex items-end justify-center pb-2 pointer-events-none">
+                  <span className="font-serif italic text-white text-[11px] drop-shadow-xs">
+                    💍 Thiago & Noiva • {CURRENT_YEAR}
+                  </span>
+                </div>
+              )}
+
+              {/* Change Photo Button */}
+              <button
+                type="button"
+                onClick={handleResetPhoto}
+                disabled={isSubmitting}
+                className="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/80 text-white text-[11px] px-3 py-1.5 rounded-full backdrop-blur-xs transition-colors z-10"
+              >
+                Trocar Foto
+              </button>
+
+              {isCompressing && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-xs text-white text-xs font-medium space-x-2 z-20">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Processando imagem...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom text for Polaroid Frame */}
+            {selectedFrame === 'polaroid' && (
+              <div className="pt-3 text-center space-y-0.5 pointer-events-none">
+                <p className="font-serif italic font-bold text-sm text-slate-800">
+                  Thiago & Noiva
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium tracking-wide">
+                  Nosso Grande Dia • InstaWedding
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Studio Controls: Filters & Frames */}
+          <div className="bg-white rounded-2xl p-3 border border-sage-200/80 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between border-b border-sage-100 pb-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-sage-900">
+                <Sparkles className="w-4 h-4 text-gold-500" />
+                <span>Efeitos & Molduras</span>
+              </div>
+
+              {/* Tab Selector */}
+              <div className="flex bg-sage-100/90 p-0.5 rounded-xl text-[11px] font-medium">
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('filters')}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    studioTab === 'filters'
+                      ? 'bg-white text-sage-900 shadow-xs font-bold'
+                      : 'text-sage-700 hover:text-sage-900'
+                  }`}
+                >
+                  Filtros
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('frames')}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    studioTab === 'frames'
+                      ? 'bg-white text-sage-900 shadow-xs font-bold'
+                      : 'text-sage-700 hover:text-sage-900'
+                  }`}
+                >
+                  Molduras
+                </button>
+              </div>
+            </div>
+
+            {/* Carousel Content */}
+            {studioTab === 'filters' ? (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {PHOTO_FILTERS.map((f) => {
+                  const isSelected = selectedFilter === f.id
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setSelectedFilter(f.id)}
+                      className={`shrink-0 flex flex-col items-center gap-1.5 p-1.5 rounded-xl transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-sage-900 bg-sage-50'
+                          : 'hover:bg-sage-50/50'
+                      }`}
+                    >
+                      <div className="w-13 h-13 rounded-lg overflow-hidden border border-sage-200 relative shadow-xs">
+                        <img
+                          src={previewUrl}
+                          alt={f.label}
+                          className="w-full h-full object-cover"
+                          style={{ filter: f.cssFilter }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-semibold text-sage-800 text-center max-w-[68px] truncate">
+                        {f.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {PHOTO_FRAMES.map((fr) => {
+                  const isSelected = selectedFrame === fr.id
+                  return (
+                    <button
+                      key={fr.id}
+                      type="button"
+                      onClick={() => setSelectedFrame(fr.id)}
+                      className={`shrink-0 flex flex-col items-center gap-1.5 p-1.5 rounded-xl transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-gold-600 bg-gold-50/40'
+                          : 'hover:bg-sage-50/50'
+                      }`}
+                    >
+                      <div className="w-13 h-13 rounded-lg bg-sage-100 flex items-center justify-center border border-sage-200 text-base shadow-xs">
+                        {fr.id === 'none' && '🚫'}
+                        {fr.id === 'polaroid' && '📷'}
+                        {fr.id === 'golden-border' && '✨'}
+                        {fr.id === 'cinema' && '🎬'}
+                        {fr.id === 'minimal-floral' && '💍'}
+                      </div>
+                      <span className="text-[10px] font-semibold text-sage-800 text-center max-w-[72px] truncate">
+                        {fr.label}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
