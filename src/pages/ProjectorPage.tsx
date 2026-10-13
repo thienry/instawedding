@@ -1,115 +1,136 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Maximize2, Minimize2, Sparkles, Heart, QrCode, ArrowLeft, Camera } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import type { Post } from '../types/domain';
-import { getPostRepository, getRealtimeService } from '../services/repositories.factory';
+import {
+  ArrowLeft,
+  Camera,
+  Heart,
+  Maximize2,
+  Minimize2,
+  QrCode,
+  Sparkles,
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
-const SLIDESHOW_INTERVAL_MS = 8000;
-const FALLBACK_POLL_INTERVAL_MS = 30000;
+import {
+  getPostRepository,
+  getRealtimeService,
+} from '@/services/repositories.factory'
+
+import type { Post } from '@/types/domain'
+
+const SLIDESHOW_INTERVAL_MS = 8000
+const FALLBACK_POLL_INTERVAL_MS = 30000
 
 export function ProjectorPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isControlsVisible, setIsControlsVisible] = useState(true);
-  const [newPostAlert, setNewPostAlert] = useState<Post | null>(null);
+  const [posts, setPosts] = useState<Post[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isControlsVisible, setIsControlsVisible] = useState(true)
+  const [newPostAlert, setNewPostAlert] = useState<Post | null>(null)
 
-  const controlsTimeoutRef = useRef<number | null>(null);
-  const postRepo = getPostRepository();
-  const realtimeService = getRealtimeService();
-
-  const loadPosts = useCallback(async () => {
-    try {
-      const fetched = await postRepo.getPosts();
-      if (fetched.length > 0) {
-        setPosts(fetched);
-      }
-    } catch {
-      // Keep displaying current posts on error
-    }
-  }, [postRepo]);
+  const controlsTimeoutRef = useRef<number | null>(null)
+  const postRepo = getPostRepository()
+  const realtimeService = getRealtimeService()
 
   // Initial load & fallback polling
   useEffect(() => {
-    loadPosts();
+    let isCancelled = false
 
-    const pollInterval = window.setInterval(() => {
-      loadPosts();
-    }, FALLBACK_POLL_INTERVAL_MS);
+    const fetchLatestPosts = () => {
+      postRepo
+        .getPosts()
+        .then((fetched) => {
+          if (!isCancelled && fetched.length > 0) {
+            setPosts(fetched)
+          }
+        })
+        .catch(() => {
+          // Keep displaying current posts on error
+        })
+    }
+
+    fetchLatestPosts()
+
+    const pollInterval = window.setInterval(
+      fetchLatestPosts,
+      FALLBACK_POLL_INTERVAL_MS
+    )
 
     return () => {
-      window.clearInterval(pollInterval);
-    };
-  }, [loadPosts]);
+      isCancelled = true
+      window.clearInterval(pollInterval)
+    }
+  }, [postRepo])
 
   // Realtime subscription
   useEffect(() => {
     const unsubscribe = realtimeService.subscribeToNewPosts((incomingPost) => {
       setPosts((prev) => {
-        if (prev.some((p) => p.id === incomingPost.id)) return prev;
-        return [incomingPost, ...prev];
-      });
+        if (prev.some((p) => p.id === incomingPost.id)) return prev
+        return [incomingPost, ...prev]
+      })
 
       // Highlight new photo immediately
-      setCurrentIndex(0);
-      setNewPostAlert(incomingPost);
+      setCurrentIndex(0)
+      setNewPostAlert(incomingPost)
 
       // Dismiss alert banner after 6 seconds
       window.setTimeout(() => {
-        setNewPostAlert((current) => (current?.id === incomingPost.id ? null : current));
-      }, 6000);
-    });
+        setNewPostAlert((current) =>
+          current?.id === incomingPost.id ? null : current
+        )
+      }, 6000)
+    })
 
     return () => {
-      unsubscribe();
-    };
-  }, [realtimeService]);
+      unsubscribe()
+    }
+  }, [realtimeService])
 
   // Slideshow auto-advance timer
   useEffect(() => {
-    if (posts.length <= 1) return;
+    if (posts.length <= 1) return
 
     const timer = window.setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % posts.length);
-    }, SLIDESHOW_INTERVAL_MS);
+      setCurrentIndex((prev) => (prev + 1) % posts.length)
+    }, SLIDESHOW_INTERVAL_MS)
 
     return () => {
-      window.clearInterval(timer);
-    };
-  }, [posts.length]);
+      window.clearInterval(timer)
+    }
+  }, [posts.length])
 
   // Auto-hide controls after inactivity
   const handleMouseMove = () => {
-    setIsControlsVisible(true);
+    setIsControlsVisible(true)
     if (controlsTimeoutRef.current) {
-      window.clearTimeout(controlsTimeoutRef.current);
+      window.clearTimeout(controlsTimeoutRef.current)
     }
     controlsTimeoutRef.current = window.setTimeout(() => {
-      setIsControlsVisible(false);
-    }, 4000);
-  };
+      setIsControlsVisible(false)
+    }, 4000)
+  }
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
+      document.documentElement.requestFullscreen().catch(() => {})
+      setIsFullscreen(true)
     } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
+      document.exitFullscreen().catch(() => {})
+      setIsFullscreen(false)
     }
-  };
+  }
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
 
-  const currentPost = posts[currentIndex];
+  const currentPost = posts[currentIndex]
 
   return (
     <div
@@ -153,7 +174,11 @@ export function ProjectorPage() {
           className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 backdrop-blur-md"
           title={isFullscreen ? 'Sair da Tela Cheia' : 'Modo Tela Cheia (F11)'}
         >
-          {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          {isFullscreen ? (
+            <Minimize2 className="w-5 h-5" />
+          ) : (
+            <Maximize2 className="w-5 h-5" />
+          )}
         </button>
       </header>
 
@@ -165,7 +190,9 @@ export function ProjectorPage() {
         >
           <div className="bg-gradient-to-r from-gold-500 via-gold-400 to-gold-500 text-sage-950 px-7 py-3 rounded-full shadow-2xl flex items-center gap-3 font-semibold text-sm border-2 border-white/60">
             <Sparkles className="w-5 h-5 animate-spin" />
-            <span>Nova foto na festa enviada por {newPostAlert.authorName}!</span>
+            <span>
+              Nova foto na festa enviada por {newPostAlert.authorName}!
+            </span>
           </div>
         </aside>
       )}
@@ -179,7 +206,9 @@ export function ProjectorPage() {
               <img
                 key={currentPost.id}
                 src={currentPost.mediaUrl}
-                alt={currentPost.caption || `Foto por ${currentPost.authorName}`}
+                alt={
+                  currentPost.caption || `Foto por ${currentPost.authorName}`
+                }
                 className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-700"
               />
             </div>
@@ -189,7 +218,9 @@ export function ProjectorPage() {
               <div className="space-y-4">
                 {currentPost.challenge ? (
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold-400/15 text-gold-500 text-xs font-semibold border border-gold-400/30">
-                    <span className="text-base">{currentPost.challenge.icon}</span>
+                    <span className="text-base">
+                      {currentPost.challenge.icon}
+                    </span>
                     <span>Desafio: {currentPost.challenge.title}</span>
                   </div>
                 ) : (
@@ -226,7 +257,8 @@ export function ProjectorPage() {
                     <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
                   </div>
                   <span className="text-sm font-bold text-sage-900">
-                    {currentPost.likesCount} {currentPost.likesCount === 1 ? 'curtida' : 'curtidas'}
+                    {currentPost.likesCount}{' '}
+                    {currentPost.likesCount === 1 ? 'curtida' : 'curtidas'}
                   </span>
                 </div>
 
@@ -243,7 +275,8 @@ export function ProjectorPage() {
               Aguardando as fotos dos convidados...
             </h2>
             <p className="text-xs text-sage-800/80 leading-relaxed">
-              Escaneie o QR Code das mesas com seu celular para tirar uma foto e aparecer no telão ao vivo!
+              Escaneie o QR Code das mesas com seu celular para tirar uma foto e
+              aparecer no telão ao vivo!
             </p>
           </div>
         )}
@@ -263,7 +296,11 @@ export function ProjectorPage() {
                   : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/40'
               }`}
             >
-              <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
+              <img
+                src={post.mediaUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
             </button>
           ))}
         </div>
@@ -284,5 +321,5 @@ export function ProjectorPage() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

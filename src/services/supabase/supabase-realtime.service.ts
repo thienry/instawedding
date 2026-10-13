@@ -1,11 +1,16 @@
-import type { PostSubscriptionCallback, RealtimeService, UnsubscribeFunction } from '../contracts/realtime.contract';
-import type { Post } from '../../types/domain';
-import { getSupabaseClient } from './supabase.client';
+import { getSupabaseClient } from './supabase.client'
+
+import type { Post } from '../../types/domain'
+import type {
+  PostSubscriptionCallback,
+  RealtimeService,
+  UnsubscribeFunction,
+} from '../contracts/realtime.contract'
 
 export class SupabaseRealtimeService implements RealtimeService {
   subscribeToNewPosts(callback: PostSubscriptionCallback): UnsubscribeFunction {
-    const supabase = getSupabaseClient();
-    const channelName = `realtime-posts-${crypto.randomUUID()}`;
+    const supabase = getSupabaseClient()
+    const channelName = `realtime-posts-${crypto.randomUUID()}`
 
     const channel = supabase
       .channel(channelName)
@@ -18,25 +23,25 @@ export class SupabaseRealtimeService implements RealtimeService {
         },
         async (payload) => {
           const newRow = payload.new as {
-            id: string;
-            author_name: string;
-            media_url: string;
-            caption: string | null;
-            challenge_id: number | null;
-            likes_count: number;
-            is_approved: boolean;
-            created_at: string;
-          };
+            id: string
+            author_name: string
+            media_url: string
+            caption: string | null
+            challenge_id: number | null
+            likes_count: number
+            is_approved: boolean
+            created_at: string
+          }
 
-          if (!newRow.is_approved) return;
+          if (!newRow.is_approved) return
 
-          let challenge = undefined;
+          let challenge = undefined
           if (newRow.challenge_id) {
             const { data } = await supabase
               .from('challenges')
               .select('*')
               .eq('id', newRow.challenge_id)
-              .maybeSingle();
+              .maybeSingle()
             if (data) {
               challenge = {
                 id: data.id,
@@ -45,7 +50,7 @@ export class SupabaseRealtimeService implements RealtimeService {
                 icon: data.icon,
                 isActive: data.is_active,
                 createdAt: data.created_at,
-              };
+              }
             }
           }
 
@@ -59,16 +64,16 @@ export class SupabaseRealtimeService implements RealtimeService {
             isApproved: newRow.is_approved,
             createdAt: newRow.created_at,
             challenge,
-          };
+          }
 
-          callback(post);
+          callback(post)
         }
       )
-      .subscribe();
+      .subscribe()
 
     return () => {
-      supabase.removeChannel(channel);
-    };
+      supabase.removeChannel(channel)
+    }
   }
 
   broadcastNewPost(_post: Post): void {

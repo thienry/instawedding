@@ -1,14 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --color-sage-50: #F2F7F3;
-  --color-sage-100: #E5EFE8;
-  --color-sage-200: #D5E4D8;
-  --color-sage-800: #2F4F38;
-  --color-sage-900: #233A2A;
+  --color-sage-50: #f2f7f3;
+  --color-sage-100: #e5efe8;
+  --color-sage-200: #d5e4d8;
+  --color-sage-800: #2f4f38;
+  --color-sage-900: #233a2a;
 
-  --color-gold-400: #C5A880;
-  --color-gold-500: #8C704B;
+  --color-gold-400: #c5a880;
+  --color-gold-500: #8c704b;
 
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;

@@ -1,78 +1,129 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, Eye, EyeOff, Trash2, RotateCcw, Lock } from 'lucide-react';
-import type { Post } from '../types/domain';
-import { getPostRepository } from '../services/repositories.factory';
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Lock,
+  LogOut,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const ADMIN_PIN = '2026';
+import { getAdminAuthService } from '@/services/admin-auth.factory'
+import { getPostRepository } from '@/services/repositories.factory'
+
+import type { Post } from '@/types/domain'
 
 export function AdminPage() {
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
+  const navigate = useNavigate()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(true)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const postRepo = getPostRepository();
-
-  const loadPosts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const all = await postRepo.getAllPostsForModeration();
-      setPosts(all);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [postRepo]);
+  const [posts, setPosts] = useState<Post[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const postRepo = getPostRepository()
+  const adminAuth = getAdminAuthService()
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadPosts();
+    let isMounted = true
+    adminAuth.checkSession().then((hasSession) => {
+      if (isMounted) {
+        setIsAuthenticated(hasSession)
+        setIsVerifying(false)
+      }
+    })
+    return () => {
+      isMounted = false
     }
-  }, [isAuthenticated, loadPosts]);
+  }, [adminAuth])
 
-  const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput === ADMIN_PIN) {
-      setIsAuthenticated(true);
-      setPinError('');
-    } else {
-      setPinError('PIN incorreto. Tente novamente.');
-      setPinInput('');
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let isMounted = true
+
+    postRepo
+      .getAllPostsForModeration()
+      .then((all) => {
+        if (isMounted) {
+          setPosts(all)
+          setIsLoading(false)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setIsLoading(false)
+      })
+
+    return () => {
+      isMounted = false
     }
-  };
+  }, [isAuthenticated, postRepo])
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPinError('')
+    const result = await adminAuth.loginWithPin(pinInput)
+    if (result.success) {
+      setIsAuthenticated(true)
+      setPinInput('')
+    } else {
+      setPinError(result.message || 'PIN incorreto. Tente novamente.')
+      setPinInput('')
+    }
+  }
+
+  const handleLogout = async () => {
+    await adminAuth.logout()
+    setIsAuthenticated(false)
+  }
 
   const handleToggleApproval = async (postId: string) => {
     try {
-      const newStatus = await postRepo.togglePostApproval(postId);
+      const newStatus = await postRepo.togglePostApproval(postId)
       setPosts((prev) =>
         prev.map((p) => (p.id === postId ? { ...p, isApproved: newStatus } : p))
-      );
+      )
     } catch {
       // Failed to toggle
     }
-  };
+  }
 
   const handleDeletePost = async (postId: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta foto permanentemente?')) return;
+    if (
+      !window.confirm(
+        'Tem certeza que deseja excluir esta foto permanentemente?'
+      )
+    )
+      return
     try {
-      await postRepo.deletePost(postId);
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      await postRepo.deletePost(postId)
+      setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch {
       // Failed to delete
     }
-  };
+  }
 
   const handleClearAll = async () => {
     const confirmation = window.prompt(
       'ATENÇÃO: Isso apagará todas as fotos de teste do banco/mural antes do evento oficial.\nDigite "ZERAR" para confirmar:'
-    );
+    )
     if (confirmation === 'ZERAR') {
-      await postRepo.clearAllPosts();
-      setPosts([]);
+      await postRepo.clearAllPosts()
+      setPosts([])
     }
-  };
+  }
+
+  if (isVerifying) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-4">
+        <div className="w-8 h-8 border-2 border-sage-800 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-sage-800/70">Verificando credenciais...</p>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return (
@@ -85,11 +136,15 @@ export function AdminPage() {
             Painel do Cerimonial
           </h2>
           <p className="text-xs text-sage-800/70 max-w-xs">
-            Digite o PIN de segurança para moderar as fotos do telão (PIN padrão: 2026).
+            Digite o PIN de segurança para moderar as fotos do telão (PIN
+            padrão: 2026).
           </p>
         </div>
 
-        <form onSubmit={handlePinSubmit} className="w-full max-w-xs space-y-3 pt-2">
+        <form
+          onSubmit={handlePinSubmit}
+          className="w-full max-w-xs space-y-3 pt-2"
+        >
           <input
             type="password"
             inputMode="numeric"
@@ -110,7 +165,7 @@ export function AdminPage() {
           </button>
         </form>
       </div>
-    );
+    )
   }
 
   return (
@@ -125,9 +180,19 @@ export function AdminPage() {
           <span>Voltar ao App</span>
         </button>
 
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-sage-900">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Moderação Ativa</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-sage-900">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Moderação Ativa</span>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            title="Encerrar Sessão de Moderação"
+            className="p-1.5 rounded-lg text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -135,7 +200,9 @@ export function AdminPage() {
       <div className="bg-white rounded-2xl p-4 border border-sage-200 flex items-center justify-between shadow-xs">
         <div>
           <p className="text-xs text-sage-800/70">Total de Publicações</p>
-          <h3 className="font-serif text-2xl font-bold text-sage-900">{posts.length}</h3>
+          <h3 className="font-serif text-2xl font-bold text-sage-900">
+            {posts.length}
+          </h3>
         </div>
 
         <button
@@ -154,7 +221,9 @@ export function AdminPage() {
         </h4>
 
         {isLoading ? (
-          <p className="text-xs text-center text-sage-800/60 py-4">Carregando...</p>
+          <p className="text-xs text-center text-sage-800/60 py-4">
+            Carregando...
+          </p>
         ) : posts.length === 0 ? (
           <div className="p-8 text-center text-xs text-sage-800/60 bg-white rounded-2xl border border-sage-200">
             Nenhuma foto no sistema no momento.
@@ -164,11 +233,17 @@ export function AdminPage() {
             <div
               key={post.id}
               className={`p-3 rounded-2xl border transition-all flex items-center gap-3 bg-white ${
-                post.isApproved ? 'border-sage-200' : 'border-rose-300 bg-rose-50/30'
+                post.isApproved
+                  ? 'border-sage-200'
+                  : 'border-rose-300 bg-rose-50/30'
               }`}
             >
               <div className="w-16 h-16 rounded-xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
-                <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={post.mediaUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               <div className="flex-1 min-w-0 space-y-0.5">
@@ -188,7 +263,9 @@ export function AdminPage() {
                 </div>
 
                 {post.caption && (
-                  <p className="text-[11px] text-sage-800/80 truncate">{post.caption}</p>
+                  <p className="text-[11px] text-sage-800/80 truncate">
+                    {post.caption}
+                  </p>
                 )}
 
                 <p className="text-[10px] text-sage-800/50">
@@ -202,14 +279,20 @@ export function AdminPage() {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => handleToggleApproval(post.id)}
-                  title={post.isApproved ? 'Ocultar do Telão' : 'Aprovar no Telão'}
+                  title={
+                    post.isApproved ? 'Ocultar do Telão' : 'Aprovar no Telão'
+                  }
                   className={`p-2 rounded-xl transition-colors ${
                     post.isApproved
                       ? 'text-sage-800 hover:bg-sage-100'
                       : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
                   }`}
                 >
-                  {post.isApproved ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {post.isApproved ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
 
                 <button
@@ -225,5 +308,5 @@ export function AdminPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

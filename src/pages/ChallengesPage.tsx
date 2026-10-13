@@ -1,31 +1,33 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Camera, Sparkles, Trophy } from 'lucide-react';
-import type { Challenge } from '../types/domain';
-import { getChallengeRepository } from '../services/repositories.factory';
+import { Camera, Sparkles, Trophy } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import { getChallengeRepository } from '@/services/repositories.factory'
+
+import type { Challenge } from '@/types/domain'
 
 export function ChallengesPage() {
-  const navigate = useNavigate();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate()
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const challengeRepo = getChallengeRepository();
+  const challengeRepo = getChallengeRepository()
 
   useEffect(() => {
     async function load() {
       try {
-        const list = await challengeRepo.getChallenges();
-        setChallenges(list);
+        const list = await challengeRepo.getChallenges()
+        setChallenges(list)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-    load();
-  }, [challengeRepo]);
+    load()
+  }, [challengeRepo])
 
   const handleStartChallenge = (challengeId: number) => {
-    navigate(`/capture?challengeId=${challengeId}`);
-  };
+    navigate(`/capture?challengeId=${challengeId}`)
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -42,7 +44,8 @@ export function ChallengesPage() {
           Desafios da Festa
         </h2>
         <p className="text-xs text-white/80 leading-relaxed max-w-xs">
-          Encontre e registre cada momento especial abaixo para concorrer a surpresas dos noivos e animar o telão!
+          Encontre e registre cada momento especial abaixo para concorrer a
+          surpresas dos noivos e animar o telão!
         </p>
       </div>
 
@@ -96,5 +99,5 @@ export function ChallengesPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

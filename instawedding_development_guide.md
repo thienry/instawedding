@@ -9,11 +9,12 @@ This document consolidates all technical definitions, system architecture, datab
 **InstaWedding T&P** is a PWA (Progressive Web App) designed for guests at Thiago & Priscila's wedding to share real-time photos/videos, participate in a "Photo Scavenger Hunt" (Challenges), and stream a live photo feed onto the venue projector/display screen.
 
 ### Core Pillars:
-* **Mobile-First & PWA:** No app store download needed. Fast access via QR Code.
-* **Frictionless Identity:** Simple guest identification by name/nickname (no password wall).
-* **Direct Media Upload:** In-browser image compression + direct upload to Cloudflare R2 via Presigned URLs.
-* **Realtime Projector Screen:** Instant wall feed updates via Supabase Realtime (WebSockets/SSE).
-* **100% Free Stack:** Designed within the *Free Tier* limits of Vercel, Supabase, and Cloudflare R2.
+
+- **Mobile-First & PWA:** No app store download needed. Fast access via QR Code.
+- **Frictionless Identity:** Simple guest identification by name/nickname (no password wall).
+- **Direct Media Upload:** In-browser image compression + direct upload to Cloudflare R2 via Presigned URLs.
+- **Realtime Projector Screen:** Instant wall feed updates via Supabase Realtime (WebSockets/SSE).
+- **100% Free Stack:** Designed within the _Free Tier_ limits of Vercel, Supabase, and Cloudflare R2.
 
 ---
 
@@ -57,11 +58,12 @@ This document consolidates all technical definitions, system architecture, datab
 ```
 
 ### Stack Selection:
-* **Frontend:** React (TypeScript) + Vite + Tailwind CSS + Lucide React + `browser-image-compression`.
-* **Backend:** Vercel Serverless Functions (Node.js) or Node.js Express API.
-* **Database & Realtime:** Supabase (PostgreSQL + Realtime Engine).
-* **Object Storage:** Cloudflare R2 (S3-compatible API).
-* **Hosting & CI/CD:** Vercel.
+
+- **Frontend:** React (TypeScript) + Vite + Tailwind CSS + Lucide React + `browser-image-compression`.
+- **Backend:** Vercel Serverless Functions (Node.js) or Node.js Express API.
+- **Database & Realtime:** Supabase (PostgreSQL + Realtime Engine).
+- **Object Storage:** Cloudflare R2 (S3-compatible API).
+- **Hosting & CI/CD:** Vercel.
 
 ---
 
@@ -121,13 +123,17 @@ INSERT INTO public.challenges (title, description, icon) VALUES
 ## 4. API Endpoints
 
 ### `POST /api/upload-url`
+
 Generates a Cloudflare R2 presigned URL for secure browser uploads.
-* **Request Body:** `{ "fileName": "photo.webp", "fileType": "image/webp" }`
-* **Response (200):** `{ "uploadUrl": "https://...", "publicUrl": "https://pub-xxx.r2.dev/uuid.webp" }`
+
+- **Request Body:** `{ "fileName": "photo.webp", "fileType": "image/webp" }`
+- **Response (200):** `{ "uploadUrl": "https://...", "publicUrl": "https://pub-xxx.r2.dev/uuid.webp" }`
 
 ### `POST /api/posts`
+
 Persists the post metadata into Supabase.
-* **Request Body:**
+
+- **Request Body:**
   ```json
   {
     "authorName": "Camila & Family",
@@ -138,13 +144,17 @@ Persists the post metadata into Supabase.
   ```
 
 ### `GET /api/posts`
+
 Fetches feed posts in descending chronological order.
-* **Response (200):** Array of posts including associated challenge object.
+
+- **Response (200):** Array of posts including associated challenge object.
 
 ### `POST /api/posts/:id/like`
+
 Registers or removes a like tied to the browser session ID.
 
 ### `GET /api/challenges`
+
 Returns active photo challenges.
 
 ---
@@ -154,12 +164,14 @@ Returns active photo challenges.
 ### STEP 1: Local Setup
 
 1. **Create Vite React Project:**
+
    ```bash
    npm create vite@latest instawedding-tp -- --template react-ts
    cd instawedding-tp
    ```
 
 2. **Install Dependencies:**
+
    ```bash
    npm install lucide-react react-router-dom @supabase/supabase-js browser-image-compression @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
    npm install -D tailwindcss postcss autoprefixer
@@ -167,10 +179,11 @@ Returns active photo challenges.
    ```
 
 3. **Configure Tailwind Palette (`tailwind.config.js`):**
+
    ```javascript
    /** @type {import('tailwindcss').Config} */
    export default {
-     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+     content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
      theme: {
        extend: {
          colors: {
@@ -179,17 +192,17 @@ Returns active photo challenges.
              100: '#E5EFE8',
              200: '#D5E4D8',
              800: '#2F4F38',
-             900: '#233A2A'
+             900: '#233A2A',
            },
            gold: {
              400: '#C5A880',
-             500: '#8C704B'
-           }
+             500: '#8C704B',
+           },
          },
          fontFamily: {
            serif: ['Playfair Display', 'serif'],
-           sans: ['Plus Jakarta Sans', 'sans-serif']
-         }
+           sans: ['Plus Jakarta Sans', 'sans-serif'],
+         },
        },
      },
      plugins: [],
@@ -200,7 +213,7 @@ Returns active photo challenges.
    ```env
    VITE_SUPABASE_URL=https://your-project.supabase.co
    VITE_SUPABASE_ANON_KEY=your-anon-key
-   
+
    # Cloudflare R2 Credentials (Serverless Side)
    R2_ACCOUNT_ID=your-account-id
    R2_ACCESS_KEY_ID=your-access-key
@@ -214,35 +227,37 @@ Returns active photo challenges.
 ### STEP 2: Client Implementation
 
 1. **Supabase Client (`src/lib/supabase.ts`):**
+
    ```typescript
-   import { createClient } from '@supabase/supabase-js';
+   import { createClient } from '@supabase/supabase-js'
 
-   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-   export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+   export const supabase = createClient(supabaseUrl, supabaseAnonKey)
    ```
 
 2. **Image Compressor (`src/utils/compressor.ts`):**
+
    ```typescript
-   import imageCompression from 'browser-image-compression';
+   import imageCompression from 'browser-image-compression'
 
    export async function compressPhoto(file: File): Promise<File> {
      const options = {
        maxSizeMB: 0.8,
        maxWidthOrHeight: 1280,
        useWebWorker: true,
-       fileType: 'image/webp'
-     };
-     return await imageCompression(file, options);
+       fileType: 'image/webp',
+     }
+     return await imageCompression(file, options)
    }
    ```
 
 3. **Application Routes (`App.tsx`):**
-   * `/` -> `FeedPage`
-   * `/capture` -> `CapturePage`
-   * `/challenges` -> `ChallengesPage`
-   * `/projector` -> `ProjectorPage`
+   - `/` -> `FeedPage`
+   - `/capture` -> `CapturePage`
+   - `/challenges` -> `ChallengesPage`
+   - `/projector` -> `ProjectorPage`
 
 ---
 
@@ -256,7 +271,7 @@ Returns active photo challenges.
    ```bash
    npm run dev -- --host
    ```
-   *Access via local IP (e.g., `http://192.168.1.50:5173`) to test native camera access.*
+   _Access via local IP (e.g., `http://192.168.1.50:5173`) to test native camera access._
 
 ---
 

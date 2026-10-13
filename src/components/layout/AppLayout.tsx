@@ -1,18 +1,20 @@
-import { useEffect } from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { BottomNavigation } from './BottomNavigation';
-import { Tv, WifiOff, Shield } from 'lucide-react';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { OfflineQueueService } from '../../services/offline-queue.service';
+import { Shield, Tv, WifiOff } from 'lucide-react'
+import { useEffect } from 'react'
+import { Link, Outlet } from 'react-router-dom'
+
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { OfflineQueueService } from '@/services/offline-queue.service'
+
+import { BottomNavigation } from './BottomNavigation'
 
 export function AppLayout() {
-  const isOnline = useNetworkStatus();
+  const isOnline = useNetworkStatus()
 
   useEffect(() => {
     if (isOnline) {
-      OfflineQueueService.flush();
+      OfflineQueueService.flush()
     }
-  }, [isOnline]);
+  }, [isOnline])
   return (
     <div className="min-h-screen bg-sage-100 flex justify-center">
       <div className="w-full max-w-md bg-sage-50 min-h-screen flex flex-col relative shadow-xl border-x border-sage-200/50">
@@ -49,7 +51,9 @@ export function AppLayout() {
         {!isOnline && (
           <div className="bg-amber-600 text-white text-[11px] font-medium px-4 py-2 flex items-center justify-center gap-2 shadow-xs">
             <WifiOff className="w-3.5 h-3.5 animate-pulse" />
-            <span>Você está offline. Fotos serão enviadas quando a conexão voltar.</span>
+            <span>
+              Você está offline. Fotos serão enviadas quando a conexão voltar.
+            </span>
           </div>
         )}
 
@@ -62,5 +66,5 @@ export function AppLayout() {
         <BottomNavigation />
       </div>
     </div>
-  );
+  )
 }

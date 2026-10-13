@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppLayout } from './components/layout/AppLayout';
-import { FeedPage } from './pages/FeedPage';
-import { CapturePage } from './pages/CapturePage';
-import { ChallengesPage } from './pages/ChallengesPage';
-import { ProjectorPage } from './pages/ProjectorPage';
-import { AdminPage } from './pages/AdminPage';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+
+import { AppLayout } from '@/components/layout/AppLayout'
+import { AdminPage } from '@/pages/AdminPage'
+import { CapturePage } from '@/pages/CapturePage'
+import { ChallengesPage } from '@/pages/ChallengesPage'
+import { FeedPage } from '@/pages/FeedPage'
+import { ProjectorPage } from '@/pages/ProjectorPage'
 
 export function App() {
   return (
@@ -25,7 +26,7 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

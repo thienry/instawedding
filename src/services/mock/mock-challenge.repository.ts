@@ -1,5 +1,5 @@
-import type { ChallengeRepository } from '../contracts/challenge-repository.contract';
-import type { Challenge } from '../../types/domain';
+import type { Challenge } from '../../types/domain'
+import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
 
 export const INITIAL_CHALLENGES: readonly Challenge[] = [
   {
@@ -42,21 +42,21 @@ export const INITIAL_CHALLENGES: readonly Challenge[] = [
     isActive: true,
     createdAt: '2026-10-13T00:00:00.000Z',
   },
-];
+]
 
 export class MockChallengeRepository implements ChallengeRepository {
-  private readonly challenges: Challenge[];
+  private readonly challenges: Challenge[]
 
   constructor(initialData: readonly Challenge[] = INITIAL_CHALLENGES) {
-    this.challenges = [...initialData];
+    this.challenges = [...initialData]
   }
 
   async getChallenges(): Promise<Challenge[]> {
-    return this.challenges.filter((c) => c.isActive);
+    return this.challenges.filter((c) => c.isActive)
   }
 
   async getChallengeById(id: number): Promise<Challenge | null> {
-    const found = this.challenges.find((c) => c.id === id);
-    return found ?? null;
+    const found = this.challenges.find((c) => c.id === id)
+    return found ?? null
   }
 }

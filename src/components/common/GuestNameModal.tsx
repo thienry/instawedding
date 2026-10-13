@@ -1,32 +1,38 @@
-import { useState } from 'react';
-import { setGuestName } from '../../utils/session';
-import { UserCheck } from 'lucide-react';
+import { UserCheck } from 'lucide-react'
+import { useState } from 'react'
+
+import { setGuestName } from '@/utils/session'
 
 interface GuestNameModalProps {
-  readonly isOpen: boolean;
-  readonly initialName?: string;
-  readonly onClose: () => void;
-  readonly onSaved: (name: string) => void;
+  readonly isOpen: boolean
+  readonly initialName?: string
+  readonly onClose: () => void
+  readonly onSaved: (name: string) => void
 }
 
-export function GuestNameModal({ isOpen, initialName = '', onClose, onSaved }: GuestNameModalProps) {
-  const [name, setName] = useState(initialName);
-  const [error, setError] = useState('');
+export function GuestNameModal({
+  isOpen,
+  initialName = '',
+  onClose,
+  onSaved,
+}: GuestNameModalProps) {
+  const [name, setName] = useState(initialName)
+  const [error, setError] = useState('')
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
+    e.preventDefault()
+    const trimmed = name.trim()
     if (!trimmed) {
-      setError('Por favor, informe seu nome ou apelido.');
-      return;
+      setError('Por favor, informe seu nome ou apelido.')
+      return
     }
-    setGuestName(trimmed);
-    setError('');
-    onSaved(trimmed);
-    onClose();
-  };
+    setGuestName(trimmed)
+    setError('')
+    onSaved(trimmed)
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -50,8 +56,8 @@ export function GuestNameModal({ isOpen, initialName = '', onClose, onSaved }: G
               autoFocus
               value={name}
               onChange={(e) => {
-                setName(e.target.value);
-                if (error) setError('');
+                setName(e.target.value)
+                if (error) setError('')
               }}
               placeholder="Ex: Tio Roberto & Família"
               maxLength={40}
@@ -69,5 +75,5 @@ export function GuestNameModal({ isOpen, initialName = '', onClose, onSaved }: G
         </form>
       </div>
     </div>
-  );
+  )
 }

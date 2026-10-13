@@ -1,117 +1,147 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Heart, Sparkles, RefreshCw } from 'lucide-react';
-import type { Post } from '../types/domain';
-import { getPostRepository, getRealtimeService } from '../services/repositories.factory';
-import { getGuestSession } from '../utils/session';
-import { Link } from 'react-router-dom';
+import { Heart, RefreshCw, Sparkles } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+
+import {
+  getPostRepository,
+  getRealtimeService,
+} from '@/services/repositories.factory'
+import { getGuestSession } from '@/utils/session'
+
+import type { Post } from '@/types/domain'
+
+function formatRelativeTime(isoString: string): string {
+  try {
+    const date = new Date(isoString)
+    const diffMs = Date.now() - date.getTime()
+    const diffMin = Math.floor(diffMs / (1000 * 60))
+    if (diffMin < 1) return 'Agora mesmo'
+    if (diffMin < 60) return `há ${diffMin} min`
+    const diffHours = Math.floor(diffMin / 60)
+    if (diffHours < 24) return `há ${diffHours} h`
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+}
 
 export function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([])
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const postRepo = getPostRepository();
-  const realtimeService = getRealtimeService();
-  const session = getGuestSession();
+  const postRepo = getPostRepository()
+  const realtimeService = getRealtimeService()
+  const session = getGuestSession()
 
-  const loadPosts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setIsRefreshing(true);
-    else setIsLoading(true);
-
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
     try {
-      const fetchedPosts = await postRepo.getPosts();
-      setPosts(fetchedPosts);
-
-      // Check which posts the current guest liked
+      const fetchedPosts = await postRepo.getPosts()
+      setPosts(fetchedPosts)
       const likedChecks = await Promise.all(
         fetchedPosts.map(async (p) => {
-          const isLiked = await postRepo.hasUserLiked(p.id, session.sessionId);
-          return { id: p.id, isLiked };
+          const isLiked = await postRepo.hasUserLiked(p.id, session.sessionId)
+          return { id: p.id, isLiked }
         })
-      );
-
-      const likedSet = new Set<string>();
+      )
+      const likedSet = new Set<string>()
       for (const item of likedChecks) {
-        if (item.isLiked) likedSet.add(item.id);
+        if (item.isLiked) likedSet.add(item.id)
       }
-      setLikedPostIds(likedSet);
+      setLikedPostIds(likedSet)
     } catch {
-      // Failed to load posts
+      // Ignore refresh error
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsRefreshing(false)
     }
-  }, [postRepo, session.sessionId]);
+  }, [postRepo, session.sessionId])
 
   useEffect(() => {
-    loadPosts();
+    let isMounted = true
+
+    postRepo
+      .getPosts()
+      .then(async (fetchedPosts) => {
+        if (!isMounted) return
+        setPosts(fetchedPosts)
+
+        const likedChecks = await Promise.all(
+          fetchedPosts.map(async (p) => {
+            const isLiked = await postRepo.hasUserLiked(p.id, session.sessionId)
+            return { id: p.id, isLiked }
+          })
+        )
+
+        if (!isMounted) return
+        const likedSet = new Set<string>()
+        for (const item of likedChecks) {
+          if (item.isLiked) likedSet.add(item.id)
+        }
+        setLikedPostIds(likedSet)
+        setIsLoading(false)
+      })
+      .catch(() => {
+        if (isMounted) setIsLoading(false)
+      })
 
     // Subscribe to new posts in realtime
     const unsubscribe = realtimeService.subscribeToNewPosts((newPost) => {
       setPosts((prev) => {
-        if (prev.some((p) => p.id === newPost.id)) return prev;
-        return [newPost, ...prev];
-      });
-    });
+        if (prev.some((p) => p.id === newPost.id)) return prev
+        return [newPost, ...prev]
+      })
+    })
 
     return () => {
-      unsubscribe();
-    };
-  }, [loadPosts, realtimeService]);
+      isMounted = false
+      unsubscribe()
+    }
+  }, [postRepo, realtimeService, session.sessionId])
 
   const handleToggleLike = async (postId: string) => {
-    const isCurrentlyLiked = likedPostIds.has(postId);
+    const isCurrentlyLiked = likedPostIds.has(postId)
 
     // Optimistic UI update
     setLikedPostIds((prev) => {
-      const next = new Set(prev);
-      if (isCurrentlyLiked) next.delete(postId);
-      else next.add(postId);
-      return next;
-    });
+      const next = new Set(prev)
+      if (isCurrentlyLiked) next.delete(postId)
+      else next.add(postId)
+      return next
+    })
 
     setPosts((prev) =>
       prev.map((p) => {
-        if (p.id !== postId) return p;
+        if (p.id !== postId) return p
         const newCount = isCurrentlyLiked
           ? Math.max(0, p.likesCount - 1)
-          : p.likesCount + 1;
-        return { ...p, likesCount: newCount };
+          : p.likesCount + 1
+        return { ...p, likesCount: newCount }
       })
-    );
+    )
 
     try {
-      const result = await postRepo.toggleLike(postId, session.sessionId);
+      const result = await postRepo.toggleLike(postId, session.sessionId)
       // Synchronize with server/storage response
       setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, likesCount: result.likesCount } : p))
-      );
+        prev.map((p) =>
+          p.id === postId ? { ...p, likesCount: result.likesCount } : p
+        )
+      )
     } catch {
       // Rollback on failure
       setLikedPostIds((prev) => {
-        const next = new Set(prev);
-        if (isCurrentlyLiked) next.add(postId);
-        else next.delete(postId);
-        return next;
-      });
+        const next = new Set(prev)
+        if (isCurrentlyLiked) next.add(postId)
+        else next.delete(postId)
+        return next
+      })
     }
-  };
-
-  const formatTimestamp = (isoString: string): string => {
-    try {
-      const date = new Date(isoString);
-      const diffMs = Date.now() - date.getTime();
-      const diffMin = Math.floor(diffMs / (1000 * 60));
-      if (diffMin < 1) return 'Agora mesmo';
-      if (diffMin < 60) return `há ${diffMin} min`;
-      const diffHours = Math.floor(diffMin / 60);
-      if (diffHours < 24) return `há ${diffHours} h`;
-      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    } catch {
-      return '';
-    }
-  };
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -121,11 +151,13 @@ export function FeedPage() {
           Feed de Momentos
         </span>
         <button
-          onClick={() => loadPosts(true)}
+          onClick={handleRefresh}
           disabled={isRefreshing}
           className="flex items-center gap-1.5 text-xs text-sage-800 hover:text-sage-900 transition-colors p-1"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
+          />
           <span>Atualizar</span>
         </button>
       </div>
@@ -133,7 +165,10 @@ export function FeedPage() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((n) => (
-            <div key={n} className="bg-white rounded-2xl p-4 border border-sage-200/60 animate-pulse space-y-3">
+            <div
+              key={n}
+              className="bg-white rounded-2xl p-4 border border-sage-200/60 animate-pulse space-y-3"
+            >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-sage-200 rounded-full" />
                 <div className="h-4 bg-sage-200 rounded w-24" />
@@ -150,7 +185,8 @@ export function FeedPage() {
             Nenhuma foto publicada ainda
           </h3>
           <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
-            Seja o primeiro a registrar e compartilhar um momento especial da festa!
+            Seja o primeiro a registrar e compartilhar um momento especial da
+            festa!
           </p>
           <Link
             to="/capture"
@@ -162,7 +198,7 @@ export function FeedPage() {
       ) : (
         <div className="space-y-5">
           {posts.map((post) => {
-            const isLiked = likedPostIds.has(post.id);
+            const isLiked = likedPostIds.has(post.id)
 
             return (
               <article
@@ -180,7 +216,7 @@ export function FeedPage() {
                         {post.authorName}
                       </h4>
                       <span className="text-[10px] text-sage-800/60 leading-none">
-                        {formatTimestamp(post.createdAt)}
+                        {formatRelativeTime(post.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -238,10 +274,10 @@ export function FeedPage() {
                   )}
                 </div>
               </article>
-            );
+            )
           })}
         </div>
       )}
     </div>
-  );
+  )
 }

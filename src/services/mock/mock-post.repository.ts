@@ -1,16 +1,17 @@
-import type { PostRepository } from '../contracts/post-repository.contract';
-import type { ChallengeRepository } from '../contracts/challenge-repository.contract';
-import type { RealtimeService } from '../contracts/realtime.contract';
-import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain';
+import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain'
+import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
+import type { PostRepository } from '../contracts/post-repository.contract'
+import type { RealtimeService } from '../contracts/realtime.contract'
 
-const POSTS_STORAGE_KEY = 'instawedding_mock_posts';
-const LIKES_STORAGE_KEY = 'instawedding_mock_likes';
+const POSTS_STORAGE_KEY = 'instawedding_mock_posts'
+const LIKES_STORAGE_KEY = 'instawedding_mock_likes'
 
 const SEED_POSTS: readonly Post[] = [
   {
     id: 'seed-post-1',
     authorName: 'Camila & Família',
-    mediaUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80',
+    mediaUrl:
+      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80',
     caption: 'Noite inesquecível celebrando o amor de vocês! 🥂✨',
     challengeId: 1,
     likesCount: 5,
@@ -20,60 +21,71 @@ const SEED_POSTS: readonly Post[] = [
   {
     id: 'seed-post-2',
     authorName: 'Lucas (Madrinha Team)',
-    mediaUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80',
+    mediaUrl:
+      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80',
     caption: 'A pista já está fervendo! 🕺💃',
     challengeId: 2,
     likesCount: 12,
     isApproved: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
   },
-];
+]
 
 export class MockPostRepository implements PostRepository {
-  private readonly challengeRepo: ChallengeRepository;
-  private readonly realtimeService: RealtimeService;
+  private readonly challengeRepo: ChallengeRepository
+  private readonly realtimeService: RealtimeService
 
-  constructor(challengeRepo: ChallengeRepository, realtimeService: RealtimeService) {
-    this.challengeRepo = challengeRepo;
-    this.realtimeService = realtimeService;
-    this.ensureInitialData();
+  constructor(
+    challengeRepo: ChallengeRepository,
+    realtimeService: RealtimeService
+  ) {
+    this.challengeRepo = challengeRepo
+    this.realtimeService = realtimeService
+    this.ensureInitialData()
   }
 
   private ensureInitialData(): void {
-    if (typeof localStorage === 'undefined') return;
-    const existing = localStorage.getItem(POSTS_STORAGE_KEY);
+    if (typeof localStorage === 'undefined') return
+    const existing = localStorage.getItem(POSTS_STORAGE_KEY)
     if (!existing) {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(SEED_POSTS));
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(SEED_POSTS))
     }
   }
 
   async getPosts(): Promise<Post[]> {
-    if (typeof localStorage === 'undefined') return [...SEED_POSTS];
-    const data = localStorage.getItem(POSTS_STORAGE_KEY);
-    const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS];
+    if (typeof localStorage === 'undefined') return [...SEED_POSTS]
+    const data = localStorage.getItem(POSTS_STORAGE_KEY)
+    const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS]
 
-    const challenges = await this.challengeRepo.getChallenges();
-    const challengeMap = new Map(challenges.map((c) => [c.id, c]));
+    const challenges = await this.challengeRepo.getChallenges()
+    const challengeMap = new Map(challenges.map((c) => [c.id, c]))
 
     const enriched = rawPosts
       .filter((p) => p.isApproved)
       .map((post) => ({
         ...post,
-        challenge: post.challengeId ? challengeMap.get(post.challengeId) : undefined,
+        challenge: post.challengeId
+          ? challengeMap.get(post.challengeId)
+          : undefined,
       }))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
 
-    return enriched;
+    return enriched
   }
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
-    const rawPosts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
-      : [];
+    const rawPosts: Post[] =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(POSTS_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+        : []
 
     const challenge = dto.challengeId
       ? await this.challengeRepo.getChallengeById(dto.challengeId)
-      : null;
+      : null
 
     const newPost: Post = {
       id: crypto.randomUUID(),
@@ -85,126 +97,143 @@ export class MockPostRepository implements PostRepository {
       isApproved: true,
       createdAt: new Date().toISOString(),
       challenge: challenge ?? undefined,
-    };
-
-    rawPosts.unshift(newPost);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(rawPosts));
     }
 
-    this.realtimeService.broadcastNewPost(newPost);
+    rawPosts.unshift(newPost)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(rawPosts))
+    }
 
-    return newPost;
+    this.realtimeService.broadcastNewPost(newPost)
+
+    return newPost
   }
 
-  async toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult> {
-    const likesSet = this.getLikesSet();
-    const likeKey = `${postId}:${sessionId}`;
-    const wasLiked = likesSet.has(likeKey);
+  async toggleLike(
+    postId: string,
+    sessionId: string
+  ): Promise<ToggleLikeResult> {
+    const likesSet = this.getLikesSet()
+    const likeKey = `${postId}:${sessionId}`
+    const wasLiked = likesSet.has(likeKey)
 
-    const posts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
-      : [];
+    const posts: Post[] =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(POSTS_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+        : []
 
-    const targetPost = posts.find((p) => p.id === postId);
+    const targetPost = posts.find((p) => p.id === postId)
     if (!targetPost) {
-      throw new Error(`Post with id "${postId}" not found`);
+      throw new Error(`Post with id "${postId}" not found`)
     }
 
-    let updatedCount = targetPost.likesCount;
+    let updatedCount = targetPost.likesCount
 
     if (wasLiked) {
-      likesSet.delete(likeKey);
-      updatedCount = Math.max(0, updatedCount - 1);
+      likesSet.delete(likeKey)
+      updatedCount = Math.max(0, updatedCount - 1)
     } else {
-      likesSet.add(likeKey);
-      updatedCount += 1;
+      likesSet.add(likeKey)
+      updatedCount += 1
     }
 
     const updatedPosts = posts.map((p) =>
       p.id === postId ? { ...p, likesCount: updatedCount } : p
-    );
+    )
 
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updatedPosts));
-      localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(Array.from(likesSet)));
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updatedPosts))
+      localStorage.setItem(
+        LIKES_STORAGE_KEY,
+        JSON.stringify(Array.from(likesSet))
+      )
     }
 
     return {
       isLiked: !wasLiked,
       likesCount: updatedCount,
-    };
+    }
   }
 
   async hasUserLiked(postId: string, sessionId: string): Promise<boolean> {
-    const likesSet = this.getLikesSet();
-    return likesSet.has(`${postId}:${sessionId}`);
+    const likesSet = this.getLikesSet()
+    return likesSet.has(`${postId}:${sessionId}`)
   }
 
   async getAllPostsForModeration(): Promise<Post[]> {
-    if (typeof localStorage === 'undefined') return [...SEED_POSTS];
-    const data = localStorage.getItem(POSTS_STORAGE_KEY);
-    const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS];
+    if (typeof localStorage === 'undefined') return [...SEED_POSTS]
+    const data = localStorage.getItem(POSTS_STORAGE_KEY)
+    const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS]
 
-    const challenges = await this.challengeRepo.getChallenges();
-    const challengeMap = new Map(challenges.map((c) => [c.id, c]));
+    const challenges = await this.challengeRepo.getChallenges()
+    const challengeMap = new Map(challenges.map((c) => [c.id, c]))
 
     return rawPosts
       .map((post) => ({
         ...post,
-        challenge: post.challengeId ? challengeMap.get(post.challengeId) : undefined,
+        challenge: post.challengeId
+          ? challengeMap.get(post.challengeId)
+          : undefined,
       }))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
   }
 
   async togglePostApproval(postId: string): Promise<boolean> {
-    const posts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
-      : [];
+    const posts: Post[] =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(POSTS_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+        : []
 
-    let newStatus = false;
+    let newStatus = false
     const updated = posts.map((p) => {
       if (p.id === postId) {
-        newStatus = !p.isApproved;
-        return { ...p, isApproved: newStatus };
+        newStatus = !p.isApproved
+        return { ...p, isApproved: newStatus }
       }
-      return p;
-    });
+      return p
+    })
 
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated))
     }
 
-    return newStatus;
+    return newStatus
   }
 
   async deletePost(postId: string): Promise<void> {
-    const posts: Post[] = typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
-      : [];
+    const posts: Post[] =
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(POSTS_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+        : []
 
-    const filtered = posts.filter((p) => p.id !== postId);
+    const filtered = posts.filter((p) => p.id !== postId)
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(filtered));
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(filtered))
     }
   }
 
   async clearAllPosts(): Promise<void> {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify([]));
-      localStorage.removeItem(LIKES_STORAGE_KEY);
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify([]))
+      localStorage.removeItem(LIKES_STORAGE_KEY)
     }
   }
 
   private getLikesSet(): Set<string> {
-    if (typeof localStorage === 'undefined') return new Set();
-    const data = localStorage.getItem(LIKES_STORAGE_KEY);
-    if (!data) return new Set();
+    if (typeof localStorage === 'undefined') return new Set()
+    const data = localStorage.getItem(LIKES_STORAGE_KEY)
+    if (!data) return new Set()
     try {
-      const arr: string[] = JSON.parse(data);
-      return new Set(arr);
+      const arr: string[] = JSON.parse(data)
+      return new Set(arr)
     } catch {
-      return new Set();
+      return new Set()
     }
   }
 }

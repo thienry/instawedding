@@ -1,44 +1,44 @@
 export interface Challenge {
-  readonly id: number;
-  readonly title: string;
-  readonly description: string;
-  readonly icon: string;
-  readonly isActive: boolean;
-  readonly createdAt: string;
+  readonly id: number
+  readonly title: string
+  readonly description: string
+  readonly icon: string
+  readonly isActive: boolean
+  readonly createdAt: string
 }
 
 export interface Post {
-  readonly id: string;
-  readonly authorName: string;
-  readonly mediaUrl: string;
-  readonly caption: string | null;
-  readonly challengeId: number | null;
-  readonly likesCount: number;
-  readonly isApproved: boolean;
-  readonly createdAt: string;
-  readonly challenge?: Challenge;
+  readonly id: string
+  readonly authorName: string
+  readonly mediaUrl: string
+  readonly caption: string | null
+  readonly challengeId: number | null
+  readonly likesCount: number
+  readonly isApproved: boolean
+  readonly createdAt: string
+  readonly challenge?: Challenge
 }
 
 export interface CreatePostDTO {
-  readonly authorName: string;
-  readonly mediaUrl: string;
-  readonly caption?: string | null;
-  readonly challengeId?: number | null;
+  readonly authorName: string
+  readonly mediaUrl: string
+  readonly caption?: string | null
+  readonly challengeId?: number | null
 }
 
 export interface ToggleLikeResult {
-  readonly isLiked: boolean;
-  readonly likesCount: number;
+  readonly isLiked: boolean
+  readonly likesCount: number
 }
 
 export interface GuestSession {
-  readonly sessionId: string;
-  readonly guestName: string;
+  readonly sessionId: string
+  readonly guestName: string
 }
 
-export type UploadProgressCallback = (percentage: number) => void;
+export type UploadProgressCallback = (percentage: number) => void
 
 export interface PresignedUploadResult {
-  readonly uploadUrl: string;
-  readonly publicUrl: string;
+  readonly uploadUrl: string
+  readonly publicUrl: string
 }
