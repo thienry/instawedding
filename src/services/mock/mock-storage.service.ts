@@ -2,8 +2,6 @@ import type { StorageService } from '../contracts/storage.contract';
 import type { PresignedUploadResult, UploadProgressCallback } from '../../types/domain';
 
 export class MockStorageService implements StorageService {
-  private readonly objectUrls = new Map<string, string>();
-
   async getPresignedUploadUrl(fileName: string, _fileType: string): Promise<PresignedUploadResult> {
     const mockId = crypto.randomUUID();
     const sanitizedName = fileName.replace(/\s+/g, '-');
@@ -16,18 +14,30 @@ export class MockStorageService implements StorageService {
   }
 
   async uploadFile(file: File, onProgress?: UploadProgressCallback): Promise<string> {
-    const steps = [15, 45, 75, 100];
+    const steps = [20, 50, 80, 100];
 
     for (const step of steps) {
-      await this.delay(120);
+      await this.delay(100);
       onProgress?.(step);
     }
 
-    const objectUrl = URL.createObjectURL(file);
-    const fileId = crypto.randomUUID();
-    this.objectUrls.set(fileId, objectUrl);
+    // Convert file to Base64 Data URL so it persists across reloads and tabs in localStorage
+    return this.fileToDataUrl(file);
+  }
 
-    return objectUrl;
+  private fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to read image as data URL'));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
   }
 
   private delay(ms: number): Promise<void> {
