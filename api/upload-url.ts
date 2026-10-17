@@ -16,11 +16,13 @@ export async function POST(req: Request): Promise<Response> {
   try {
     const body = (await req.json()) as {
       contentType?: string
+      fileType?: string
       sizeBytes?: number
       sessionId?: string
     }
 
-    const { contentType, sizeBytes, sessionId } = body
+    const contentType = body.contentType || body.fileType
+    const { sizeBytes, sessionId } = body
 
     // Validate MIME whitelist
     if (!contentType || !ALLOWED_MIME_TYPES.has(contentType.toLowerCase())) {
@@ -84,10 +86,6 @@ export async function POST(req: Request): Promise<Response> {
       Bucket: bucketName,
       Key: objectKey,
       ContentType: contentType,
-      ContentLength: sizeBytes,
-      Metadata: {
-        'x-session-id': sessionId,
-      },
     })
 
     // Generate presigned PUT URL expiring in 5 minutes (300 seconds)

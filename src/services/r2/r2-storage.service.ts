@@ -1,8 +1,10 @@
+import { getOrCreateSessionId } from '@/utils/session'
+
+import type { StorageService } from '@/services/contracts/storage.contract'
 import type {
   PresignedUploadResult,
   UploadProgressCallback,
-} from '../../types/domain'
-import type { StorageService } from '../contracts/storage.contract'
+} from '@/types/domain'
 
 export class StorageUploadError extends Error {
   readonly statusCode?: number
@@ -23,17 +25,28 @@ export class R2StorageService implements StorageService {
 
   async getPresignedUploadUrl(
     fileName: string,
-    fileType: string
+    fileType: string,
+    sizeBytes: number = 1024
   ): Promise<PresignedUploadResult> {
+    const sessionId = getOrCreateSessionId()
     const response = await fetch(`${this.apiBaseUrl}/upload-url`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName, fileType }),
+      body: JSON.stringify({
+        fileName,
+        contentType: fileType,
+        sizeBytes,
+        sessionId,
+      }),
     })
 
     if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as {
+        error?: string
+      }
       throw new StorageUploadError(
-        `Failed to request presigned upload URL: ${response.statusText}`,
+        errorData.error ||
+          `Failed to request presigned upload URL: ${response.statusText}`,
         response.status
       )
     }
@@ -47,7 +60,8 @@ export class R2StorageService implements StorageService {
   ): Promise<string> {
     const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(
       file.name,
-      file.type
+      file.type,
+      file.size
     )
 
     return new Promise((resolve, reject) => {

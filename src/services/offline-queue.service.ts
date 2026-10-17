@@ -1,8 +1,7 @@
+import { getPostRepository } from '@/services/repositories.factory'
 import { generateUUID } from '@/utils/uuid'
 
-import { getPostRepository } from './repositories.factory'
-
-import type { CreatePostDTO } from '../types/domain'
+import type { CreatePostDTO } from '@/types/domain'
 
 const OFFLINE_QUEUE_KEY = 'instawedding_offline_post_queue'
 

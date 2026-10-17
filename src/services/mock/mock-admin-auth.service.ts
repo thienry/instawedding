@@ -2,7 +2,7 @@ import type {
   AdminAuthResult,
   AdminAuthService,
   AdminUser,
-} from '../contracts/admin-auth.contract'
+} from '@/services/contracts/admin-auth.contract'
 
 const STORAGE_KEY = 'instawedding_mock_admin_user'
 

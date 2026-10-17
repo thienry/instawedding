@@ -1,5 +1,5 @@
-import type { Challenge } from '../../types/domain'
-import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
+import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
+import type { Challenge } from '@/types/domain'
 
 export const INITIAL_CHALLENGES: readonly Challenge[] = [
   {

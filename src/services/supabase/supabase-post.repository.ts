@@ -1,7 +1,7 @@
-import { getSupabaseClient } from './supabase.client'
+import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
-import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain'
-import type { PostRepository } from '../contracts/post-repository.contract'
+import type { PostRepository } from '@/services/contracts/post-repository.contract'
+import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
 
 interface SupabasePostRow {
   id: string

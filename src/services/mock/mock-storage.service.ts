@@ -1,10 +1,10 @@
 import { generateUUID } from '@/utils/uuid'
 
+import type { StorageService } from '@/services/contracts/storage.contract'
 import type {
   PresignedUploadResult,
   UploadProgressCallback,
-} from '../../types/domain'
-import type { StorageService } from '../contracts/storage.contract'
+} from '@/types/domain'
 
 export class MockStorageService implements StorageService {
   async getPresignedUploadUrl(

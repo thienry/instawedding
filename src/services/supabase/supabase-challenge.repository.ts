@@ -1,7 +1,7 @@
-import { getSupabaseClient } from './supabase.client'
+import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
-import type { Challenge } from '../../types/domain'
-import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
+import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
+import type { Challenge } from '@/types/domain'
 
 interface SupabaseChallengeRow {
   id: number

@@ -1,13 +1,12 @@
 import { ExternalLink, ShieldCheck, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 
+import { TermsModal } from '@/components/common/TermsModal'
 import {
   getTermsAcceptedAt,
   setGuestName,
   setTermsAccepted,
 } from '@/utils/session'
-
-import { TermsModal } from './TermsModal'
 
 interface GuestNameModalProps {
   readonly isOpen: boolean

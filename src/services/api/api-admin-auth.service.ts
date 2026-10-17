@@ -1,11 +1,11 @@
-import { getSupabaseClient } from '../supabase/supabase.client'
+import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
 import type {
   AdminAuthResult,
   AdminAuthService,
   AdminOtpRequestResult,
   AdminUser,
-} from '../contracts/admin-auth.contract'
+} from '@/services/contracts/admin-auth.contract'
 
 export class ApiAdminAuthService implements AdminAuthService {
   private currentUser: AdminUser | null = null

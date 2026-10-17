@@ -20,6 +20,12 @@ import {
 import { getStorageService } from '@/services/storage.factory'
 import { compressPhoto } from '@/utils/compressor'
 import {
+  getFilterById,
+  PHOTO_FILTERS,
+  PHOTO_FRAMES,
+  renderFilteredAndFramedPhoto,
+} from '@/utils/photo-filters'
+import {
   getGuestName,
   getGuestSession,
   getTermsAcceptedAt,
@@ -27,14 +33,8 @@ import {
   setTermsAccepted,
 } from '@/utils/session'
 
-import {
-  PHOTO_FILTERS,
-  PHOTO_FRAMES,
-  getFilterById,
-  renderFilteredAndFramedPhoto,
-} from '@/utils/photo-filters'
-import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
 import type { Challenge } from '@/types/domain'
+import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
 
 const CURRENT_DATE_STR = new Date().toLocaleDateString('pt-BR')
 const CURRENT_YEAR = new Date().getFullYear()
@@ -332,7 +332,9 @@ export function CapturePage() {
                 <>
                   <div className="absolute top-0 inset-x-0 h-6 bg-[#05070a] pointer-events-none" />
                   <div className="absolute bottom-0 inset-x-0 h-6 bg-[#05070a] flex items-center justify-between px-3 text-[9px] text-white/80 font-mono pointer-events-none">
-                    <span className="font-semibold text-white">● REC THIAGO & NOIVA</span>
+                    <span className="font-semibold text-white">
+                      ● REC THIAGO & NOIVA
+                    </span>
                     <span>{CURRENT_DATE_STR}</span>
                   </div>
                 </>

@@ -1,7 +1,7 @@
-import { MockStorageService } from './mock/mock-storage.service'
-import { R2StorageService } from './r2/r2-storage.service'
+import { MockStorageService } from '@/services/mock/mock-storage.service'
+import { R2StorageService } from '@/services/r2/r2-storage.service'
 
-import type { StorageService } from './contracts/storage.contract'
+import type { StorageService } from '@/services/contracts/storage.contract'
 
 const isMockEnabled = import.meta.env.VITE_USE_MOCKS !== 'false'
 

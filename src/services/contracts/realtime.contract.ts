@@ -1,4 +1,4 @@
-import type { Post } from '../../types/domain'
+import type { Post } from '@/types/domain'
 
 export type PostSubscriptionCallback = (post: Post) => void
 export type UnsubscribeFunction = () => void

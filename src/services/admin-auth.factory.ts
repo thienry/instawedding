@@ -1,7 +1,7 @@
-import { ApiAdminAuthService } from './api/api-admin-auth.service'
-import { MockAdminAuthService } from './mock/mock-admin-auth.service'
+import { ApiAdminAuthService } from '@/services/api/api-admin-auth.service'
+import { MockAdminAuthService } from '@/services/mock/mock-admin-auth.service'
 
-import type { AdminAuthService } from './contracts/admin-auth.contract'
+import type { AdminAuthService } from '@/services/contracts/admin-auth.contract'
 
 let adminAuthInstance: AdminAuthService | null = null
 

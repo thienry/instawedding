@@ -1,17 +1,8 @@
 export type PhotoFilterId =
-  | 'none'
-  | 'golden'
-  | 'vintage'
-  | 'bw'
-  | 'vivid'
-  | 'dramatic'
+  'none' | 'golden' | 'vintage' | 'bw' | 'vivid' | 'dramatic'
 
 export type PhotoFrameId =
-  | 'none'
-  | 'polaroid'
-  | 'golden-border'
-  | 'cinema'
-  | 'minimal-floral'
+  'none' | 'polaroid' | 'golden-border' | 'cinema' | 'minimal-floral'
 
 export interface PhotoFilterOption {
   readonly id: PhotoFilterId
@@ -93,7 +84,10 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
-    img.onerror = (e) => reject(new Error('Failed to load image for filter processing: ' + String(e)))
+    img.onerror = (e) =>
+      reject(
+        new Error('Failed to load image for filter processing: ' + String(e))
+      )
     img.src = src
   })
 }
@@ -262,7 +256,12 @@ export async function renderFilteredAndFramedPhoto(
     ctx.filter = 'none'
 
     // Subtle dark gradient vignette at the bottom for readability
-    const vignette = ctx.createLinearGradient(0, srcH - badgeHeight * 2, 0, srcH)
+    const vignette = ctx.createLinearGradient(
+      0,
+      srcH - badgeHeight * 2,
+      0,
+      srcH
+    )
     vignette.addColorStop(0, 'rgba(0,0,0,0)')
     vignette.addColorStop(1, 'rgba(0,0,0,0.65)')
     ctx.fillStyle = vignette
@@ -297,7 +296,8 @@ export async function renderFilteredAndFramedPhoto(
           reject(new Error('Failed to generate image blob from Canvas.'))
           return
         }
-        const cleanName = originalFilename.replace(/\.[^/.]+$/, '') + '-filtered.webp'
+        const cleanName =
+          originalFilename.replace(/\.[^/.]+$/, '') + '-filtered.webp'
         resolve(
           new File([blob], cleanName, {
             type: 'image/webp',

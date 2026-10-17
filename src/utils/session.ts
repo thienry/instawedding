@@ -1,6 +1,6 @@
-import { generateUUID } from './uuid'
+import { generateUUID } from '@/utils/uuid'
 
-import type { GuestSession } from '../types/domain'
+import type { GuestSession } from '@/types/domain'
 
 const SESSION_STORAGE_KEY = 'instawedding_guest_session_id'
 const GUEST_NAME_KEY = 'instawedding_guest_name'

@@ -1,13 +1,13 @@
-import { MockChallengeRepository } from './mock/mock-challenge.repository'
-import { MockPostRepository } from './mock/mock-post.repository'
-import { MockRealtimeService } from './mock/mock-realtime.service'
-import { SupabaseChallengeRepository } from './supabase/supabase-challenge.repository'
-import { SupabasePostRepository } from './supabase/supabase-post.repository'
-import { SupabaseRealtimeService } from './supabase/supabase-realtime.service'
+import { MockChallengeRepository } from '@/services/mock/mock-challenge.repository'
+import { MockPostRepository } from '@/services/mock/mock-post.repository'
+import { MockRealtimeService } from '@/services/mock/mock-realtime.service'
+import { SupabaseChallengeRepository } from '@/services/supabase/supabase-challenge.repository'
+import { SupabasePostRepository } from '@/services/supabase/supabase-post.repository'
+import { SupabaseRealtimeService } from '@/services/supabase/supabase-realtime.service'
 
-import type { ChallengeRepository } from './contracts/challenge-repository.contract'
-import type { PostRepository } from './contracts/post-repository.contract'
-import type { RealtimeService } from './contracts/realtime.contract'
+import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
+import type { PostRepository } from '@/services/contracts/post-repository.contract'
+import type { RealtimeService } from '@/services/contracts/realtime.contract'
 
 const isMockEnabled = import.meta.env.VITE_USE_MOCKS !== 'false'
 

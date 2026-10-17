@@ -1,4 +1,4 @@
-import type { Challenge } from '../../types/domain'
+import type { Challenge } from '@/types/domain'
 
 export interface ChallengeRepository {
   getChallenges(): Promise<Challenge[]>

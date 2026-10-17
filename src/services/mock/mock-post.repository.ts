@@ -1,9 +1,9 @@
 import { generateUUID } from '@/utils/uuid'
 
-import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain'
-import type { ChallengeRepository } from '../contracts/challenge-repository.contract'
-import type { PostRepository } from '../contracts/post-repository.contract'
-import type { RealtimeService } from '../contracts/realtime.contract'
+import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
+import type { PostRepository } from '@/services/contracts/post-repository.contract'
+import type { RealtimeService } from '@/services/contracts/realtime.contract'
+import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
 
 const POSTS_STORAGE_KEY = 'instawedding_mock_posts'
 const LIKES_STORAGE_KEY = 'instawedding_mock_likes'

@@ -2,11 +2,10 @@ import { LogOut, Shield, Tv, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 
+import { BottomNavigation } from '@/components/layout/BottomNavigation'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import { OfflineQueueService } from '@/services/offline-queue.service'
-
-import { BottomNavigation } from './BottomNavigation'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 

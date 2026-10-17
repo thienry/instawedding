@@ -1,4 +1,4 @@
-import type { CreatePostDTO, Post, ToggleLikeResult } from '../../types/domain'
+import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
 
 export interface PostRepository {
   getPosts(): Promise<Post[]>

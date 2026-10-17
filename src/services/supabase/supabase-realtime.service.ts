@@ -1,13 +1,12 @@
+import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { generateUUID } from '@/utils/uuid'
 
-import { getSupabaseClient } from './supabase.client'
-
-import type { Post } from '../../types/domain'
 import type {
   PostSubscriptionCallback,
   RealtimeService,
   UnsubscribeFunction,
-} from '../contracts/realtime.contract'
+} from '@/services/contracts/realtime.contract'
+import type { Post } from '@/types/domain'
 
 export class SupabaseRealtimeService implements RealtimeService {
   subscribeToNewPosts(callback: PostSubscriptionCallback): UnsubscribeFunction {
