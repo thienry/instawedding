@@ -7,6 +7,12 @@ export interface Challenge {
   readonly createdAt: string
 }
 
+export interface CreateChallengeDTO {
+  readonly title: string
+  readonly description: string
+  readonly icon: string
+}
+
 export interface Post {
   readonly id: string
   readonly authorName: string

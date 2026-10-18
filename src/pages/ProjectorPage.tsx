@@ -1,15 +1,21 @@
 import {
   ArrowLeft,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   Heart,
   Maximize2,
   Minimize2,
+  Pause,
+  Play,
   QrCode,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { QrCodeSvg } from '@/components/common/QrCodeSvg'
 import {
   getPostRepository,
   getRealtimeService,
@@ -23,13 +29,20 @@ const FALLBACK_POLL_INTERVAL_MS = 30000
 export function ProjectorPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isControlsVisible, setIsControlsVisible] = useState(true)
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [newPostAlert, setNewPostAlert] = useState<Post | null>(null)
 
   const controlsTimeoutRef = useRef<number | null>(null)
   const postRepo = getPostRepository()
   const realtimeService = getRealtimeService()
+
+  const captureUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/capture`
+      : 'https://casamento-thiago-e-priscila.vercel.app/capture'
 
   // Initial load & fallback polling
   useEffect(() => {
@@ -88,7 +101,7 @@ export function ProjectorPage() {
 
   // Slideshow auto-advance timer
   useEffect(() => {
-    if (posts.length <= 1) return
+    if (posts.length <= 1 || isPaused) return
 
     const timer = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % posts.length)
@@ -97,7 +110,7 @@ export function ProjectorPage() {
     return () => {
       window.clearInterval(timer)
     }
-  }, [posts.length])
+  }, [posts.length, isPaused])
 
   // Auto-hide controls after inactivity
   const handleMouseMove = () => {
@@ -132,6 +145,16 @@ export function ProjectorPage() {
 
   const currentPost = posts[currentIndex]
 
+  const handlePrevSlide = () => {
+    if (posts.length === 0) return
+    setCurrentIndex((prev) => (prev - 1 + posts.length) % posts.length)
+  }
+
+  const handleNextSlide = () => {
+    if (posts.length === 0) return
+    setCurrentIndex((prev) => (prev + 1) % posts.length)
+  }
+
   return (
     <div
       onMouseMove={handleMouseMove}
@@ -158,28 +181,76 @@ export function ProjectorPage() {
           </Link>
           <div>
             <h1 className="font-serif text-2xl lg:text-3xl font-bold tracking-wide text-white flex items-center gap-2.5">
-              <span>Thiago & Priscila</span>
+              <span>Thiago &amp; Priscila</span>
               <span className="text-[11px] font-sans font-medium uppercase tracking-widest text-gold-400 border border-gold-400/40 px-2.5 py-0.5 rounded-full bg-gold-400/10">
                 Ao Vivo
               </span>
             </h1>
             <p className="text-xs text-sage-200/80 font-sans tracking-wider">
-              Mural de Memórias & Desafios da Festa
+              Mural de Memórias &amp; Desafios da Festa
             </p>
           </div>
         </div>
 
-        <button
-          onClick={toggleFullscreen}
-          className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 backdrop-blur-md"
-          title={isFullscreen ? 'Sair da Tela Cheia' : 'Modo Tela Cheia (F11)'}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="w-5 h-5" />
-          ) : (
-            <Maximize2 className="w-5 h-5" />
+        {/* Slideshow Playback & Fullscreen Controls */}
+        <div className="flex items-center gap-2">
+          {posts.length > 1 && (
+            <div className="flex items-center gap-1 bg-white/10 border border-white/10 rounded-full px-2 py-1 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={handlePrevSlide}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors"
+                title="Foto anterior"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPaused((prev) => !prev)}
+                className="p-1.5 rounded-full hover:bg-white/20 text-gold-400 transition-colors"
+                title={
+                  isPaused ? 'Retomar apresentação' : 'Pausar apresentação'
+                }
+              >
+                {isPaused ? (
+                  <Play className="w-4 h-4" />
+                ) : (
+                  <Pause className="w-4 h-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleNextSlide}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors"
+                title="Próxima foto"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           )}
-        </button>
+
+          <button
+            type="button"
+            onClick={() => setIsQrModalOpen(true)}
+            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-gold-400 transition-colors border border-white/10 backdrop-blur-md"
+            title="Expandir QR Code na tela"
+          >
+            <QrCode className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 backdrop-blur-md"
+            title={isFullscreen ? 'Sair da Tela Cheia' : 'Modo Tela Cheia (F11)'}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-5 h-5" />
+            ) : (
+              <Maximize2 className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </header>
 
       {/* New Photo Entrance Alert */}
@@ -201,15 +272,21 @@ export function ProjectorPage() {
       <main className="flex-1 flex items-center justify-center p-4 lg:p-10 relative z-10">
         {currentPost ? (
           <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#FAF8F5] text-sage-900 p-6 lg:p-8 rounded-3xl shadow-2xl border border-gold-400/40 transition-all duration-700">
-            {/* Fine Art Photo Frame */}
-            <div className="lg:col-span-7 aspect-4/3 rounded-2xl overflow-hidden bg-sage-100 shadow-md relative border border-sage-200/80 flex items-center justify-center">
+            {/* Fine Art Photo Frame (Uncropped with blurred backdrop) */}
+            <div className="lg:col-span-7 aspect-4/3 rounded-2xl overflow-hidden bg-slate-950 shadow-md relative border border-sage-200/80 flex items-center justify-center">
+              <img
+                src={currentPost.mediaUrl}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+              />
               <img
                 key={currentPost.id}
                 src={currentPost.mediaUrl}
                 alt={
                   currentPost.caption || `Foto por ${currentPost.authorName}`
                 }
-                className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-700"
+                className="relative z-10 w-full h-full object-contain animate-in fade-in zoom-in-95 duration-700"
               />
             </div>
 
@@ -245,7 +322,7 @@ export function ProjectorPage() {
                   </blockquote>
                 ) : (
                   <p className="font-serif italic text-sm text-sage-800/60 pl-1">
-                    Celebrando o grande dia com Thiago & Priscila ✨
+                    Celebrando o grande dia com Thiago &amp; Priscila ✨
                   </p>
                 )}
               </div>
@@ -264,25 +341,30 @@ export function ProjectorPage() {
 
                 <span className="text-xs text-sage-800/60 font-medium">
                   {currentIndex + 1} de {posts.length} fotos
+                  {isPaused ? ' (Pausado)' : ''}
                 </span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-center space-y-4 bg-[#FAF8F5] text-sage-900 p-12 rounded-3xl shadow-2xl border border-gold-400/40 max-w-lg">
-            <span className="text-5xl block animate-bounce">💍</span>
+          <div className="text-center space-y-5 bg-[#FAF8F5] text-sage-900 p-10 rounded-3xl shadow-2xl border border-gold-400/40 max-w-lg">
+            <div className="flex justify-center">
+              <div className="p-3 bg-white rounded-2xl border border-sage-200 shadow-sm">
+                <QrCodeSvg value={captureUrl} size={140} />
+              </div>
+            </div>
             <h2 className="font-serif text-2xl font-bold">
               Aguardando as fotos dos convidados...
             </h2>
             <p className="text-xs text-sage-800/80 leading-relaxed">
-              Escaneie o QR Code das mesas com seu celular para tirar uma foto e
-              aparecer no telão ao vivo!
+              Aponte a câmera do seu celular para o QR Code acima para tirar uma
+              foto agora e aparecer no telão ao vivo!
             </p>
           </div>
         )}
       </main>
 
-      {/* Bottom Thumbnails Strip & Wedding Invitation Callout */}
+      {/* Bottom Thumbnails Strip & Real Scannable QR Code Callout */}
       <footer className="relative z-20 px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-t from-[#142017]/95 via-[#142017]/60 to-transparent">
         {/* Thumbnails row */}
         <div className="flex items-center gap-2.5 overflow-x-auto max-w-2xl py-1 scrollbar-none">
@@ -305,21 +387,71 @@ export function ProjectorPage() {
           ))}
         </div>
 
-        {/* QR Code Invitation Card */}
-        <div className="flex items-center gap-3 bg-[#FAF8F5] text-sage-900 px-4 py-2.5 rounded-2xl border border-gold-400/50 shadow-xl shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-sage-900 text-white flex items-center justify-center shrink-0">
-            <QrCode className="w-6 h-6 text-gold-400" />
+        {/* Real Scannable QR Code Invitation Card */}
+        <button
+          type="button"
+          onClick={() => setIsQrModalOpen(true)}
+          title="Clique para ampliar o QR Code"
+          className="flex items-center gap-3.5 bg-[#FAF8F5] hover:bg-white text-sage-900 px-4 py-2.5 rounded-2xl border border-gold-400/60 shadow-xl shrink-0 transition-transform hover:scale-[1.02] cursor-pointer text-left"
+        >
+          <div className="p-1 rounded-xl bg-white border border-sage-200 shrink-0 shadow-2xs">
+            <QrCodeSvg value={captureUrl} size={56} />
           </div>
           <div>
-            <p className="text-xs font-bold font-serif text-sage-900">
-              Participe do Mural
+            <p className="text-xs font-bold font-serif text-sage-900 flex items-center gap-1">
+              <span>Participe do Mural Ao Vivo</span>
+              <Sparkles className="w-3.5 h-3.5 text-gold-500" />
             </p>
-            <p className="text-[10px] text-sage-800/70 font-sans">
-              Escaneie o QR Code na mesa e envie sua foto
+            <p className="text-[11px] text-sage-800/80 font-sans">
+              Aponte a câmera para o QR Code e envie sua foto!
+            </p>
+          </div>
+        </button>
+      </footer>
+
+      {/* Expandable Giant QR Code Modal for Projector */}
+      {isQrModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsQrModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FAF8F5] text-sage-900 rounded-3xl p-8 max-w-md w-full text-center space-y-5 border-2 border-gold-400 shadow-2xl relative"
+          >
+            <button
+              type="button"
+              onClick={() => setIsQrModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-sage-200/60 text-sage-800 transition-colors"
+              aria-label="Fechar QR Code"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-widest text-gold-500">
+                Casamento Thiago &amp; Priscila
+              </span>
+              <h3 className="font-serif text-2xl font-bold text-sage-900">
+                Envie sua Foto para o Telão!
+              </h3>
+              <p className="text-xs text-sage-800/75">
+                Escaneie o código abaixo com a câmera do seu celular:
+              </p>
+            </div>
+
+            <div className="inline-block p-4 bg-white rounded-3xl border border-sage-200 shadow-md">
+              <QrCodeSvg value={captureUrl} size={240} />
+            </div>
+
+            <p className="text-[11px] font-mono text-sage-800/70 break-all">
+              {captureUrl}
             </p>
           </div>
         </div>
-      </footer>
+      )}
     </div>
   )
 }

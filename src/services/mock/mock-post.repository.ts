@@ -166,6 +166,18 @@ export class MockPostRepository implements PostRepository {
     return likesSet.has(`${postId}:${sessionId}`)
   }
 
+  async getLikedPostIds(sessionId: string): Promise<Set<string>> {
+    const likesSet = this.getLikesSet()
+    const result = new Set<string>()
+    const suffix = `:${sessionId}`
+    for (const key of likesSet) {
+      if (key.endsWith(suffix)) {
+        result.add(key.slice(0, key.length - suffix.length))
+      }
+    }
+    return result
+  }
+
   async getAllPostsForModeration(): Promise<Post[]> {
     if (typeof localStorage === 'undefined') return [...SEED_POSTS]
     const data = localStorage.getItem(POSTS_STORAGE_KEY)

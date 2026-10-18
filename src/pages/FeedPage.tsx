@@ -1,16 +1,24 @@
 import {
+  Camera,
+  Download,
+  Flame,
   Heart,
   Loader2,
+  Maximize2,
   RefreshCw,
+  Share2,
   ShieldCheck,
   Sparkles,
   Trash2,
+  Trophy,
   User,
+  X,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { GuestNameModal } from '@/components/common/GuestNameModal'
+import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
 import { TermsModal } from '@/components/common/TermsModal'
 import {
   getPostRepository,
@@ -19,6 +27,8 @@ import {
 import { getGuestSession } from '@/utils/session'
 
 import type { Post } from '@/types/domain'
+
+type FeedFilterTab = 'all' | 'most-liked' | 'challenges' | 'mine'
 
 function formatRelativeTime(isoString: string): string {
   try {
@@ -39,14 +49,25 @@ function formatRelativeTime(isoString: string): string {
 }
 
 export function FeedPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const challengeFilterParam = searchParams.get('challengeId')
+  const challengeFilterId = challengeFilterParam
+    ? Number(challengeFilterParam)
+    : null
+
   const [posts, setPosts] = useState<Post[]>([])
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<FeedFilterTab>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [postToDelete, setPostToDelete] = useState<Post | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
+  const [lightboxPostId, setLightboxPostId] = useState<string | null>(null)
+  const [heartBurstPostId, setHeartBurstPostId] = useState<string | null>(null)
+
+  const lastTapMapRef = useRef<Map<string, number>>(new Map())
 
   const session = getGuestSession()
   const [guestName, setGuestNameState] = useState(session.guestName)
@@ -57,18 +78,11 @@ export function FeedPage() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
-      const fetchedPosts = await postRepo.getPosts()
+      const [fetchedPosts, likedSet] = await Promise.all([
+        postRepo.getPosts(),
+        postRepo.getLikedPostIds(session.sessionId),
+      ])
       setPosts(fetchedPosts)
-      const likedChecks = await Promise.all(
-        fetchedPosts.map(async (p) => {
-          const isLiked = await postRepo.hasUserLiked(p.id, session.sessionId)
-          return { id: p.id, isLiked }
-        })
-      )
-      const likedSet = new Set<string>()
-      for (const item of likedChecks) {
-        if (item.isLiked) likedSet.add(item.id)
-      }
       setLikedPostIds(likedSet)
     } catch {
       // Ignore refresh error
@@ -80,24 +94,13 @@ export function FeedPage() {
   useEffect(() => {
     let isMounted = true
 
-    postRepo
-      .getPosts()
-      .then(async (fetchedPosts) => {
+    Promise.all([
+      postRepo.getPosts(),
+      postRepo.getLikedPostIds(session.sessionId),
+    ])
+      .then(([fetchedPosts, likedSet]) => {
         if (!isMounted) return
         setPosts(fetchedPosts)
-
-        const likedChecks = await Promise.all(
-          fetchedPosts.map(async (p) => {
-            const isLiked = await postRepo.hasUserLiked(p.id, session.sessionId)
-            return { id: p.id, isLiked }
-          })
-        )
-
-        if (!isMounted) return
-        const likedSet = new Set<string>()
-        for (const item of likedChecks) {
-          if (item.isLiked) likedSet.add(item.id)
-        }
         setLikedPostIds(likedSet)
         setIsLoading(false)
       })
@@ -119,44 +122,105 @@ export function FeedPage() {
     }
   }, [postRepo, realtimeService, session.sessionId])
 
-  const handleToggleLike = async (postId: string) => {
-    const isCurrentlyLiked = likedPostIds.has(postId)
+  const handleToggleLike = useCallback(
+    async (postId: string) => {
+      const isCurrentlyLiked = likedPostIds.has(postId)
 
-    // Optimistic UI update
-    setLikedPostIds((prev) => {
-      const next = new Set(prev)
-      if (isCurrentlyLiked) next.delete(postId)
-      else next.add(postId)
-      return next
-    })
-
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== postId) return p
-        const newCount = isCurrentlyLiked
-          ? Math.max(0, p.likesCount - 1)
-          : p.likesCount + 1
-        return { ...p, likesCount: newCount }
-      })
-    )
-
-    try {
-      const result = await postRepo.toggleLike(postId, session.sessionId)
-      // Synchronize with server/storage response
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === postId ? { ...p, likesCount: result.likesCount } : p
-        )
-      )
-    } catch {
-      // Rollback on failure
+      // Optimistic UI update
       setLikedPostIds((prev) => {
         const next = new Set(prev)
-        if (isCurrentlyLiked) next.add(postId)
-        else next.delete(postId)
+        if (isCurrentlyLiked) next.delete(postId)
+        else next.add(postId)
         return next
       })
+
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p
+          const newCount = isCurrentlyLiked
+            ? Math.max(0, p.likesCount - 1)
+            : p.likesCount + 1
+          return { ...p, likesCount: newCount }
+        })
+      )
+
+      try {
+        const result = await postRepo.toggleLike(postId, session.sessionId)
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId ? { ...p, likesCount: result.likesCount } : p
+          )
+        )
+      } catch {
+        // Rollback on failure
+        setLikedPostIds((prev) => {
+          const next = new Set(prev)
+          if (isCurrentlyLiked) next.add(postId)
+          else next.delete(postId)
+          return next
+        })
+      }
+    },
+    [likedPostIds, postRepo, session.sessionId]
+  )
+
+  const handlePhotoTap = (post: Post) => {
+    const now = Date.now()
+    const lastTap = lastTapMapRef.current.get(post.id) ?? 0
+    if (now - lastTap < 320) {
+      lastTapMapRef.current.set(post.id, 0)
+      setHeartBurstPostId(post.id)
+      window.setTimeout(() => {
+        setHeartBurstPostId((prev) => (prev === post.id ? null : prev))
+      }, 750)
+      if (!likedPostIds.has(post.id)) {
+        void handleToggleLike(post.id)
+      }
+    } else {
+      lastTapMapRef.current.set(post.id, now)
     }
+  }
+
+  const handleDownloadPost = async (post: Post) => {
+    try {
+      const response = await fetch(post.mediaUrl)
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      const safeAuthor = post.authorName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+      link.download = `casamento-thiago-e-priscila-${safeAuthor}-${post.id.slice(0, 6)}.webp`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      window.open(post.mediaUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  const handleSharePost = async (post: Post) => {
+    const shareTitle = 'Casamento Thiago & Priscila • InstaWedding'
+    const shareText = post.caption
+      ? `Foto de ${post.authorName}: "${post.caption}"`
+      : `Foto de ${post.authorName} no casamento de Thiago & Priscila!`
+    const shareUrl = window.location.origin
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        })
+        return
+      } catch {
+        // User cancelled or share failed; fall back to download
+      }
+    }
+    await handleDownloadPost(post)
   }
 
   const handleConfirmDelete = async () => {
@@ -178,10 +242,45 @@ export function FeedPage() {
     }
   }
 
+  const filteredPosts = useMemo(() => {
+    let list = [...posts]
+
+    if (challengeFilterId !== null && !Number.isNaN(challengeFilterId)) {
+      list = list.filter((p) => p.challengeId === challengeFilterId)
+    }
+
+    if (activeTab === 'challenges') {
+      list = list.filter((p) => Boolean(p.challengeId))
+    } else if (activeTab === 'mine') {
+      list = list.filter(
+        (p) =>
+          (Boolean(p.clientSessionId) &&
+            p.clientSessionId === session.sessionId) ||
+          (guestName &&
+            p.authorName.trim().toLowerCase() ===
+              guestName.trim().toLowerCase())
+      )
+    } else if (activeTab === 'most-liked') {
+      list.sort((a, b) => b.likesCount - a.likesCount)
+    }
+
+    return list
+  }, [posts, challengeFilterId, activeTab, session.sessionId, guestName])
+
+  const activeChallengeObj = useMemo(() => {
+    if (challengeFilterId === null) return null
+    return posts.find((p) => p.challengeId === challengeFilterId)?.challenge
+  }, [posts, challengeFilterId])
+
+  const lightboxPost = useMemo(
+    () => posts.find((p) => p.id === lightboxPostId) ?? null,
+    [posts, lightboxPostId]
+  )
+
   return (
     <div className="p-4 space-y-4">
       {/* Top Banner / Pull to Refresh */}
-      <div className="flex items-center justify-between pb-1">
+      <div className="flex items-center justify-between pb-0.5">
         <button
           type="button"
           onClick={() => setIsNameModalOpen(true)}
@@ -202,6 +301,83 @@ export function FeedPage() {
           <span className="text-[11px]">Atualizar</span>
         </button>
       </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          type="button"
+          onClick={() => setActiveTab('all')}
+          className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'all'
+              ? 'bg-sage-900 text-white shadow-xs'
+              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+          }`}
+        >
+          Todas ({posts.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('most-liked')}
+          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'most-liked'
+              ? 'bg-sage-900 text-white shadow-xs'
+              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 text-amber-500" />
+          <span>Mais Curtidas</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('challenges')}
+          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'challenges'
+              ? 'bg-sage-900 text-white shadow-xs'
+              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+          }`}
+        >
+          <Trophy className="w-3.5 h-3.5 text-gold-500" />
+          <span>Desafios</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('mine')}
+          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'mine'
+              ? 'bg-sage-900 text-white shadow-xs'
+              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+          }`}
+        >
+          <Camera className="w-3.5 h-3.5 text-sage-700" />
+          <span>Minhas Fotos</span>
+        </button>
+      </div>
+
+      {/* Active Challenge Filter Pill */}
+      {challengeFilterId !== null && (
+        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-gold-400/15 border border-gold-400/30 text-xs text-sage-900">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-gold-500 shrink-0" />
+            <span>
+              Filtrando por desafio:{' '}
+              {activeChallengeObj
+                ? `${activeChallengeObj.icon} ${activeChallengeObj.title}`
+                : `#${challengeFilterId}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              searchParams.delete('challengeId')
+              setSearchParams(searchParams)
+            }}
+            className="p-1 rounded-full hover:bg-gold-400/20 text-sage-800"
+            title="Limpar filtro de desafio"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Feed Content */}
       {isLoading ? (
@@ -226,30 +402,38 @@ export function FeedPage() {
             </div>
           ))}
         </div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 border border-sage-200 text-center space-y-3 shadow-xs">
           <span className="text-3xl block">📷</span>
           <h3 className="font-serif text-lg font-bold text-sage-900">
-            Nenhuma foto publicada ainda
+            {posts.length === 0
+              ? 'Nenhuma foto publicada ainda'
+              : 'Nenhuma foto encontrada neste filtro'}
           </h3>
           <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
-            Seja o primeiro a registrar e compartilhar um momento especial da
-            festa!
+            {posts.length === 0
+              ? 'Seja o primeiro a registrar e compartilhar um momento especial da festa!'
+              : 'Experimente trocar a aba acima ou publique uma nova foto agora.'}
           </p>
           <Link
-            to="/capture"
+            to={
+              challengeFilterId !== null
+                ? `/capture?challengeId=${challengeFilterId}`
+                : '/capture'
+            }
             className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 rounded-full bg-sage-900 text-white text-xs font-semibold hover:bg-sage-800 transition-colors shadow-sm"
           >
-            Tirar Primeira Foto
+            Tirar Foto Agora
           </Link>
         </div>
       ) : (
         <div className="space-y-5">
-          {posts.map((post) => {
+          {filteredPosts.map((post) => {
             const isLiked = likedPostIds.has(post.id)
             const isOwner =
               Boolean(post.clientSessionId) &&
               post.clientSessionId === session.sessionId
+            const showHeartBurst = heartBurstPostId === post.id
 
             return (
               <article
@@ -274,10 +458,18 @@ export function FeedPage() {
 
                   <div className="flex items-center gap-2">
                     {post.challenge && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/30">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSearchParams({
+                            challengeId: String(post.challenge!.id),
+                          })
+                        }
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/30 hover:bg-gold-400/25 transition-colors"
+                      >
                         <span>{post.challenge.icon}</span>
                         <span>{post.challenge.title}</span>
-                      </span>
+                      </button>
                     )}
 
                     {/* LGPD Right to Erasure: Owner deletion trigger */}
@@ -294,32 +486,76 @@ export function FeedPage() {
                   </div>
                 </div>
 
-                {/* Media Image */}
-                <div className="relative aspect-4/3 bg-sage-100 overflow-hidden">
+                {/* Media Image (Double-tap to like + Full aspect ratio preservation) */}
+                <div
+                  onClick={() => handlePhotoTap(post)}
+                  className="relative bg-slate-950/90 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
+                >
                   <img
                     src={post.mediaUrl}
                     alt={post.caption || `Foto por ${post.authorName}`}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full max-h-[72vh] object-contain"
                   />
+
+                  {/* Expand to Lightbox Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setLightboxPostId(post.id)
+                    }}
+                    aria-label="Ver em tela cheia"
+                    className="absolute top-2.5 right-2.5 p-2 rounded-full bg-black/50 hover:bg-black/75 text-white/90 backdrop-blur-xs transition-opacity opacity-80 group-hover:opacity-100"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Double-tap Heart Burst Overlay */}
+                  {showHeartBurst && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 animate-in zoom-in-50 fade-in duration-150">
+                      <Heart className="w-20 h-20 fill-rose-500 text-rose-500 drop-shadow-[0_4px_20px_rgba(244,63,94,0.65)] animate-bounce" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Post Actions & Caption */}
                 <div className="p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => handleToggleLike(post.id)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-sage-900 hover:opacity-80 active:scale-95 transition-all"
-                    >
-                      <Heart
-                        className={`w-5 h-5 transition-colors ${
-                          isLiked
-                            ? 'fill-rose-500 text-rose-500'
-                            : 'text-sage-800/70 stroke-[1.75]'
-                        }`}
-                      />
-                      <span>{post.likesCount}</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleLike(post.id)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-sage-900 hover:opacity-80 active:scale-95 transition-all"
+                      >
+                        <Heart
+                          className={`w-5 h-5 transition-colors ${
+                            isLiked
+                              ? 'fill-rose-500 text-rose-500'
+                              : 'text-sage-800/70 stroke-[1.75]'
+                          }`}
+                        />
+                        <span>{post.likesCount}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSharePost(post)}
+                        title="Compartilhar foto"
+                        className="p-1 text-sage-800/70 hover:text-sage-900 active:scale-95 transition-all"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPost(post)}
+                        title="Baixar foto"
+                        className="p-1 text-sage-800/70 hover:text-sage-900 active:scale-95 transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
 
                     {post.challengeId && (
                       <span className="text-[10px] text-sage-800/60 flex items-center gap-1">
@@ -407,6 +643,16 @@ export function FeedPage() {
           </div>
         </div>
       )}
+
+      {/* Fullscreen Photo Lightbox Modal */}
+      <PhotoLightboxModal
+        post={lightboxPost}
+        isLiked={lightboxPost ? likedPostIds.has(lightboxPost.id) : false}
+        onClose={() => setLightboxPostId(null)}
+        onToggleLike={handleToggleLike}
+        onDownload={handleDownloadPost}
+        onShare={handleSharePost}
+      />
 
       {/* Terms and Privacy Modal */}
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />

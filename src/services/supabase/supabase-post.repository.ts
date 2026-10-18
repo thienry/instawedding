@@ -118,6 +118,18 @@ export class SupabasePostRepository implements PostRepository {
     return true
   }
 
+  async getLikedPostIds(sessionId: string): Promise<Set<string>> {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+      .from('likes')
+      .select('post_id')
+      .eq('client_session_id', sessionId)
+
+    if (error || !data) return new Set()
+    const rows = data as Array<{ post_id: string }>
+    return new Set(rows.map((r) => r.post_id))
+  }
+
   async getAllPostsForModeration(): Promise<Post[]> {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase

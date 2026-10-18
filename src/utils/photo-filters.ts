@@ -104,7 +104,7 @@ export async function renderFilteredAndFramedPhoto(
   const {
     filterId,
     frameId,
-    weddingTitle = 'Thiago & Noiva',
+    weddingTitle = 'Thiago & Priscila',
     weddingSubtitle = 'Nosso Grande Dia • InstaWedding',
     maxDimension = 1440,
   } = options

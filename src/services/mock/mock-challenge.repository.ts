@@ -1,5 +1,7 @@
 import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
-import type { Challenge } from '@/types/domain'
+import type { Challenge, CreateChallengeDTO } from '@/types/domain'
+
+const CHALLENGES_STORAGE_KEY = 'instawedding_mock_challenges'
 
 export const INITIAL_CHALLENGES: readonly Challenge[] = [
   {
@@ -45,18 +47,85 @@ export const INITIAL_CHALLENGES: readonly Challenge[] = [
 ]
 
 export class MockChallengeRepository implements ChallengeRepository {
-  private readonly challenges: Challenge[]
+  private readonly fallbackChallenges: Challenge[]
 
   constructor(initialData: readonly Challenge[] = INITIAL_CHALLENGES) {
-    this.challenges = [...initialData]
+    this.fallbackChallenges = [...initialData]
+    this.ensureInitialData()
+  }
+
+  private ensureInitialData(): void {
+    if (typeof localStorage === 'undefined') return
+    if (!localStorage.getItem(CHALLENGES_STORAGE_KEY)) {
+      localStorage.setItem(
+        CHALLENGES_STORAGE_KEY,
+        JSON.stringify(this.fallbackChallenges)
+      )
+    }
+  }
+
+  private readAll(): Challenge[] {
+    if (typeof localStorage === 'undefined') return [...this.fallbackChallenges]
+    const raw = localStorage.getItem(CHALLENGES_STORAGE_KEY)
+    if (!raw) return [...this.fallbackChallenges]
+    try {
+      return JSON.parse(raw) as Challenge[]
+    } catch {
+      return [...this.fallbackChallenges]
+    }
+  }
+
+  private saveAll(list: Challenge[]): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CHALLENGES_STORAGE_KEY, JSON.stringify(list))
+    }
   }
 
   async getChallenges(): Promise<Challenge[]> {
-    return this.challenges.filter((c) => c.isActive)
+    return this.readAll().filter((c) => c.isActive)
+  }
+
+  async getAllChallenges(): Promise<Challenge[]> {
+    return this.readAll()
   }
 
   async getChallengeById(id: number): Promise<Challenge | null> {
-    const found = this.challenges.find((c) => c.id === id)
+    const found = this.readAll().find((c) => c.id === id)
     return found ?? null
+  }
+
+  async createChallenge(dto: CreateChallengeDTO): Promise<Challenge> {
+    const all = this.readAll()
+    const maxId = all.reduce((acc, item) => Math.max(acc, item.id), 0)
+    const created: Challenge = {
+      id: maxId + 1,
+      title: dto.title.trim(),
+      description: dto.description.trim(),
+      icon: dto.icon.trim() || '✨',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    }
+    all.push(created)
+    this.saveAll(all)
+    return created
+  }
+
+  async toggleChallengeActive(id: number): Promise<boolean> {
+    const all = this.readAll()
+    let newStatus = false
+    const updated = all.map((c) => {
+      if (c.id === id) {
+        newStatus = !c.isActive
+        return { ...c, isActive: newStatus }
+      }
+      return c
+    })
+    this.saveAll(updated)
+    return newStatus
+  }
+
+  async deleteChallenge(id: number): Promise<void> {
+    const all = this.readAll().filter((c) => c.id !== id)
+    this.saveAll(all)
   }
 }

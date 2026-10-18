@@ -71,6 +71,22 @@ CREATE POLICY "Allow public read active challenges"
   ON public.challenges FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Allow public insert challenges" ON public.challenges;
+CREATE POLICY "Allow public insert challenges"
+  ON public.challenges FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update challenges" ON public.challenges;
+CREATE POLICY "Allow public update challenges"
+  ON public.challenges FOR UPDATE
+  USING (true)
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public delete challenges" ON public.challenges;
+CREATE POLICY "Allow public delete challenges"
+  ON public.challenges FOR DELETE
+  USING (true);
+
 DROP POLICY IF EXISTS "Allow public read posts" ON public.posts;
 CREATE POLICY "Allow public read posts"
   ON public.posts FOR SELECT

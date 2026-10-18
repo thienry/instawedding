@@ -157,7 +157,7 @@ export function CapturePage() {
           {
             filterId: selectedFilter,
             frameId: selectedFrame,
-            weddingTitle: 'Thiago & Noiva',
+            weddingTitle: 'Thiago & Priscila',
           }
         )
         setIsCompressing(false)
@@ -319,11 +319,11 @@ export function CapturePage() {
                 : 'border border-sage-200 bg-black/5'
             }`}
           >
-            <div className="relative aspect-4/3 rounded-xl overflow-hidden bg-black/10">
+            <div className="relative rounded-xl overflow-hidden bg-slate-950/90 flex items-center justify-center max-h-[60vh]">
               <img
                 src={previewUrl}
                 alt="Prévia da foto"
-                className="w-full h-full object-cover transition-all duration-150"
+                className="w-full max-h-[60vh] object-contain transition-all duration-150"
                 style={{ filter: getFilterById(selectedFilter).cssFilter }}
               />
 
@@ -333,7 +333,7 @@ export function CapturePage() {
                   <div className="absolute top-0 inset-x-0 h-6 bg-[#05070a] pointer-events-none" />
                   <div className="absolute bottom-0 inset-x-0 h-6 bg-[#05070a] flex items-center justify-between px-3 text-[9px] text-white/80 font-mono pointer-events-none">
                     <span className="font-semibold text-white">
-                      ● REC THIAGO & NOIVA
+                      ● REC THIAGO & PRISCILA
                     </span>
                     <span>{CURRENT_DATE_STR}</span>
                   </div>
@@ -349,7 +349,7 @@ export function CapturePage() {
               {selectedFrame === 'minimal-floral' && (
                 <div className="absolute bottom-0 inset-x-0 h-9 bg-gradient-to-t from-black/75 to-transparent flex items-end justify-center pb-2 pointer-events-none">
                   <span className="font-serif italic text-white text-[11px] drop-shadow-xs">
-                    💍 Thiago & Noiva • {CURRENT_YEAR}
+                    💍 Thiago & Priscila • {CURRENT_YEAR}
                   </span>
                 </div>
               )}
@@ -376,7 +376,7 @@ export function CapturePage() {
             {selectedFrame === 'polaroid' && (
               <div className="pt-3 text-center space-y-0.5 pointer-events-none">
                 <p className="font-serif italic font-bold text-sm text-slate-800">
-                  Thiago & Noiva
+                  Thiago & Priscila
                 </p>
                 <p className="text-[10px] text-slate-500 font-medium tracking-wide">
                   Nosso Grande Dia • InstaWedding

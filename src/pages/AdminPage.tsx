@@ -1,28 +1,38 @@
 import {
   ArrowLeft,
   CheckCircle2,
+  Download,
   Eye,
   EyeOff,
+  Image as ImageIcon,
   KeyRound,
   Loader2,
   Lock,
   LogOut,
   Mail,
+  Plus,
   RefreshCw,
   RotateCcw,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
   Trash2,
+  Trophy,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getAdminAuthService } from '@/services/admin-auth.factory'
-import { getPostRepository } from '@/services/repositories.factory'
+import {
+  getChallengeRepository,
+  getPostRepository,
+} from '@/services/repositories.factory'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
-import type { Post } from '@/types/domain'
+import type { Challenge, Post } from '@/types/domain'
+
+type AdminTab = 'photos' | 'challenges'
+type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
 
 export function AdminPage() {
   const navigate = useNavigate()
@@ -40,11 +50,26 @@ export function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [debugOtpCode, setDebugOtpCode] = useState<string | null>(null)
 
-  // Post moderation states
+  // Dashboard tabs & data states
+  const [activeTab, setActiveTab] = useState<AdminTab>('photos')
+  const [photoFilter, setPhotoFilter] = useState<PhotoModerationFilter>('all')
   const [posts, setPosts] = useState<Post[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDownloadingAlbum, setIsDownloadingAlbum] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState<{
+    current: number
+    total: number
+  } | null>(null)
+
+  // New Challenge Form states
+  const [newChallengeIcon, setNewChallengeIcon] = useState('🥂')
+  const [newChallengeTitle, setNewChallengeTitle] = useState('')
+  const [newChallengeDesc, setNewChallengeDesc] = useState('')
+  const [isCreatingChallenge, setIsCreatingChallenge] = useState(false)
 
   const postRepo = getPostRepository()
+  const challengeRepo = getChallengeRepository()
   const adminAuth = getAdminAuthService()
 
   useEffect(() => {
@@ -77,11 +102,14 @@ export function AdminPage() {
     if (!currentUser) return
     let isMounted = true
 
-    postRepo
-      .getAllPostsForModeration()
-      .then((all) => {
+    Promise.all([
+      postRepo.getAllPostsForModeration(),
+      challengeRepo.getAllChallenges(),
+    ])
+      .then(([allPosts, allChallenges]) => {
         if (isMounted) {
-          setPosts(all)
+          setPosts(allPosts)
+          setChallenges(allChallenges)
           setIsLoading(false)
         }
       })
@@ -92,7 +120,7 @@ export function AdminPage() {
     return () => {
       isMounted = false
     }
-  }, [currentUser, postRepo])
+  }, [currentUser, postRepo, challengeRepo])
 
   const handleRequestOtp = async (
     e?: React.FormEvent,
@@ -231,6 +259,98 @@ export function AdminPage() {
       setPosts([])
     }
   }
+
+  const handleDownloadAlbum = async () => {
+    const approvedPosts = posts.filter((p) => p.isApproved)
+    if (approvedPosts.length === 0) {
+      alert('Não há fotos aprovadas para baixar.')
+      return
+    }
+
+    setIsDownloadingAlbum(true)
+    setDownloadProgress({ current: 0, total: approvedPosts.length })
+
+    for (let i = 0; i < approvedPosts.length; i++) {
+      const post = approvedPosts[i]
+      setDownloadProgress({ current: i + 1, total: approvedPosts.length })
+      try {
+        const res = await fetch(post.mediaUrl)
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        const safeAuthor = post.authorName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+        a.download = `foto-${String(i + 1).padStart(3, '0')}-${safeAuthor}.webp`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        await new Promise((resolve) => window.setTimeout(resolve, 350))
+      } catch {
+        // Continue to next photo if individual fetch fails
+      }
+    }
+
+    setIsDownloadingAlbum(false)
+    setDownloadProgress(null)
+  }
+
+  const handleCreateChallenge = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newChallengeTitle.trim() || !newChallengeDesc.trim()) return
+
+    setIsCreatingChallenge(true)
+    try {
+      const created = await challengeRepo.createChallenge({
+        title: newChallengeTitle.trim(),
+        description: newChallengeDesc.trim(),
+        icon: newChallengeIcon.trim() || '✨',
+      })
+      setChallenges((prev) => [...prev, created])
+      setNewChallengeTitle('')
+      setNewChallengeDesc('')
+      setNewChallengeIcon('✨')
+    } catch {
+      alert('Falha ao criar desafio. Verifique as permissões no Supabase.')
+    } finally {
+      setIsCreatingChallenge(false)
+    }
+  }
+
+  const handleToggleChallenge = async (id: number) => {
+    try {
+      const newStatus = await challengeRepo.toggleChallengeActive(id)
+      setChallenges((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, isActive: newStatus } : c))
+      )
+    } catch {
+      alert('Não foi possível alterar o status do desafio.')
+    }
+  }
+
+  const handleDeleteChallenge = async (id: number) => {
+    if (currentUser?.role !== 'admin') {
+      alert('Apenas administradores podem excluir desafios.')
+      return
+    }
+    if (!window.confirm('Deseja excluir este desafio permanentemente?')) {
+      return
+    }
+    try {
+      await challengeRepo.deleteChallenge(id)
+      setChallenges((prev) => prev.filter((c) => c.id !== id))
+    } catch {
+      alert('Não foi possível excluir o desafio.')
+    }
+  }
+
+  const filteredPosts = useMemo(() => {
+    if (photoFilter === 'approved') return posts.filter((p) => p.isApproved)
+    if (photoFilter === 'hidden') return posts.filter((p) => !p.isApproved)
+    return posts
+  }, [posts, photoFilter])
 
   if (isVerifying) {
     return (
@@ -489,7 +609,6 @@ export function AdminPage() {
           </div>
         </div>
 
-        {/* Visible Logout Button */}
         <button
           onClick={handleLogout}
           title="Encerrar sessão e deslogar"
@@ -516,134 +635,361 @@ export function AdminPage() {
         </span>
       </div>
 
-      {/* Stats & Destructive Actions */}
-      <div className="bg-white rounded-2xl p-4 border border-sage-200 flex items-center justify-between shadow-xs">
-        <div>
-          <p className="text-xs text-sage-800/70">Total de Fotos Enviadas</p>
-          <h3 className="font-serif text-2xl font-bold text-sage-900">
-            {posts.length}
-          </h3>
-        </div>
-
-        {isAdmin ? (
-          <button
-            onClick={handleClearAll}
-            title="Apenas Admin: apaga todos os posts de teste"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200 transition-colors shadow-2xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Zerar Fotos</span>
-          </button>
-        ) : (
-          <span className="text-[10px] text-sage-800/70 bg-sage-100 px-2.5 py-1.5 rounded-lg border border-sage-200 text-right">
-            Modo Cerimonial
-          </span>
-        )}
+      {/* Main Section Switcher: Photos vs Challenges */}
+      <div className="grid grid-cols-2 gap-2 bg-sage-200/70 p-1 rounded-2xl">
+        <button
+          type="button"
+          onClick={() => setActiveTab('photos')}
+          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'photos'
+              ? 'bg-white text-sage-900 shadow-xs'
+              : 'text-sage-800 hover:text-sage-900'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Fotos ({posts.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('challenges')}
+          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'challenges'
+              ? 'bg-white text-sage-900 shadow-xs'
+              : 'text-sage-800 hover:text-sage-900'
+          }`}
+        >
+          <Trophy className="w-3.5 h-3.5 text-gold-500" />
+          <span>Desafios ({challenges.length})</span>
+        </button>
       </div>
 
-      {/* Posts Moderation List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-sage-800/80">
-            Fila de Moderação
-          </h4>
-          <span className="text-[11px] text-sage-800/60">
-            {posts.filter((p) => p.isApproved).length} aprovadas /{' '}
-            {posts.filter((p) => !p.isApproved).length} ocultas
-          </span>
-        </div>
-
-        {isLoading ? (
-          <p className="text-xs text-center text-sage-800/60 py-6">
-            Carregando fila de publicações...
-          </p>
-        ) : posts.length === 0 ? (
-          <div className="p-8 text-center text-xs text-sage-800/60 bg-white rounded-2xl border border-sage-200 shadow-xs">
-            Nenhuma foto no sistema no momento.
-          </div>
-        ) : (
-          posts.map((post) => (
-            <div
-              key={post.id}
-              className={`p-3 rounded-2xl border transition-all flex items-center gap-3 bg-white shadow-2xs ${
-                post.isApproved
-                  ? 'border-sage-200'
-                  : 'border-rose-300 bg-rose-50/20'
-              }`}
-            >
-              <div className="w-14 h-14 rounded-xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
-                <img
-                  src={post.mediaUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0 space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <h5 className="text-xs font-bold text-sage-900 truncate">
-                    {post.authorName}
-                  </h5>
-                  <span
-                    className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
-                      post.isApproved
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-rose-100 text-rose-800'
-                    }`}
-                  >
-                    {post.isApproved ? 'No Telão' : 'Oculto'}
-                  </span>
-                </div>
-
-                {post.caption && (
-                  <p className="text-[11px] text-sage-800/80 truncate">
-                    {post.caption}
-                  </p>
-                )}
-
-                <p className="text-[10px] text-sage-800/50">
-                  {new Date(post.createdAt).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+      {activeTab === 'photos' ? (
+        <>
+          {/* Stats & Album Actions */}
+          <div className="bg-white rounded-2xl p-4 border border-sage-200 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-sage-800/70">
+                  Total de Fotos Enviadas
                 </p>
+                <h3 className="font-serif text-2xl font-bold text-sage-900">
+                  {posts.length}
+                </h3>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Moderate: Toggle Approval (Available to Admin & Moderator) */}
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleToggleApproval(post.id)}
-                  title={
-                    post.isApproved ? 'Ocultar do Telão' : 'Aprovar no Telão'
-                  }
-                  className={`p-2 rounded-xl transition-colors ${
-                    post.isApproved
-                      ? 'text-sage-800 hover:bg-sage-100'
-                      : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                  }`}
+                  type="button"
+                  disabled={isDownloadingAlbum || posts.length === 0}
+                  onClick={handleDownloadAlbum}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold transition-colors shadow-2xs"
                 >
-                  {post.isApproved ? (
-                    <EyeOff className="w-4 h-4" />
+                  {isDownloadingAlbum ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>
+                        {downloadProgress
+                          ? `${downloadProgress.current}/${downloadProgress.total}`
+                          : 'Baixando...'}
+                      </span>
+                    </>
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Baixar Álbum</span>
+                    </>
                   )}
                 </button>
 
-                {/* Permanent Deletion: Restricted strictly to Admin role */}
                 {isAdmin && (
                   <button
-                    onClick={() => handleDeletePost(post.id)}
-                    title="Excluir Definitivamente (Apenas Admin)"
-                    className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                    type="button"
+                    onClick={handleClearAll}
+                    title="Apenas Admin: apaga todos os posts de teste"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200 transition-colors shadow-2xs"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Zerar</span>
                   </button>
                 )}
               </div>
             </div>
-          ))
-        )}
-      </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 pt-2 border-t border-sage-100">
+              <button
+                type="button"
+                onClick={() => setPhotoFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                  photoFilter === 'all'
+                    ? 'bg-sage-900 text-white'
+                    : 'bg-sage-100 text-sage-800 hover:bg-sage-200'
+                }`}
+              >
+                Todas ({posts.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhotoFilter('approved')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                  photoFilter === 'approved'
+                    ? 'bg-emerald-700 text-white'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                }`}
+              >
+                Aprovadas ({posts.filter((p) => p.isApproved).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhotoFilter('hidden')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                  photoFilter === 'hidden'
+                    ? 'bg-rose-700 text-white'
+                    : 'bg-rose-50 text-rose-800 hover:bg-rose-100'
+                }`}
+              >
+                Ocultas ({posts.filter((p) => !p.isApproved).length})
+              </button>
+            </div>
+          </div>
+
+          {/* Posts Moderation List */}
+          <div className="space-y-3">
+            {isLoading ? (
+              <p className="text-xs text-center text-sage-800/60 py-6">
+                Carregando fila de publicações...
+              </p>
+            ) : filteredPosts.length === 0 ? (
+              <div className="p-8 text-center text-xs text-sage-800/60 bg-white rounded-2xl border border-sage-200 shadow-xs">
+                Nenhuma foto encontrada neste filtro.
+              </div>
+            ) : (
+              filteredPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className={`p-3 rounded-2xl border transition-all flex items-center gap-3 bg-white shadow-2xs ${
+                    post.isApproved
+                      ? 'border-sage-200'
+                      : 'border-rose-300 bg-rose-50/20'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
+                    <img
+                      src={post.mediaUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <h5 className="text-xs font-bold text-sage-900 truncate">
+                        {post.authorName}
+                      </h5>
+                      <span
+                        className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
+                          post.isApproved
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}
+                      >
+                        {post.isApproved ? 'No Telão' : 'Oculto'}
+                      </span>
+                    </div>
+
+                    {post.caption && (
+                      <p className="text-[11px] text-sage-800/80 truncate">
+                        {post.caption}
+                      </p>
+                    )}
+
+                    <p className="text-[10px] text-sage-800/50">
+                      {new Date(post.createdAt).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => handleToggleApproval(post.id)}
+                      title={
+                        post.isApproved
+                          ? 'Ocultar do Telão'
+                          : 'Aprovar no Telão'
+                      }
+                      className={`p-2 rounded-xl transition-colors ${
+                        post.isApproved
+                          ? 'text-sage-800 hover:bg-sage-100'
+                          : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {post.isApproved ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        title="Excluir Definitivamente (Apenas Admin)"
+                        className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      ) : (
+        /* CHALLENGES MANAGEMENT TAB */
+        <div className="space-y-4">
+          {/* Create Challenge Form */}
+          <form
+            onSubmit={handleCreateChallenge}
+            className="bg-white rounded-2xl p-4 border border-sage-200 shadow-xs space-y-3"
+          >
+            <h4 className="text-xs font-bold uppercase tracking-wider text-sage-900 flex items-center gap-1.5">
+              <Plus className="w-4 h-4 text-gold-500" />
+              <span>Criar Novo Desafio</span>
+            </h4>
+
+            <div className="grid grid-cols-4 gap-2">
+              <div>
+                <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+                  Ícone
+                </label>
+                <input
+                  type="text"
+                  maxLength={4}
+                  value={newChallengeIcon}
+                  onChange={(e) => setNewChallengeIcon(e.target.value)}
+                  placeholder="🥂"
+                  className="w-full px-2.5 py-2 rounded-xl border border-sage-200 text-center text-base bg-white"
+                />
+              </div>
+              <div className="col-span-3">
+                <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+                  Título do Desafio
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newChallengeTitle}
+                  onChange={(e) => setNewChallengeTitle(e.target.value)}
+                  placeholder="Ex: Selfie com os Noivos"
+                  className="w-full px-3 py-2 rounded-xl border border-sage-200 text-xs bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+                Descrição para os Convidados
+              </label>
+              <input
+                type="text"
+                required
+                value={newChallengeDesc}
+                onChange={(e) => setNewChallengeDesc(e.target.value)}
+                placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
+                className="w-full px-3 py-2 rounded-xl border border-sage-200 text-xs bg-white"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isCreatingChallenge}
+              className="w-full py-2.5 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            >
+              {isCreatingChallenge ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Salvando...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Desafio à Festa</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Existing Challenges List */}
+          <div className="space-y-2.5">
+            {challenges.map((challenge) => (
+              <div
+                key={challenge.id}
+                className={`p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-2xs ${
+                  challenge.isActive
+                    ? 'border-sage-200'
+                    : 'border-sage-200/50 opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-sage-50 border border-sage-200 flex items-center justify-center text-xl shrink-0">
+                    {challenge.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h5 className="text-xs font-bold text-sage-900 truncate">
+                        {challenge.title}
+                      </h5>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                          challenge.isActive
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {challenge.isActive ? 'Ativo' : 'Pausado'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-sage-800/70 truncate">
+                      {challenge.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleChallenge(challenge.id)}
+                    title={
+                      challenge.isActive ? 'Pausar Desafio' : 'Ativar Desafio'
+                    }
+                    className="p-2 rounded-xl text-sage-800 hover:bg-sage-100 transition-colors"
+                  >
+                    {challenge.isActive ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteChallenge(challenge.id)}
+                      title="Excluir Desafio"
+                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
