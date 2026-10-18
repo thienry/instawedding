@@ -1,4 +1,4 @@
-import { buildClearCookieHeader } from '@/api/_lib/security'
+import { buildClearCookieHeader } from '../_lib/security.js'
 
 export async function POST(): Promise<Response> {
   return new Response(JSON.stringify({ success: true }), {

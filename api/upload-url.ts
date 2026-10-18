@@ -57,8 +57,7 @@ export async function POST(req: Request): Promise<Response> {
     const accessKeyId = process.env.R2_ACCESS_KEY_ID
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
     const bucketName = process.env.R2_BUCKET_NAME || 'instawedding'
-    const publicDomain =
-      process.env.R2_PUBLIC_DOMAIN || 'https://media.instawedding.local'
+    const publicDomain = process.env.R2_PUBLIC_DOMAIN || '/media'
 
     if (!accountId || !accessKeyId || !secretAccessKey) {
       return new Response(

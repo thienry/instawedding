@@ -8,9 +8,9 @@ import {
   createOtpChallengeToken,
   getOtpTokenFromRequest,
   verifyOtpChallenge,
-} from '@/api/_lib/security'
+} from '../_lib/security.js'
 
-import type { UserRole } from '@/api/_lib/security'
+import type { UserRole } from '../_lib/security.js'
 
 interface OtpRequestBody {
   action: 'request' | 'verify'

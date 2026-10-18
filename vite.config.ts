@@ -17,4 +17,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/media': {
+        target: 'https://pub-0d40d8c10eb24e8388e286f86efcdb44.r2.dev',
+        changeOrigin: true,
+        rewrite: (reqPath) => reqPath.replace(/^\/media/, ''),
+      },
+    },
+  },
 })

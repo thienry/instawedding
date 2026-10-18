@@ -1,4 +1,4 @@
-import { getAdminTokenFromRequest, verifyAdminToken } from '@/api/_lib/security'
+import { getAdminTokenFromRequest, verifyAdminToken } from '../_lib/security.js'
 
 export async function POST(): Promise<Response> {
   return new Response(
