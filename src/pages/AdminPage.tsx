@@ -375,7 +375,7 @@ export function AdminPage() {
           </h2>
           <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
             {otpStep === 'email'
-              ? 'Painel exclusivo para os Noivos (Administração) e Cerimonial (Moderação ao vivo).'
+              ? 'Painel exclusivo para os Noivos (Administração) e Cerimonial (Moderação).'
               : `Digite o código de 6 dígitos enviado para ${emailInput}.`}
           </p>
         </div>
@@ -572,38 +572,38 @@ export function AdminPage() {
   const isAdmin = currentUser.role === 'admin'
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Top Bar with User Info & Explicit Logout */}
-      <div className="bg-white rounded-2xl p-4 border border-sage-200 shadow-xs flex items-center justify-between gap-3">
-        <div className="flex items-center space-x-3 min-w-0">
+      <div className="bg-white rounded-3xl p-5 border border-sage-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center space-x-3.5 min-w-0">
           {currentUser.avatarUrl ? (
             <img
               src={currentUser.avatarUrl}
               alt={currentUser.name}
-              className="w-10 h-10 rounded-full border border-sage-200 object-cover shrink-0"
+              className="w-12 h-12 rounded-full border border-sage-200 object-cover shrink-0"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-900 font-bold flex items-center justify-center border border-sage-200 text-sm shrink-0">
+            <div className="w-12 h-12 rounded-full bg-sage-100 text-sage-900 font-bold flex items-center justify-center border border-sage-200 text-base shrink-0">
               {currentUser.name.charAt(0).toUpperCase()}
             </div>
           )}
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-xs font-bold text-sage-900 leading-tight truncate">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-sage-900 leading-tight truncate">
                 {currentUser.name}
               </h3>
               <span
-                className={`text-[9px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 ${
+                className={`text-xs font-bold px-2.5 py-0.5 rounded-md shrink-0 ${
                   isAdmin
-                    ? 'bg-gold-500/20 text-gold-600'
-                    : 'bg-sage-200 text-sage-850'
+                    ? 'bg-gold-500/20 text-gold-500'
+                    : 'bg-sage-200 text-sage-800'
                 }`}
               >
                 {isAdmin ? '👑 Admin' : '🛡️ Moderador'}
               </span>
             </div>
-            <p className="text-[11px] text-sage-800/60 leading-tight truncate">
+            <p className="text-xs sm:text-sm text-sage-800/65 leading-tight truncate mt-0.5">
               {currentUser.email}
             </p>
           </div>
@@ -612,53 +612,53 @@ export function AdminPage() {
         <button
           onClick={handleLogout}
           title="Encerrar sessão e deslogar"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors shadow-2xs shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition-colors shadow-2xs shrink-0"
         >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Sair</span>
+          <LogOut className="w-4 h-4" />
+          <span>Sair da Conta</span>
         </button>
       </div>
 
       {/* Navigation Return */}
-      <div className="flex items-center justify-between pb-1">
+      <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-1.5 text-xs text-sage-800 hover:text-sage-900 transition-colors font-medium"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="w-4 h-4" />
           <span>Voltar para o Feed</span>
         </button>
 
-        <span className="text-xs text-sage-800/70 flex items-center gap-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Sessão Segura</span>
+        <span className="text-xs sm:text-sm text-sage-800/75 flex items-center gap-1.5 font-medium">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Sessão Administrativa Segura</span>
         </span>
       </div>
 
       {/* Main Section Switcher: Photos vs Challenges */}
-      <div className="grid grid-cols-2 gap-2 bg-sage-200/70 p-1 rounded-2xl">
+      <div className="grid grid-cols-2 gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl max-w-md">
         <button
           type="button"
           onClick={() => setActiveTab('photos')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'photos'
               ? 'bg-white text-sage-900 shadow-xs'
               : 'text-sage-800 hover:text-sage-900'
           }`}
         >
-          <ImageIcon className="w-3.5 h-3.5" />
+          <ImageIcon className="w-4 h-4" />
           <span>Fotos ({posts.length})</span>
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('challenges')}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'challenges'
               ? 'bg-white text-sage-900 shadow-xs'
               : 'text-sage-800 hover:text-sage-900'
           }`}
         >
-          <Trophy className="w-3.5 h-3.5 text-gold-500" />
+          <Trophy className="w-4 h-4 text-gold-500" />
           <span>Desafios ({challenges.length})</span>
         </button>
       </div>
@@ -666,27 +666,27 @@ export function AdminPage() {
       {activeTab === 'photos' ? (
         <>
           {/* Stats & Album Actions */}
-          <div className="bg-white rounded-2xl p-4 border border-sage-200 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs text-sage-800/70">
-                  Total de Fotos Enviadas
+                <p className="text-sm text-sage-800/75 font-medium">
+                  Total de Fotos Enviadas na Festa
                 </p>
-                <h3 className="font-serif text-2xl font-bold text-sage-900">
+                <h3 className="font-serif text-3xl font-bold text-sage-900 mt-0.5">
                   {posts.length}
                 </h3>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   disabled={isDownloadingAlbum || posts.length === 0}
                   onClick={handleDownloadAlbum}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold transition-colors shadow-2xs"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors shadow-xs"
                 >
                   {isDownloadingAlbum ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       <span>
                         {downloadProgress
                           ? `${downloadProgress.current}/${downloadProgress.total}`
@@ -695,8 +695,8 @@ export function AdminPage() {
                     </>
                   ) : (
                     <>
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Baixar Álbum</span>
+                      <Download className="w-4 h-4" />
+                      <span>Baixar Álbum Completo</span>
                     </>
                   )}
                 </button>
@@ -706,21 +706,21 @@ export function AdminPage() {
                     type="button"
                     onClick={handleClearAll}
                     title="Apenas Admin: apaga todos os posts de teste"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium border border-rose-200 transition-colors shadow-2xs"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold border border-rose-200 transition-colors shadow-2xs"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Zerar</span>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Zerar Feed</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 pt-2 border-t border-sage-100">
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-sage-100">
               <button
                 type="button"
                 onClick={() => setPhotoFilter('all')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
                   photoFilter === 'all'
                     ? 'bg-sage-900 text-white'
                     : 'bg-sage-100 text-sage-800 hover:bg-sage-200'
@@ -731,7 +731,7 @@ export function AdminPage() {
               <button
                 type="button"
                 onClick={() => setPhotoFilter('approved')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
                   photoFilter === 'approved'
                     ? 'bg-emerald-700 text-white'
                     : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
@@ -742,7 +742,7 @@ export function AdminPage() {
               <button
                 type="button"
                 onClick={() => setPhotoFilter('hidden')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
                   photoFilter === 'hidden'
                     ? 'bg-rose-700 text-white'
                     : 'bg-rose-50 text-rose-800 hover:bg-rose-100'
@@ -753,116 +753,118 @@ export function AdminPage() {
             </div>
           </div>
 
-          {/* Posts Moderation List */}
-          <div className="space-y-3">
+          {/* Posts Moderation Grid */}
+          <div>
             {isLoading ? (
-              <p className="text-xs text-center text-sage-800/60 py-6">
+              <p className="text-sm text-center text-sage-800/60 py-8">
                 Carregando fila de publicações...
               </p>
             ) : filteredPosts.length === 0 ? (
-              <div className="p-8 text-center text-xs text-sage-800/60 bg-white rounded-2xl border border-sage-200 shadow-xs">
+              <div className="p-10 text-center text-sm text-sage-800/65 bg-white rounded-3xl border border-sage-200 shadow-xs">
                 Nenhuma foto encontrada neste filtro.
               </div>
             ) : (
-              filteredPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className={`p-3 rounded-2xl border transition-all flex items-center gap-3 bg-white shadow-2xs ${
-                    post.isApproved
-                      ? 'border-sage-200'
-                      : 'border-rose-300 bg-rose-50/20'
-                  }`}
-                >
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
-                    <img
-                      src={post.mediaUrl}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <h5 className="text-xs font-bold text-sage-900 truncate">
-                        {post.authorName}
-                      </h5>
-                      <span
-                        className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
-                          post.isApproved
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-rose-100 text-rose-800'
-                        }`}
-                      >
-                        {post.isApproved ? 'No Telão' : 'Oculto'}
-                      </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className={`p-4 rounded-3xl border transition-all flex items-center gap-4 bg-white shadow-2xs ${
+                      post.isApproved
+                        ? 'border-sage-200'
+                        : 'border-rose-300 bg-rose-50/25'
+                    }`}
+                  >
+                    <div className="w-18 h-18 rounded-2xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
+                      <img
+                        src={post.mediaUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
-                    {post.caption && (
-                      <p className="text-[11px] text-sage-800/80 truncate">
-                        {post.caption}
-                      </p>
-                    )}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h5 className="text-sm sm:text-base font-bold text-sage-900 truncate">
+                          {post.authorName}
+                        </h5>
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                            post.isApproved
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}
+                        >
+                          {post.isApproved ? 'No Telão' : 'Oculto'}
+                        </span>
+                      </div>
 
-                    <p className="text-[10px] text-sage-800/50">
-                      {new Date(post.createdAt).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => handleToggleApproval(post.id)}
-                      title={
-                        post.isApproved
-                          ? 'Ocultar do Telão'
-                          : 'Aprovar no Telão'
-                      }
-                      className={`p-2 rounded-xl transition-colors ${
-                        post.isApproved
-                          ? 'text-sage-800 hover:bg-sage-100'
-                          : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {post.isApproved ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
+                      {post.caption && (
+                        <p className="text-xs sm:text-sm text-sage-800/80 truncate">
+                          {post.caption}
+                        </p>
                       )}
-                    </button>
 
-                    {isAdmin && (
+                      <p className="text-xs text-sage-800/55">
+                        {new Date(post.createdAt).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
-                        onClick={() => handleDeletePost(post.id)}
-                        title="Excluir Definitivamente (Apenas Admin)"
-                        className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                        onClick={() => handleToggleApproval(post.id)}
+                        title={
+                          post.isApproved
+                            ? 'Ocultar do Telão'
+                            : 'Aprovar no Telão'
+                        }
+                        className={`p-2.5 rounded-xl transition-colors ${
+                          post.isApproved
+                            ? 'text-sage-800 hover:bg-sage-100'
+                            : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                        }`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {post.isApproved ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </button>
-                    )}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          title="Excluir Definitivamente (Apenas Admin)"
+                          className="p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </>
       ) : (
         /* CHALLENGES MANAGEMENT TAB */
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Create Challenge Form */}
           <form
             onSubmit={handleCreateChallenge}
-            className="bg-white rounded-2xl p-4 border border-sage-200 shadow-xs space-y-3"
+            className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4 max-w-2xl"
           >
-            <h4 className="text-xs font-bold uppercase tracking-wider text-sage-900 flex items-center gap-1.5">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
               <Plus className="w-4 h-4 text-gold-500" />
               <span>Criar Novo Desafio</span>
             </h4>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               <div>
-                <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+                <label className="text-xs font-bold text-sage-800 block mb-1.5">
                   Ícone
                 </label>
                 <input
@@ -871,11 +873,11 @@ export function AdminPage() {
                   value={newChallengeIcon}
                   onChange={(e) => setNewChallengeIcon(e.target.value)}
                   placeholder="🥂"
-                  className="w-full px-2.5 py-2 rounded-xl border border-sage-200 text-center text-base bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-center text-lg bg-white"
                 />
               </div>
               <div className="col-span-3">
-                <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+                <label className="text-xs font-bold text-sage-800 block mb-1.5">
                   Título do Desafio
                 </label>
                 <input
@@ -884,13 +886,13 @@ export function AdminPage() {
                   value={newChallengeTitle}
                   onChange={(e) => setNewChallengeTitle(e.target.value)}
                   placeholder="Ex: Selfie com os Noivos"
-                  className="w-full px-3 py-2 rounded-xl border border-sage-200 text-xs bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-sage-200 text-sm bg-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-semibold text-sage-800 block mb-1">
+              <label className="text-xs font-bold text-sage-800 block mb-1.5">
                 Descrição para os Convidados
               </label>
               <input
@@ -899,51 +901,51 @@ export function AdminPage() {
                 value={newChallengeDesc}
                 onChange={(e) => setNewChallengeDesc(e.target.value)}
                 placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
-                className="w-full px-3 py-2 rounded-xl border border-sage-200 text-xs bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-sage-200 text-sm bg-white"
               />
             </div>
 
             <button
               type="submit"
               disabled={isCreatingChallenge}
-              className="w-full py-2.5 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-3 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
             >
               {isCreatingChallenge ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Salvando...</span>
                 </>
               ) : (
                 <>
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>Adicionar Desafio à Festa</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Existing Challenges List */}
-          <div className="space-y-2.5">
+          {/* Existing Challenges Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {challenges.map((challenge) => (
               <div
                 key={challenge.id}
-                className={`p-3.5 rounded-2xl border bg-white flex items-center justify-between gap-3 shadow-2xs ${
+                className={`p-4 rounded-3xl border bg-white flex items-center justify-between gap-4 shadow-2xs ${
                   challenge.isActive
                     ? 'border-sage-200'
                     : 'border-sage-200/50 opacity-60'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-sage-50 border border-sage-200 flex items-center justify-center text-xl shrink-0">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-sage-50 border border-sage-200 flex items-center justify-center text-2xl shrink-0">
                     {challenge.icon}
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <h5 className="text-xs font-bold text-sage-900 truncate">
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <h5 className="text-sm sm:text-base font-bold text-sage-900 truncate">
                         {challenge.title}
                       </h5>
                       <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                           challenge.isActive
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-slate-200 text-slate-700'
@@ -952,7 +954,7 @@ export function AdminPage() {
                         {challenge.isActive ? 'Ativo' : 'Pausado'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-sage-800/70 truncate">
+                    <p className="text-xs sm:text-sm text-sage-800/75 truncate">
                       {challenge.description}
                     </p>
                   </div>
@@ -965,12 +967,12 @@ export function AdminPage() {
                     title={
                       challenge.isActive ? 'Pausar Desafio' : 'Ativar Desafio'
                     }
-                    className="p-2 rounded-xl text-sage-800 hover:bg-sage-100 transition-colors"
+                    className="p-2.5 rounded-xl text-sage-800 hover:bg-sage-100 transition-colors"
                   >
                     {challenge.isActive ? (
-                      <EyeOff className="w-4 h-4" />
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
 
@@ -979,9 +981,9 @@ export function AdminPage() {
                       type="button"
                       onClick={() => handleDeleteChallenge(challenge.id)}
                       title="Excluir Desafio"
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
+                      className="p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   )}
                 </div>

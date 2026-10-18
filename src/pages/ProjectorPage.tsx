@@ -15,6 +15,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { QrCodeSvg } from '@/components/common/QrCodeSvg'
 import {
   getPostRepository,
@@ -33,6 +34,10 @@ export function ProjectorPage() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isControlsVisible, setIsControlsVisible] = useState(true)
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+
+  useEffect(() => {
+    document.title = 'Telão Ao Vivo | Casamento de Thiago & Priscila'
+  }, [])
   const [newPostAlert, setNewPostAlert] = useState<Post | null>(null)
 
   const controlsTimeoutRef = useRef<number | null>(null)
@@ -158,7 +163,7 @@ export function ProjectorPage() {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="min-h-screen w-screen bg-[#1A281E] text-sage-50 overflow-hidden relative select-none flex flex-col justify-between"
+      className="h-dvh w-full bg-[#1A281E] text-sage-50 overflow-hidden relative select-none flex flex-col justify-between"
     >
       {/* Ambient background decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gold-400 via-transparent to-transparent" />
@@ -167,7 +172,7 @@ export function ProjectorPage() {
 
       {/* Top Wedding Header */}
       <header
-        className={`relative z-30 px-8 py-5 flex items-center justify-between transition-opacity duration-500 bg-gradient-to-b from-[#142017]/90 to-transparent ${
+        className={`shrink-0 relative z-30 px-6 lg:px-8 py-3.5 flex items-center justify-between transition-opacity duration-500 bg-gradient-to-b from-[#142017]/90 to-transparent ${
           isControlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -179,12 +184,14 @@ export function ProjectorPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
+          <img
+            src="/favicon.svg"
+            alt="Logo Thiago & Priscila"
+            className="w-11 h-11 rounded-xl shadow-md"
+          />
           <div>
             <h1 className="font-serif text-2xl lg:text-3xl font-bold tracking-wide text-white flex items-center gap-2.5">
               <span>Thiago &amp; Priscila</span>
-              <span className="text-[11px] font-sans font-medium uppercase tracking-widest text-gold-400 border border-gold-400/40 px-2.5 py-0.5 rounded-full bg-gold-400/10">
-                Ao Vivo
-              </span>
             </h1>
             <p className="text-xs text-sage-200/80 font-sans tracking-wider">
               Mural de Memórias &amp; Desafios da Festa
@@ -269,11 +276,11 @@ export function ProjectorPage() {
       )}
 
       {/* Main Wedding Photo Showcase */}
-      <main className="flex-1 flex items-center justify-center p-4 lg:p-10 relative z-10">
+      <main className="flex-1 min-h-0 flex items-center justify-center px-4 py-2 lg:px-10 lg:py-3 relative z-10 overflow-hidden">
         {currentPost ? (
-          <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#FAF8F5] text-sage-900 p-6 lg:p-8 rounded-3xl shadow-2xl border border-gold-400/40 transition-all duration-700">
+          <div className="max-w-5xl w-full max-h-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center bg-[#FAF8F5] text-sage-900 p-5 lg:p-6 rounded-3xl shadow-2xl border border-gold-400/40 transition-all duration-700">
             {/* Fine Art Photo Frame (Uncropped with blurred backdrop) */}
-            <div className="lg:col-span-7 aspect-4/3 rounded-2xl overflow-hidden bg-slate-950 shadow-md relative border border-sage-200/80 flex items-center justify-center">
+            <div className="lg:col-span-7 aspect-4/3 max-h-[calc(100dvh-15rem)] w-full rounded-2xl overflow-hidden bg-slate-950 shadow-md relative border border-sage-200/80 flex items-center justify-center">
               <img
                 src={currentPost.mediaUrl}
                 alt=""
@@ -311,9 +318,16 @@ export function ProjectorPage() {
                   <span className="text-[11px] text-gold-500 uppercase tracking-widest font-bold">
                     Momento registrado por
                   </span>
-                  <h2 className="font-serif text-3xl lg:text-4xl font-bold text-sage-900 tracking-tight mt-1">
-                    {currentPost.authorName}
-                  </h2>
+                  <div className="flex items-center gap-3.5 mt-1.5">
+                    <AuthorAvatar
+                      name={currentPost.authorName}
+                      avatarUrl={currentPost.authorAvatarUrl}
+                      size="lg"
+                    />
+                    <h2 className="font-serif text-3xl lg:text-4xl font-bold text-sage-900 tracking-tight truncate">
+                      {currentPost.authorName}
+                    </h2>
+                  </div>
                 </div>
 
                 {currentPost.caption ? (
@@ -358,14 +372,14 @@ export function ProjectorPage() {
             </h2>
             <p className="text-xs text-sage-800/80 leading-relaxed">
               Aponte a câmera do seu celular para o QR Code acima para tirar uma
-              foto agora e aparecer no telão ao vivo!
+              foto agora e aparecer no telão!
             </p>
           </div>
         )}
       </main>
 
       {/* Bottom Thumbnails Strip & Real Scannable QR Code Callout */}
-      <footer className="relative z-20 px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-t from-[#142017]/95 via-[#142017]/60 to-transparent">
+      <footer className="shrink-0 relative z-20 px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-t from-[#142017]/95 via-[#142017]/60 to-transparent">
         {/* Thumbnails row */}
         <div className="flex items-center gap-2.5 overflow-x-auto max-w-2xl py-1 scrollbar-none">
           {posts.slice(0, 10).map((post, idx) => (
@@ -399,7 +413,7 @@ export function ProjectorPage() {
           </div>
           <div>
             <p className="text-xs font-bold font-serif text-sage-900 flex items-center gap-1">
-              <span>Participe do Mural Ao Vivo</span>
+              <span>Participe do Mural</span>
               <Sparkles className="w-3.5 h-3.5 text-gold-500" />
             </p>
             <p className="text-[11px] text-sage-800/80 font-sans">

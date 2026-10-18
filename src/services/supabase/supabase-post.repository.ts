@@ -6,6 +6,7 @@ import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
 interface SupabasePostRow {
   id: string
   author_name: string
+  author_avatar_url?: string | null
   media_url: string
   caption: string | null
   challenge_id: number | null
@@ -23,14 +24,15 @@ interface SupabasePostRow {
   } | null
 }
 
+const POST_SELECT_QUERY =
+  '*, challenges(id, title, description, icon, is_active, created_at)'
+
 export class SupabasePostRepository implements PostRepository {
   async getPosts(): Promise<Post[]> {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('posts')
-      .select(
-        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
-      )
+      .select(POST_SELECT_QUERY)
       .eq('is_approved', true)
       .order('created_at', { ascending: false })
 
@@ -43,23 +45,40 @@ export class SupabasePostRepository implements PostRepository {
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const supabase = getSupabaseClient()
+    const basePayload = {
+      author_name: dto.authorName.trim(),
+      media_url: dto.mediaUrl,
+      caption: dto.caption?.trim() || null,
+      challenge_id: dto.challengeId ?? null,
+      client_session_id: dto.clientSessionId || 'anonymous',
+    }
+
     const { data, error } = await supabase
       .from('posts')
       .insert({
-        author_name: dto.authorName.trim(),
-        media_url: dto.mediaUrl,
-        caption: dto.caption?.trim() || null,
-        challenge_id: dto.challengeId ?? null,
-        client_session_id: dto.clientSessionId || 'anonymous',
+        ...basePayload,
+        author_avatar_url: dto.authorAvatarUrl ?? null,
       })
-      .select(
-        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
-      )
+      .select(POST_SELECT_QUERY)
       .single()
 
-    if (error || !data) {
-      throw new Error(
-        `Failed to create post in Supabase: ${error?.message ?? 'Unknown error'}`
+    if (error) {
+      const fallbackResult = await supabase
+        .from('posts')
+        .insert(basePayload)
+        .select(POST_SELECT_QUERY)
+        .single()
+
+      if (fallbackResult.error || !fallbackResult.data) {
+        throw new Error(
+          `Failed to create post in Supabase: ${
+            fallbackResult.error?.message ?? error.message
+          }`
+        )
+      }
+
+      return this.mapRowToPost(
+        fallbackResult.data as unknown as SupabasePostRow
       )
     }
 
@@ -134,9 +153,7 @@ export class SupabasePostRepository implements PostRepository {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('posts')
-      .select(
-        'id, author_name, media_url, caption, challenge_id, client_session_id, likes_count, is_approved, created_at, challenges(id, title, description, icon, is_active, created_at)'
-      )
+      .select(POST_SELECT_QUERY)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -182,6 +199,7 @@ export class SupabasePostRepository implements PostRepository {
     return {
       id: row.id,
       authorName: row.author_name,
+      authorAvatarUrl: row.author_avatar_url ?? null,
       mediaUrl: row.media_url,
       caption: row.caption,
       challengeId: row.challenge_id,

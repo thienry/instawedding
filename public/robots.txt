@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /challenges
+Allow: /capture
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://casamento-thiago-e-priscila.vercel.app/sitemap.xml

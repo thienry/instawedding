@@ -1,6 +1,8 @@
 import { Download, Heart, Share2, Sparkles, X } from 'lucide-react'
 import { useEffect } from 'react'
 
+import { AuthorAvatar } from '@/components/common/AuthorAvatar'
+
 import type { Post } from '@/types/domain'
 
 interface PhotoLightboxModalProps {
@@ -44,9 +46,12 @@ export function PhotoLightboxModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-white/15 text-white font-serif font-bold text-sm flex items-center justify-center border border-white/25">
-            {post.authorName.charAt(0).toUpperCase()}
-          </div>
+          <AuthorAvatar
+            name={post.authorName}
+            avatarUrl={post.authorAvatarUrl}
+            sizeClassName="w-10 h-10 text-sm"
+            fallbackClassName="bg-white/15 text-white border border-white/25"
+          />
           <div>
             <h3 className="text-sm font-bold leading-tight">
               {post.authorName}

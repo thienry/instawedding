@@ -1,9 +1,13 @@
 import {
+  Award,
   Camera,
   Download,
   Flame,
   Heart,
+  LayoutGrid,
+  LayoutList,
   Loader2,
+  LogOut,
   Maximize2,
   RefreshCw,
   Share2,
@@ -17,18 +21,21 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { GuestNameModal } from '@/components/common/GuestNameModal'
 import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
 import { TermsModal } from '@/components/common/TermsModal'
+import { getGuestAuthService } from '@/services/guest-auth.factory'
 import {
   getPostRepository,
   getRealtimeService,
 } from '@/services/repositories.factory'
 import { getGuestSession } from '@/utils/session'
 
-import type { Post } from '@/types/domain'
+import type { GuestUser, Post } from '@/types/domain'
 
 type FeedFilterTab = 'all' | 'most-liked' | 'challenges' | 'mine'
+type FeedViewMode = 'list' | 'grid'
 
 function formatRelativeTime(isoString: string): string {
   try {
@@ -58,29 +65,70 @@ export function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<FeedFilterTab>('all')
+  const [viewMode, setViewMode] = useState<FeedViewMode>('list')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [postToDelete, setPostToDelete] = useState<Post | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
+  const [authModalReason, setAuthModalReason] = useState<string | undefined>(
+    undefined
+  )
   const [lightboxPostId, setLightboxPostId] = useState<string | null>(null)
   const [heartBurstPostId, setHeartBurstPostId] = useState<string | null>(null)
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isPulling, setIsPulling] = useState(false)
+  const [guestUser, setGuestUser] = useState<GuestUser | null>(() =>
+    getGuestAuthService().getCurrentGuest()
+  )
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   const lastTapMapRef = useRef<Map<string, number>>(new Map())
+  const touchStartYRef = useRef<number | null>(null)
+
+  const PULL_THRESHOLD = 68
+  const MAX_PULL_DISTANCE = 115
 
   const session = getGuestSession()
-  const [guestName, setGuestNameState] = useState(session.guestName)
-
+  const guestAuthService = getGuestAuthService()
   const postRepo = getPostRepository()
   const realtimeService = getRealtimeService()
+
+  const effectiveSessionId = guestUser?.id ?? session.sessionId
+
+  const handleDirectGoogleLogin = async () => {
+    setIsSigningIn(true)
+    try {
+      const result = await guestAuthService.signInWithGoogle('/')
+      if (result.user) {
+        setGuestUser(result.user)
+      }
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  useEffect(() => {
+    setGuestUser(guestAuthService.getCurrentGuest())
+
+    const unsubscribeAuth = guestAuthService.onAuthStateChange((user) => {
+      setGuestUser(user)
+    })
+
+    return () => {
+      unsubscribeAuth()
+    }
+  }, [guestAuthService])
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
       const [fetchedPosts, likedSet] = await Promise.all([
         postRepo.getPosts(),
-        postRepo.getLikedPostIds(session.sessionId),
+        guestUser
+          ? postRepo.getLikedPostIds(effectiveSessionId)
+          : Promise.resolve(new Set<string>()),
       ])
       setPosts(fetchedPosts)
       setLikedPostIds(likedSet)
@@ -88,15 +136,72 @@ export function FeedPage() {
       // Ignore refresh error
     } finally {
       setIsRefreshing(false)
+      setPullDistance(0)
     }
-  }, [postRepo, session.sessionId])
+  }, [effectiveSessionId, guestUser, postRepo])
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (window.scrollY > 5 || isRefreshing) {
+      touchStartYRef.current = null
+      return
+    }
+    const firstTouch = event.touches[0]
+    if (!firstTouch) return
+    touchStartYRef.current = firstTouch.clientY
+    setIsPulling(true)
+  }
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartYRef.current === null || isRefreshing) return
+    if (window.scrollY > 5) {
+      touchStartYRef.current = null
+      setIsPulling(false)
+      setPullDistance(0)
+      return
+    }
+
+    const currentTouch = event.touches[0]
+    if (!currentTouch) return
+    const deltaY = currentTouch.clientY - touchStartYRef.current
+
+    if (deltaY <= 0) {
+      setPullDistance(0)
+      return
+    }
+
+    // Damped elastic curve for natural mobile pull feel
+    const dampedDistance = Math.min(MAX_PULL_DISTANCE, Math.round(deltaY * 0.45))
+    setPullDistance(dampedDistance)
+  }
+
+  const handleTouchEnd = () => {
+    if (touchStartYRef.current === null) return
+    touchStartYRef.current = null
+    setIsPulling(false)
+
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(15)
+        } catch {
+          // Ignore vibration errors on unsupported browsers
+        }
+      }
+      setPullDistance(56)
+      void handleRefresh()
+    } else {
+      setPullDistance(0)
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
 
     Promise.all([
       postRepo.getPosts(),
-      postRepo.getLikedPostIds(session.sessionId),
+      guestUser
+        ? postRepo.getLikedPostIds(effectiveSessionId)
+        : Promise.resolve(new Set<string>()),
     ])
       .then(([fetchedPosts, likedSet]) => {
         if (!isMounted) return
@@ -120,10 +225,18 @@ export function FeedPage() {
       isMounted = false
       unsubscribe()
     }
-  }, [postRepo, realtimeService, session.sessionId])
+  }, [effectiveSessionId, guestUser, postRepo, realtimeService])
 
   const handleToggleLike = useCallback(
     async (postId: string) => {
+      if (!guestUser) {
+        setAuthModalReason(
+          'Conecte sua conta Google para curtir as fotos da festa.'
+        )
+        setIsNameModalOpen(true)
+        return
+      }
+
       const isCurrentlyLiked = likedPostIds.has(postId)
 
       // Optimistic UI update
@@ -145,7 +258,7 @@ export function FeedPage() {
       )
 
       try {
-        const result = await postRepo.toggleLike(postId, session.sessionId)
+        const result = await postRepo.toggleLike(postId, effectiveSessionId)
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId ? { ...p, likesCount: result.likesCount } : p
@@ -161,7 +274,7 @@ export function FeedPage() {
         })
       }
     },
-    [likedPostIds, postRepo, session.sessionId]
+    [effectiveSessionId, guestUser, likedPostIds, postRepo]
   )
 
   const handlePhotoTap = (post: Post) => {
@@ -169,6 +282,13 @@ export function FeedPage() {
     const lastTap = lastTapMapRef.current.get(post.id) ?? 0
     if (now - lastTap < 320) {
       lastTapMapRef.current.set(post.id, 0)
+      if (!guestUser) {
+        setAuthModalReason(
+          'Conecte sua conta Google para curtir as fotos da festa.'
+        )
+        setIsNameModalOpen(true)
+        return
+      }
       setHeartBurstPostId(post.id)
       window.setTimeout(() => {
         setHeartBurstPostId((prev) => (prev === post.id ? null : prev))
@@ -202,7 +322,7 @@ export function FeedPage() {
   }
 
   const handleSharePost = async (post: Post) => {
-    const shareTitle = 'Casamento Thiago & Priscila • InstaWedding'
+    const shareTitle = 'Casamento de Thiago & Priscila'
     const shareText = post.caption
       ? `Foto de ${post.authorName}: "${post.caption}"`
       : `Foto de ${post.authorName} no casamento de Thiago & Priscila!`
@@ -254,18 +374,19 @@ export function FeedPage() {
     } else if (activeTab === 'mine') {
       list = list.filter(
         (p) =>
+          (guestUser && p.clientSessionId === guestUser.id) ||
           (Boolean(p.clientSessionId) &&
             p.clientSessionId === session.sessionId) ||
-          (guestName &&
+          (guestUser &&
             p.authorName.trim().toLowerCase() ===
-              guestName.trim().toLowerCase())
+              guestUser.name.trim().toLowerCase())
       )
     } else if (activeTab === 'most-liked') {
       list.sort((a, b) => b.likesCount - a.likesCount)
     }
 
     return list
-  }, [posts, challengeFilterId, activeTab, session.sessionId, guestName])
+  }, [posts, challengeFilterId, activeTab, session.sessionId, guestUser])
 
   const activeChallengeObj = useMemo(() => {
     if (challengeFilterId === null) return null
@@ -277,323 +398,594 @@ export function FeedPage() {
     [posts, lightboxPostId]
   )
 
+  const totalLikesCount = useMemo(
+    () => posts.reduce((acc, p) => acc + p.likesCount, 0),
+    [posts]
+  )
+
+  const topContributors = useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; avatarUrl: string | null; count: number; likes: number }
+    >()
+    for (const post of posts) {
+      const key = post.authorName.trim().toLowerCase()
+      if (!key) continue
+      const current = map.get(key) ?? {
+        name: post.authorName.trim(),
+        avatarUrl: post.authorAvatarUrl ?? null,
+        count: 0,
+        likes: 0,
+      }
+      if (!current.avatarUrl && post.authorAvatarUrl) {
+        current.avatarUrl = post.authorAvatarUrl
+      }
+      current.count += 1
+      current.likes += post.likesCount
+      map.set(key, current)
+    }
+    return Array.from(map.values())
+      .sort((a, b) => (b.count !== a.count ? b.count - a.count : b.likes - a.likes))
+      .slice(0, 3)
+  }, [posts])
+
+  const pullProgress = Math.min(1, pullDistance / PULL_THRESHOLD)
+
   return (
-    <div className="p-4 space-y-4">
-      {/* Top Banner / Pull to Refresh */}
-      <div className="flex items-center justify-between pb-0.5">
-        <button
-          type="button"
-          onClick={() => setIsNameModalOpen(true)}
-          className="flex items-center gap-1.5 text-xs text-sage-800/80 hover:text-sage-900 font-medium transition-colors"
-        >
-          <User className="w-3.5 h-3.5 text-sage-700" />
-          <span>{guestName ? `Olá, ${guestName}` : 'Identifique-se'}</span>
-        </button>
-
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-1.5 text-xs text-sage-800 hover:text-sage-900 transition-colors p-1"
-        >
+    <div
+      className="p-4 sm:p-6 lg:p-8"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      {/* Mobile Pull-to-Refresh Animated Indicator */}
+      <div
+        aria-live="polite"
+        style={{
+          height: pullDistance > 0 ? `${pullDistance}px` : '0px',
+          opacity: pullDistance > 8 ? Math.min(1, pullDistance / 42) : 0,
+        }}
+        className={`md:hidden flex items-center justify-center overflow-hidden ${
+          isPulling ? '' : 'transition-all duration-300 ease-out'
+        }`}
+      >
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-sage-200 shadow-sm text-xs font-semibold text-sage-900">
           <RefreshCw
-            className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
+            style={
+              !isRefreshing
+                ? { transform: `rotate(${Math.round(pullProgress * 360)}deg)` }
+                : undefined
+            }
+            className={`w-4 h-4 text-gold-500 ${
+              isRefreshing ? 'animate-spin' : 'transition-transform duration-75'
+            }`}
           />
-          <span className="text-[11px]">Atualizar</span>
-        </button>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <button
-          type="button"
-          onClick={() => setActiveTab('all')}
-          className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            activeTab === 'all'
-              ? 'bg-sage-900 text-white shadow-xs'
-              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
-          }`}
-        >
-          Todas ({posts.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('most-liked')}
-          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            activeTab === 'most-liked'
-              ? 'bg-sage-900 text-white shadow-xs'
-              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-amber-500" />
-          <span>Mais Curtidas</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('challenges')}
-          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            activeTab === 'challenges'
-              ? 'bg-sage-900 text-white shadow-xs'
-              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
-          }`}
-        >
-          <Trophy className="w-3.5 h-3.5 text-gold-500" />
-          <span>Desafios</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('mine')}
-          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            activeTab === 'mine'
-              ? 'bg-sage-900 text-white shadow-xs'
-              : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
-          }`}
-        >
-          <Camera className="w-3.5 h-3.5 text-sage-700" />
-          <span>Minhas Fotos</span>
-        </button>
-      </div>
-
-      {/* Active Challenge Filter Pill */}
-      {challengeFilterId !== null && (
-        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-gold-400/15 border border-gold-400/30 text-xs text-sage-900">
-          <div className="flex items-center gap-1.5 font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-gold-500 shrink-0" />
-            <span>
-              Filtrando por desafio:{' '}
-              {activeChallengeObj
-                ? `${activeChallengeObj.icon} ${activeChallengeObj.title}`
-                : `#${challengeFilterId}`}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              searchParams.delete('challengeId')
-              setSearchParams(searchParams)
-            }}
-            className="p-1 rounded-full hover:bg-gold-400/20 text-sage-800"
-            title="Limpar filtro de desafio"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          <span>
+            {isRefreshing
+              ? 'Atualizando mural...'
+              : pullDistance >= PULL_THRESHOLD
+                ? 'Solte para atualizar'
+                : 'Puxe para atualizar'}
+          </span>
         </div>
-      )}
+      </div>
 
-      {/* Feed Content */}
-      {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className="bg-white rounded-2xl overflow-hidden border border-sage-200/60 shadow-xs animate-pulse"
+      <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+        {/* Main Feed Column */}
+        <div className="lg:col-span-8 space-y-5">
+          {/* Top Action & View Mode Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              disabled={isSigningIn}
+              onClick={() => {
+                if (guestUser) {
+                  setAuthModalReason(undefined)
+                  setIsNameModalOpen(true)
+                } else {
+                  void handleDirectGoogleLogin()
+                }
+              }}
+              className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm text-sage-900 hover:bg-sage-100 disabled:opacity-60 font-semibold transition-colors shadow-2xs"
             >
-              <div className="p-3 flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-full bg-sage-200" />
-                <div className="space-y-1.5 flex-1">
-                  <div className="w-24 h-3 bg-sage-200 rounded-sm" />
-                  <div className="w-16 h-2 bg-sage-100 rounded-sm" />
-                </div>
+              {guestUser ? (
+                <>
+                  <AuthorAvatar
+                    name={guestUser.name}
+                    avatarUrl={guestUser.avatarUrl}
+                    size="sm"
+                  />
+                  <span className="truncate max-w-44">
+                    Olá, {guestUser.name.split(' ')[0]}
+                  </span>
+                  <LogOut className="w-3.5 h-3.5 text-sage-800/50 ml-0.5" />
+                </>
+              ) : (
+                <>
+                  {isSigningIn ? (
+                    <Loader2 className="w-4 h-4 text-sage-800 animate-spin" />
+                  ) : (
+                    <User className="w-4 h-4 text-sage-800" />
+                  )}
+                  <span>
+                    {isSigningIn ? 'Conectando...' : 'Entrar com Google'}
+                  </span>
+                </>
+              )}
+            </button>
+
+            <div className="flex items-center gap-2">
+              {/* View Mode Switcher (Editorial List vs 2-Col Grid) */}
+              <div className="hidden sm:flex items-center bg-white border border-sage-200/90 rounded-2xl p-1 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  title="Visualização em Lista"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-sage-900 text-white shadow-2xs'
+                      : 'text-sage-800 hover:bg-sage-100'
+                  }`}
+                >
+                  <LayoutList className="w-4 h-4" />
+                  <span>Lista</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  title="Visualização em Grade"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-sage-900 text-white shadow-2xs'
+                      : 'text-sage-800 hover:bg-sage-100'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span>Grade</span>
+                </button>
               </div>
-              <div className="aspect-4/3 bg-sage-100" />
-              <div className="p-3 space-y-2">
-                <div className="w-12 h-4 bg-sage-200 rounded-sm" />
-                <div className="w-3/4 h-3 bg-sage-100 rounded-sm" />
+
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                <span>Atualizar</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                activeTab === 'all'
+                  ? 'bg-sage-900 text-white shadow-sm'
+                  : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+              }`}
+            >
+              Todas ({posts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('most-liked')}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                activeTab === 'most-liked'
+                  ? 'bg-sage-900 text-white shadow-sm'
+                  : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+              }`}
+            >
+              <Flame className="w-4 h-4 text-amber-500" />
+              <span>Mais Curtidas</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('challenges')}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                activeTab === 'challenges'
+                  ? 'bg-sage-900 text-white shadow-sm'
+                  : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+              }`}
+            >
+              <Trophy className="w-4 h-4 text-gold-500" />
+              <span>Desafios</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('mine')}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                activeTab === 'mine'
+                  ? 'bg-sage-900 text-white shadow-sm'
+                  : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
+              }`}
+            >
+              <Camera className="w-4 h-4 text-sage-700" />
+              <span>Minhas Fotos</span>
+            </button>
+          </div>
+
+          {/* Active Challenge Filter Pill */}
+          {challengeFilterId !== null && (
+            <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-gold-400/15 border border-gold-400/35 text-sm text-sage-900">
+              <div className="flex items-center gap-2 font-semibold">
+                <Sparkles className="w-4 h-4 text-gold-500 shrink-0" />
+                <span>
+                  Filtrando por desafio:{' '}
+                  {activeChallengeObj
+                    ? `${activeChallengeObj.icon} ${activeChallengeObj.title}`
+                    : `#${challengeFilterId}`}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  searchParams.delete('challengeId')
+                  setSearchParams(searchParams)
+                }}
+                className="p-1.5 rounded-full hover:bg-gold-400/20 text-sage-800"
+                title="Limpar filtro de desafio"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Feed Content */}
+          {isLoading ? (
+            <div className="space-y-6">
+              {[1, 2].map((n) => (
+                <div
+                  key={n}
+                  className="bg-white rounded-3xl overflow-hidden border border-sage-200/70 shadow-xs animate-pulse"
+                >
+                  <div className="p-4 flex items-center space-x-3">
+                    <div className="w-11 h-11 rounded-full bg-sage-200" />
+                    <div className="space-y-2 flex-1">
+                      <div className="w-32 h-4 bg-sage-200 rounded-sm" />
+                      <div className="w-20 h-3 bg-sage-100 rounded-sm" />
+                    </div>
+                  </div>
+                  <div className="aspect-4/3 bg-sage-100" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="w-16 h-5 bg-sage-200 rounded-sm" />
+                    <div className="w-3/4 h-4 bg-sage-100 rounded-sm" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 border border-sage-200 text-center space-y-4 shadow-xs">
+              <span className="text-4xl block">📷</span>
+              <h3 className="font-serif text-xl font-bold text-sage-900">
+                {posts.length === 0
+                  ? 'Nenhuma foto publicada ainda'
+                  : 'Nenhuma foto encontrada neste filtro'}
+              </h3>
+              <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
+                {posts.length === 0
+                  ? 'Seja o primeiro a registrar e compartilhar um momento especial da festa de Thiago & Priscila!'
+                  : 'Experimente trocar a aba acima ou publique uma nova foto agora.'}
+              </p>
+              <Link
+                to={
+                  challengeFilterId !== null
+                    ? `/capture?challengeId=${challengeFilterId}`
+                    : '/capture'
+                }
+                className="inline-flex items-center gap-2 mt-2 px-6 py-3 rounded-full bg-sage-900 text-white text-sm font-semibold hover:bg-sage-800 transition-colors shadow-sm"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Tirar Foto Agora</span>
+              </Link>
+            </div>
+          ) : (
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+                  : 'space-y-6'
+              }
+            >
+              {filteredPosts.map((post) => {
+                const isLiked = likedPostIds.has(post.id)
+                const isOwner =
+                  (guestUser && post.clientSessionId === guestUser.id) ||
+                  (Boolean(post.clientSessionId) &&
+                    post.clientSessionId === session.sessionId)
+                const showHeartBurst = heartBurstPostId === post.id
+
+                return (
+                  <article
+                    key={post.id}
+                    className="bg-white rounded-3xl overflow-hidden border border-sage-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Author Header */}
+                      <div className="p-4 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <AuthorAvatar
+                            name={post.authorName}
+                            avatarUrl={post.authorAvatarUrl}
+                            size="lg"
+                          />
+                          <div className="min-w-0">
+                            <h4 className="text-base font-bold text-sage-900 leading-tight truncate">
+                              {post.authorName}
+                            </h4>
+                            <span className="text-xs text-sage-800/65 block mt-0.5">
+                              {formatRelativeTime(post.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {post.challenge && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSearchParams({
+                                  challengeId: String(post.challenge!.id),
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/35 hover:bg-gold-400/25 transition-colors"
+                            >
+                              <span className="text-sm">
+                                {post.challenge.icon}
+                              </span>
+                              <span className="max-w-36 truncate">
+                                {post.challenge.title}
+                              </span>
+                            </button>
+                          )}
+
+                          {/* LGPD Right to Erasure: Owner deletion trigger */}
+                          {isOwner && (
+                            <button
+                              type="button"
+                              onClick={() => setPostToDelete(post)}
+                              title="Excluir minha publicação (LGPD Art. 18)"
+                              className="p-2 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Media Image (Double-tap to like + Full aspect ratio preservation) */}
+                      <div
+                        onClick={() => handlePhotoTap(post)}
+                        className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
+                      >
+                        <img
+                          src={post.mediaUrl}
+                          alt={post.caption || `Foto por ${post.authorName}`}
+                          loading="lazy"
+                          className={
+                            viewMode === 'grid'
+                              ? 'w-full aspect-4/3 object-contain'
+                              : 'w-full max-h-[75vh] object-contain'
+                          }
+                        />
+
+                        {/* Expand to Lightbox Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setLightboxPostId(post.id)
+                          }}
+                          aria-label="Ver em tela cheia"
+                          className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm"
+                        >
+                          <Maximize2 className="w-4 h-4" />
+                        </button>
+
+                        {/* Double-tap Heart Burst Overlay */}
+                        {showHeartBurst && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 animate-in zoom-in-50 fade-in duration-150">
+                            <Heart className="w-24 h-24 fill-rose-500 text-rose-500 drop-shadow-[0_4px_20px_rgba(244,63,94,0.65)] animate-bounce" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Post Actions & Caption */}
+                    <div className="p-4 sm:px-5 sm:py-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLike(post.id)}
+                            title={
+                              guestUser
+                                ? 'Curtir foto'
+                                : 'Entre com Google para curtir'
+                            }
+                            className="inline-flex items-center gap-2 px-3 py-1.5 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all"
+                          >
+                            <Heart
+                              className={`w-6 h-6 transition-colors ${
+                                isLiked
+                                  ? 'fill-rose-500 text-rose-500'
+                                  : 'text-sage-800/80 stroke-[1.85]'
+                              }`}
+                            />
+                            <span>{post.likesCount}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSharePost(post)}
+                            title="Compartilhar foto"
+                            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
+                          >
+                            <Share2 className="w-5 h-5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadPost(post)}
+                            title="Baixar foto"
+                            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
+                          >
+                            <Download className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {post.challengeId && (
+                          <span className="text-xs font-medium text-sage-800/70 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-gold-500" />
+                            Desafio Concluído
+                          </span>
+                        )}
+                      </div>
+
+                      {post.caption && (
+                        <p className="text-sm sm:text-base text-sage-800/95 leading-relaxed pt-0.5">
+                          <span className="font-bold text-sage-900 mr-2">
+                            {post.authorName}
+                          </span>
+                          {post.caption}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          {/* LGPD and Compliance Footer */}
+          <footer className="pt-8 pb-4 text-center space-y-2 border-t border-sage-200/60">
+            <button
+              type="button"
+              onClick={() => setIsTermsOpen(true)}
+              className="inline-flex items-center gap-2 text-xs sm:text-sm text-sage-800/75 hover:text-sage-900 font-medium underline underline-offset-4 transition-colors"
+            >
+              <ShieldCheck className="w-4 h-4 text-sage-700" />
+              <span>Termos de Uso &amp; Privacidade (LGPD)</span>
+            </button>
+            <p className="text-xs text-sage-800/55">
+              InstaWedding • Thiago &amp; Priscila © 2026
+            </p>
+          </footer>
+        </div>
+
+        {/* Desktop Right Sticky Sidebar (Notebook WebApp Widgets) */}
+        <aside className="hidden lg:block lg:col-span-4 sticky top-6 space-y-5">
+          {/* Wedding Welcome & Quick Stats Card */}
+          <div className="bg-gradient-to-br from-sage-900 to-sage-800 text-white rounded-3xl p-6 shadow-md space-y-4 relative overflow-hidden">
+            <div className="flex items-center gap-3.5">
+              <img
+                src="/favicon.svg"
+                alt="Monograma T&P"
+                className="w-12 h-12 rounded-2xl shadow-sm shrink-0"
+              />
+              <div>
+                <span className="text-xs uppercase tracking-widest text-gold-400 font-bold">
+                  Mural Oficial
+                </span>
+                <h3 className="font-serif text-xl font-bold leading-tight">
+                  Thiago &amp; Priscila
+                </h3>
               </div>
             </div>
-          ))}
-        </div>
-      ) : filteredPosts.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 border border-sage-200 text-center space-y-3 shadow-xs">
-          <span className="text-3xl block">📷</span>
-          <h3 className="font-serif text-lg font-bold text-sage-900">
-            {posts.length === 0
-              ? 'Nenhuma foto publicada ainda'
-              : 'Nenhuma foto encontrada neste filtro'}
-          </h3>
-          <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
-            {posts.length === 0
-              ? 'Seja o primeiro a registrar e compartilhar um momento especial da festa!'
-              : 'Experimente trocar a aba acima ou publique uma nova foto agora.'}
-          </p>
-          <Link
-            to={
-              challengeFilterId !== null
-                ? `/capture?challengeId=${challengeFilterId}`
-                : '/capture'
-            }
-            className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 rounded-full bg-sage-900 text-white text-xs font-semibold hover:bg-sage-800 transition-colors shadow-sm"
-          >
-            Tirar Foto Agora
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {filteredPosts.map((post) => {
-            const isLiked = likedPostIds.has(post.id)
-            const isOwner =
-              Boolean(post.clientSessionId) &&
-              post.clientSessionId === session.sessionId
-            const showHeartBurst = heartBurstPostId === post.id
 
-            return (
-              <article
-                key={post.id}
-                className="bg-white rounded-2xl overflow-hidden border border-sage-200/70 shadow-xs transition-all"
-              >
-                {/* Author Header */}
-                <div className="p-3.5 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
-                    <div className="w-8 h-8 rounded-full bg-sage-100 text-sage-900 font-serif font-bold text-xs flex items-center justify-center border border-sage-200">
-                      {post.authorName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-sage-900 leading-none">
-                        {post.authorName}
-                      </h4>
-                      <span className="text-[10px] text-sage-800/60 leading-none">
-                        {formatRelativeTime(post.createdAt)}
-                      </span>
-                    </div>
-                  </div>
+            <p className="text-sm text-white/85 leading-relaxed">
+              Compartilhe seus cliques favoritos da festa, participe dos
+              desafios fotográficos e veja tudo ao vivo no telão!
+            </p>
 
-                  <div className="flex items-center gap-2">
-                    {post.challenge && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSearchParams({
-                            challengeId: String(post.challenge!.id),
-                          })
-                        }
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/30 hover:bg-gold-400/25 transition-colors"
-                      >
-                        <span>{post.challenge.icon}</span>
-                        <span>{post.challenge.title}</span>
-                      </button>
-                    )}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-white/10 rounded-2xl p-3 border border-white/10">
+                <p className="text-2xl font-serif font-bold text-white">
+                  {posts.length}
+                </p>
+                <p className="text-xs text-white/75 font-medium">
+                  Fotos Publicadas
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-2xl p-3 border border-white/10">
+                <p className="text-2xl font-serif font-bold text-gold-400">
+                  {totalLikesCount}
+                </p>
+                <p className="text-xs text-white/75 font-medium">
+                  Curtidas na Festa
+                </p>
+              </div>
+            </div>
 
-                    {/* LGPD Right to Erasure: Owner deletion trigger */}
-                    {isOwner && (
-                      <button
-                        type="button"
-                        onClick={() => setPostToDelete(post)}
-                        title="Excluir minha publicação (LGPD Art. 18)"
-                        className="p-1 rounded-full text-sage-800/40 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+            <Link
+              to="/challenges"
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl bg-gold-400 hover:bg-gold-500 text-sage-900 font-bold text-sm transition-colors shadow-xs"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Explorar Desafios da Festa</span>
+            </Link>
+          </div>
+
+          {/* Top Fotógrafos da Noite Widget */}
+          {topContributors.length > 0 && (
+            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-gold-500" />
+                  <h3 className="font-serif text-base font-bold text-sage-900">
+                    Top Fotógrafos da Noite
+                  </h3>
                 </div>
-
-                {/* Media Image (Double-tap to like + Full aspect ratio preservation) */}
-                <div
-                  onClick={() => handlePhotoTap(post)}
-                  className="relative bg-slate-950/90 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
+                <Link
+                  to="/challenges"
+                  className="text-xs font-semibold text-gold-500 hover:underline"
                 >
-                  <img
-                    src={post.mediaUrl}
-                    alt={post.caption || `Foto por ${post.authorName}`}
-                    loading="lazy"
-                    className="w-full max-h-[72vh] object-contain"
-                  />
+                  Ver todos
+                </Link>
+              </div>
 
-                  {/* Expand to Lightbox Button */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setLightboxPostId(post.id)
-                    }}
-                    aria-label="Ver em tela cheia"
-                    className="absolute top-2.5 right-2.5 p-2 rounded-full bg-black/50 hover:bg-black/75 text-white/90 backdrop-blur-xs transition-opacity opacity-80 group-hover:opacity-100"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Double-tap Heart Burst Overlay */}
-                  {showHeartBurst && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 animate-in zoom-in-50 fade-in duration-150">
-                      <Heart className="w-20 h-20 fill-rose-500 text-rose-500 drop-shadow-[0_4px_20px_rgba(244,63,94,0.65)] animate-bounce" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Post Actions & Caption */}
-                <div className="p-3.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleLike(post.id)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-sage-900 hover:opacity-80 active:scale-95 transition-all"
-                      >
-                        <Heart
-                          className={`w-5 h-5 transition-colors ${
-                            isLiked
-                              ? 'fill-rose-500 text-rose-500'
-                              : 'text-sage-800/70 stroke-[1.75]'
-                          }`}
+              <div className="space-y-2.5">
+                {topContributors.map((person, idx) => {
+                  const medals = ['🥇', '🥈', '🥉']
+                  return (
+                    <div
+                      key={person.name}
+                      className="flex items-center justify-between p-3 rounded-2xl bg-sage-50/80 border border-sage-200/60"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-lg leading-none shrink-0">
+                          {medals[idx]}
+                        </span>
+                        <AuthorAvatar
+                          name={person.name}
+                          avatarUrl={person.avatarUrl}
+                          size="sm"
                         />
-                        <span>{post.likesCount}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleSharePost(post)}
-                        title="Compartilhar foto"
-                        className="p-1 text-sage-800/70 hover:text-sage-900 active:scale-95 transition-all"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadPost(post)}
-                        title="Baixar foto"
-                        className="p-1 text-sage-800/70 hover:text-sage-900 active:scale-95 transition-all"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
+                        <span className="text-sm font-bold text-sage-900 truncate">
+                          {person.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs font-semibold text-sage-800 shrink-0">
+                        <span>📷 {person.count}</span>
+                        <span className="inline-flex items-center gap-1 text-rose-600">
+                          <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
+                          {person.likes}
+                        </span>
+                      </div>
                     </div>
-
-                    {post.challengeId && (
-                      <span className="text-[10px] text-sage-800/60 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-gold-500" />
-                        Desafio Concluído
-                      </span>
-                    )}
-                  </div>
-
-                  {post.caption && (
-                    <p className="text-xs text-sage-800/90 leading-relaxed pt-0.5">
-                      <span className="font-semibold text-sage-900 mr-1.5">
-                        {post.authorName}
-                      </span>
-                      {post.caption}
-                    </p>
-                  )}
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      )}
-
-      {/* LGPD and Compliance Footer */}
-      <footer className="pt-6 pb-2 text-center space-y-1.5 border-t border-sage-200/50">
-        <button
-          type="button"
-          onClick={() => setIsTermsOpen(true)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-sage-800/70 hover:text-sage-900 font-medium underline underline-offset-2 transition-colors"
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-sage-700" />
-          <span>Termos de Uso & Privacidade (LGPD)</span>
-        </button>
-        <p className="text-[10px] text-sage-800/50">
-          InstaWedding • Thiago & Priscila © 2026
-        </p>
-      </footer>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
 
       {/* LGPD Self-Deletion Confirmation Modal */}
       {postToDelete && (
@@ -602,25 +994,25 @@ export function FeedPage() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
         >
-          <div className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-sage-200 space-y-3.5">
-            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <Trash2 className="w-5 h-5" />
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-sage-200 space-y-4">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
             </div>
-            <div className="text-center space-y-1">
-              <h3 className="font-serif text-base font-bold text-sage-900">
+            <div className="text-center space-y-1.5">
+              <h3 className="font-serif text-lg font-bold text-sage-900">
                 Excluir publicação?
               </h3>
-              <p className="text-xs text-sage-800/70">
+              <p className="text-sm text-sage-800/75 leading-relaxed">
                 Esta foto será removida permanentemente do feed e do telão da
                 festa (Direito de eliminação - LGPD Art. 18).
               </p>
             </div>
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2.5 pt-1">
               <button
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setPostToDelete(null)}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 hover:bg-sage-100 transition-colors"
+                className="flex-1 py-3 px-4 rounded-xl border border-sage-200 text-sm font-semibold text-sage-800 hover:bg-sage-100 transition-colors"
               >
                 Cancelar
               </button>
@@ -628,11 +1020,11 @@ export function FeedPage() {
                 type="button"
                 disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5"
               >
                 {isDeleting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Excluindo...</span>
                   </>
                 ) : (
@@ -657,12 +1049,17 @@ export function FeedPage() {
       {/* Terms and Privacy Modal */}
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
 
-      {/* Guest Identification Modal */}
+      {/* Guest Google OAuth Identification Modal */}
       <GuestNameModal
         isOpen={isNameModalOpen}
-        initialName={guestName}
-        onClose={() => setIsNameModalOpen(false)}
-        onSaved={(newName) => setGuestNameState(newName)}
+        guestUser={guestUser}
+        reasonMessage={authModalReason}
+        redirectPath="/"
+        onClose={() => {
+          setIsNameModalOpen(false)
+          setAuthModalReason(undefined)
+        }}
+        onAuthChanged={(user) => setGuestUser(user)}
       />
     </div>
   )

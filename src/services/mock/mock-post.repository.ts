@@ -12,6 +12,8 @@ const SEED_POSTS: readonly Post[] = [
   {
     id: 'seed-post-1',
     authorName: 'Camila & Família',
+    authorAvatarUrl:
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
     mediaUrl:
       'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80',
     caption: 'Noite inesquecível celebrando o amor de vocês! 🥂✨',
@@ -24,6 +26,8 @@ const SEED_POSTS: readonly Post[] = [
   {
     id: 'seed-post-2',
     authorName: 'Lucas (Madrinha Team)',
+    authorAvatarUrl:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
     mediaUrl:
       'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80',
     caption: 'A pista já está fervendo! 🕺💃',
@@ -94,6 +98,7 @@ export class MockPostRepository implements PostRepository {
     const newPost: Post = {
       id: generateUUID(),
       authorName: dto.authorName.trim(),
+      authorAvatarUrl: dto.authorAvatarUrl ?? null,
       mediaUrl: dto.mediaUrl,
       caption: dto.caption?.trim() || null,
       challengeId: dto.challengeId ?? null,

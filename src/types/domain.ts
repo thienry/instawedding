@@ -16,6 +16,7 @@ export interface CreateChallengeDTO {
 export interface Post {
   readonly id: string
   readonly authorName: string
+  readonly authorAvatarUrl?: string | null
   readonly mediaUrl: string
   readonly caption: string | null
   readonly challengeId: number | null
@@ -28,6 +29,7 @@ export interface Post {
 
 export interface CreatePostDTO {
   readonly authorName: string
+  readonly authorAvatarUrl?: string | null
   readonly mediaUrl: string
   readonly caption?: string | null
   readonly challengeId?: number | null
@@ -37,6 +39,13 @@ export interface CreatePostDTO {
 export interface ToggleLikeResult {
   readonly isLiked: boolean
   readonly likesCount: number
+}
+
+export interface GuestUser {
+  readonly id: string
+  readonly name: string
+  readonly email: string
+  readonly avatarUrl: string | null
 }
 
 export interface GuestSession {

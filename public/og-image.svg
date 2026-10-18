@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <style>
+      .monogram {
+        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        font-size: 108px;
+        fill: #2f4f38;
+        text-anchor: middle;
+      }
+      .title {
+        font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        font-size: 56px;
+        fill: #1f3526;
+        text-anchor: middle;
+      }
+      .subtitle {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-weight: 600;
+        font-size: 24px;
+        letter-spacing: 5px;
+        fill: #3b5323;
+        text-anchor: middle;
+      }
+      .tagline {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-weight: 500;
+        font-size: 22px;
+        fill: #4c6452;
+        text-anchor: middle;
+      }
+    </style>
+  </defs>
+
+  <!-- Cream Linen Background -->
+  <rect width="1200" height="630" fill="#fdfdfb" />
+
+  <!-- Outer Sage Border & Inner Gold Frame -->
+  <rect x="28" y="28" width="1144" height="574" rx="32" fill="none" stroke="#2f4f38" stroke-width="4" />
+  <rect x="44" y="44" width="1112" height="542" rx="24" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.85" />
+
+  <!-- Corner Botanical Gold Accents -->
+  <circle cx="68" cy="68" r="5" fill="#d4af37" />
+  <circle cx="1132" cy="68" r="5" fill="#d4af37" />
+  <circle cx="68" cy="562" r="5" fill="#d4af37" />
+  <circle cx="1132" cy="562" r="5" fill="#d4af37" />
+
+  <!-- Monogram Badge -->
+  <g transform="translate(600, 185)">
+    <rect x="-120" y="-95" width="240" height="190" rx="42" fill="#f4f7f4" stroke="#2f4f38" stroke-width="3" />
+    <rect x="-110" y="-85" width="220" height="170" rx="34" fill="none" stroke="#d4af37" stroke-width="1.5" opacity="0.8" />
+    <text x="-52" y="36" class="monogram">T</text>
+    <line x1="0" y1="-48" x2="0" y2="52" stroke="#d4af37" stroke-width="4" stroke-linecap="round" />
+    <text x="52" y="36" class="monogram">P</text>
+  </g>
+
+  <!-- Wedding Title & Description -->
+  <text x="600" y="365" class="subtitle">CASAMENTO DE</text>
+  <text x="600" y="435" class="title">Thiago &amp; Priscila</text>
+
+  <!-- Gold Divider Line -->
+  <line x1="460" y1="468" x2="740" y2="468" stroke="#d4af37" stroke-width="2" stroke-linecap="round" />
+  <circle cx="600" cy="468" r="4.5" fill="#d4af37" />
+
+  <!-- Call to action tagline -->
+  <text x="600" y="518" class="tagline">Álbum Interativo • Desafios Fotográficos • Mural Ao Vivo</text>
+</svg>

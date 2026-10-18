@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.challenges (
 CREATE TABLE IF NOT EXISTS public.posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_name TEXT NOT NULL,
+  author_avatar_url TEXT,
   media_url TEXT NOT NULL,
   caption TEXT,
   challenge_id BIGINT REFERENCES public.challenges(id) ON DELETE SET NULL,
@@ -23,6 +24,8 @@ CREATE TABLE IF NOT EXISTS public.posts (
   is_approved BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS author_avatar_url TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON public.posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_is_approved ON public.posts (is_approved);
