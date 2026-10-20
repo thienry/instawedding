@@ -162,7 +162,7 @@ export function GuestNameModal({
               </h2>
               <p className="text-xs sm:text-sm text-sage-800/75 leading-relaxed">
                 {reasonMessage ||
-                  'Para curtir registros ou publicar fotos no mural dos noivos, conecte sua conta Google. Seu nome e foto de perfil serão usados automaticamente.'}
+                  'Para dar like ou postar fotos no mural dos noivos, conecte sua conta Google. Seu nome e foto de perfil serão usados automaticamente.'}
               </p>
             </div>
 

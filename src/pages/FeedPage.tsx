@@ -1,6 +1,7 @@
 import {
   Award,
   Camera,
+  CloudUpload,
   Download,
   Flame,
   Heart,
@@ -16,6 +17,7 @@ import {
   Trash2,
   Trophy,
   User,
+  WifiOff,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -24,8 +26,13 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { GuestNameModal } from '@/components/common/GuestNameModal'
 import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
+import { ProgressiveImage } from '@/components/common/ProgressiveImage'
 import { TermsModal } from '@/components/common/TermsModal'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
+import {
+  OfflineQueueService,
+  type BackgroundUploadTask,
+} from '@/services/offline-queue.service'
 import {
   getPostRepository,
   getRealtimeService,
@@ -36,6 +43,9 @@ import type { GuestUser, Post } from '@/types/domain'
 
 type FeedFilterTab = 'all' | 'most-liked' | 'challenges' | 'mine'
 type FeedViewMode = 'list' | 'grid'
+
+const INITIAL_VISIBLE_POSTS = 12
+const VISIBLE_POSTS_STEP = 10
 
 function formatRelativeTime(isoString: string): string {
   try {
@@ -61,8 +71,13 @@ export function FeedPage() {
   const challengeFilterId = challengeFilterParam
     ? Number(challengeFilterParam)
     : null
+  const lightboxPostId = searchParams.get('photoId')
 
   const [posts, setPosts] = useState<Post[]>([])
+  const [pendingUploads, setPendingUploads] = useState<BackgroundUploadTask[]>(
+    []
+  )
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_POSTS)
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<FeedFilterTab>('all')
   const [viewMode, setViewMode] = useState<FeedViewMode>('list')
@@ -75,7 +90,9 @@ export function FeedPage() {
   const [authModalReason, setAuthModalReason] = useState<string | undefined>(
     undefined
   )
-  const [lightboxPostId, setLightboxPostId] = useState<string | null>(null)
+  const [shareToastMessage, setShareToastMessage] = useState<string | null>(
+    null
+  )
   const [heartBurstPostId, setHeartBurstPostId] = useState<string | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
   const [isPulling, setIsPulling] = useState(false)
@@ -86,6 +103,7 @@ export function FeedPage() {
 
   const lastTapMapRef = useRef<Map<string, number>>(new Map())
   const touchStartYRef = useRef<number | null>(null)
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null)
 
   const PULL_THRESHOLD = 68
   const MAX_PULL_DISTANCE = 115
@@ -214,16 +232,37 @@ export function FeedPage() {
       })
 
     // Subscribe to new posts in realtime
-    const unsubscribe = realtimeService.subscribeToNewPosts((newPost) => {
-      setPosts((prev) => {
-        if (prev.some((p) => p.id === newPost.id)) return prev
-        return [newPost, ...prev]
-      })
+    const unsubscribeRealtime = realtimeService.subscribeToNewPosts(
+      (newPost) => {
+        setPosts((prev) => {
+          if (prev.some((p) => p.id === newPost.id)) return prev
+          return [newPost, ...prev]
+        })
+      }
+    )
+
+    // Subscribe to optimistic background upload queue
+    const unsubscribeQueue = OfflineQueueService.subscribe((tasks) => {
+      if (isMounted) {
+        setPendingUploads(tasks)
+      }
     })
+
+    const unsubscribePublished = OfflineQueueService.onPostPublished(
+      (publishedPost) => {
+        if (!isMounted) return
+        setPosts((prev) => {
+          if (prev.some((p) => p.id === publishedPost.id)) return prev
+          return [publishedPost, ...prev]
+        })
+      }
+    )
 
     return () => {
       isMounted = false
-      unsubscribe()
+      unsubscribeRealtime()
+      unsubscribeQueue()
+      unsubscribePublished()
     }
   }, [effectiveSessionId, guestUser, postRepo, realtimeService])
 
@@ -321,12 +360,31 @@ export function FeedPage() {
     }
   }
 
+  const handleOpenLightbox = useCallback(
+    (postId: string) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.set('photoId', postId)
+        return next
+      })
+    },
+    [setSearchParams]
+  )
+
+  const handleCloseLightbox = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('photoId')
+      return next
+    })
+  }, [setSearchParams])
+
   const handleSharePost = async (post: Post) => {
     const shareTitle = 'Casamento de Thiago & Priscila'
     const shareText = post.caption
       ? `Foto de ${post.authorName}: "${post.caption}"`
       : `Foto de ${post.authorName} no casamento de Thiago & Priscila!`
-    const shareUrl = window.location.origin
+    const shareUrl = `${window.location.origin}/?photoId=${encodeURIComponent(post.id)}`
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
@@ -336,10 +394,26 @@ export function FeedPage() {
           url: shareUrl,
         })
         return
-      } catch {
-        // User cancelled or share failed; fall back to download
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return
+        }
       }
     }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        setShareToastMessage('Link da foto copiado!')
+        window.setTimeout(() => {
+          setShareToastMessage(null)
+        }, 2800)
+        return
+      } catch {
+        // Fallback to download if clipboard access is denied
+      }
+    }
+
     await handleDownloadPost(post)
   }
 
@@ -354,6 +428,9 @@ export function FeedPage() {
         next.delete(postToDelete.id)
         return next
       })
+      if (lightboxPostId === postToDelete.id) {
+        handleCloseLightbox()
+      }
       setPostToDelete(null)
     } catch {
       alert('Não foi possível excluir a publicação. Tente novamente.')
@@ -387,6 +464,34 @@ export function FeedPage() {
 
     return list
   }, [posts, challengeFilterId, activeTab, session.sessionId, guestUser])
+
+  const visiblePosts = useMemo(
+    () => filteredPosts.slice(0, visibleCount),
+    [filteredPosts, visibleCount]
+  )
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_POSTS)
+  }, [activeTab, challengeFilterId])
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current
+    if (!sentinel || visibleCount >= filteredPosts.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) =>
+            Math.min(filteredPosts.length, prev + VISIBLE_POSTS_STEP)
+          )
+        }
+      },
+      { rootMargin: '800px 0px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [visibleCount, filteredPosts.length])
 
   const activeChallengeObj = useMemo(() => {
     if (challengeFilterId === null) return null
@@ -473,7 +578,7 @@ export function FeedPage() {
 
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
         {/* Main Feed Column */}
-        <div className="lg:col-span-8 space-y-5">
+        <div className="lg:col-span-8 space-y-6">
           {/* Top Action & View Mode Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
@@ -637,6 +742,109 @@ export function FeedPage() {
             </div>
           )}
 
+          {/* Instagram-style Optimistic Background Upload Progress Cards */}
+          {pendingUploads.length > 0 && (
+            <div className="space-y-3">
+              {pendingUploads.map((task) => {
+                const isFailed = task.status === 'failed'
+                const isOffline =
+                  typeof navigator !== 'undefined' && !navigator.onLine
+
+                return (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-2xl p-3.5 border border-sage-200/90 shadow-sm space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-900 shrink-0 relative border border-sage-200">
+                          <img
+                            src={
+                              task.previewUrl ||
+                              task.blurDataUrl ||
+                              '/favicon.svg'
+                            }
+                            alt="Publicando foto"
+                            className="w-full h-full object-cover"
+                          />
+                          {task.status === 'uploading' && (
+                            <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 text-white animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-sage-900 truncate flex items-center gap-1.5">
+                            {isOffline || isFailed ? (
+                              <>
+                                <WifiOff className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>
+                                  {isOffline
+                                    ? 'Aguardando sinal de rede móvel...'
+                                    : 'Envio pausado na rede móvel'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <CloudUpload className="w-3.5 h-3.5 text-sage-700 shrink-0" />
+                                <span>Publicando sua foto...</span>
+                              </>
+                            )}
+                          </p>
+                          <p className="text-xs text-sage-800/70 truncate">
+                            {task.caption
+                              ? `"${task.caption}"`
+                              : isOffline || isFailed
+                                ? 'Salvo no aparelho — será enviado automaticamente'
+                                : `${task.progress}% enviado`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {(isFailed || isOffline) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void OfflineQueueService.retryTask(task.id)
+                            }
+                            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-sage-900 text-white hover:bg-sage-800 transition-colors"
+                          >
+                            Tentar agora
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void OfflineQueueService.cancelTask(task.id)
+                          }
+                          title="Cancelar envio"
+                          className="p-1.5 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Smooth Progress Bar */}
+                    <div className="h-1.5 w-full rounded-full bg-sage-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          isFailed || isOffline
+                            ? 'bg-amber-500'
+                            : 'bg-gradient-to-r from-sage-800 via-sage-700 to-gold-500'
+                        }`}
+                        style={{
+                          width: `${Math.max(12, task.progress)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           {/* Feed Content */}
           {isLoading ? (
             <div className="space-y-6">
@@ -686,181 +894,200 @@ export function FeedPage() {
               </Link>
             </div>
           ) : (
-            <div
-              className={
-                viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
-                  : 'space-y-6'
-              }
-            >
-              {filteredPosts.map((post) => {
-                const isLiked = likedPostIds.has(post.id)
-                const isOwner =
-                  (guestUser && post.clientSessionId === guestUser.id) ||
-                  (Boolean(post.clientSessionId) &&
-                    post.clientSessionId === session.sessionId)
-                const showHeartBurst = heartBurstPostId === post.id
+            <>
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+                    : 'space-y-6'
+                }
+              >
+                {visiblePosts.map((post, index) => {
+                  const isLiked = likedPostIds.has(post.id)
+                  const isOwner =
+                    (guestUser && post.clientSessionId === guestUser.id) ||
+                    (Boolean(post.clientSessionId) &&
+                      post.clientSessionId === session.sessionId)
+                  const showHeartBurst = heartBurstPostId === post.id
 
-                return (
-                  <article
-                    key={post.id}
-                    className="bg-white rounded-3xl overflow-hidden border border-sage-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-                  >
-                    <div>
-                      {/* Author Header */}
-                      <div className="p-4 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <AuthorAvatar
-                            name={post.authorName}
-                            avatarUrl={post.authorAvatarUrl}
-                            size="lg"
-                          />
-                          <div className="min-w-0">
-                            <h4 className="text-base font-bold text-sage-900 leading-tight truncate">
-                              {post.authorName}
-                            </h4>
-                            <span className="text-xs text-sage-800/65 block mt-0.5">
-                              {formatRelativeTime(post.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {post.challenge && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSearchParams({
-                                  challengeId: String(post.challenge!.id),
-                                })
-                              }
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/35 hover:bg-gold-400/25 transition-colors"
-                            >
-                              <span className="text-sm">
-                                {post.challenge.icon}
-                              </span>
-                              <span className="max-w-36 truncate">
-                                {post.challenge.title}
-                              </span>
-                            </button>
-                          )}
-
-                          {/* LGPD Right to Erasure: Owner deletion trigger */}
-                          {isOwner && (
-                            <button
-                              type="button"
-                              onClick={() => setPostToDelete(post)}
-                              title="Excluir minha publicação (LGPD Art. 18)"
-                              className="p-2 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Media Image (Double-tap to like + Full aspect ratio preservation) */}
-                      <div
-                        onClick={() => handlePhotoTap(post)}
-                        className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
-                      >
-                        <img
-                          src={post.mediaUrl}
-                          alt={post.caption || `Foto por ${post.authorName}`}
-                          loading="lazy"
-                          className={
-                            viewMode === 'grid'
-                              ? 'w-full aspect-4/3 object-contain'
-                              : 'w-full max-h-[75vh] object-contain'
-                          }
-                        />
-
-                        {/* Expand to Lightbox Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setLightboxPostId(post.id)
-                          }}
-                          aria-label="Ver em tela cheia"
-                          className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm"
-                        >
-                          <Maximize2 className="w-4 h-4" />
-                        </button>
-
-                        {/* Double-tap Heart Burst Overlay */}
-                        {showHeartBurst && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 animate-in zoom-in-50 fade-in duration-150">
-                            <Heart className="w-24 h-24 fill-rose-500 text-rose-500 drop-shadow-[0_4px_20px_rgba(244,63,94,0.65)] animate-bounce" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Post Actions & Caption */}
-                    <div className="p-4 sm:px-5 sm:py-4 space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleLike(post.id)}
-                            title={
-                              guestUser
-                                ? 'Curtir foto'
-                                : 'Entre com Google para curtir'
-                            }
-                            className="inline-flex items-center gap-2 px-3 py-1.5 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all"
-                          >
-                            <Heart
-                              className={`w-6 h-6 transition-colors ${
-                                isLiked
-                                  ? 'fill-rose-500 text-rose-500'
-                                  : 'text-sage-800/80 stroke-[1.85]'
-                              }`}
+                  return (
+                    <article
+                      key={post.id}
+                      className="bg-white rounded-3xl overflow-hidden border border-sage-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Author Header */}
+                        <div className="p-4 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <AuthorAvatar
+                              name={post.authorName}
+                              avatarUrl={post.authorAvatarUrl}
+                              size="lg"
                             />
-                            <span>{post.likesCount}</span>
-                          </button>
+                            <div className="min-w-0">
+                              <h4 className="text-base font-bold text-sage-900 leading-tight truncate">
+                                {post.authorName}
+                              </h4>
+                              <span className="text-xs text-sage-800/65 block mt-0.5">
+                                {formatRelativeTime(post.createdAt)}
+                              </span>
+                            </div>
+                          </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleSharePost(post)}
-                            title="Compartilhar foto"
-                            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
-                          >
-                            <Share2 className="w-5 h-5" />
-                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {post.challenge && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSearchParams({
+                                    challengeId: String(post.challenge!.id),
+                                  })
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/35 hover:bg-gold-400/25 transition-colors"
+                              >
+                                <span className="text-sm">
+                                  {post.challenge.icon}
+                                </span>
+                                <span className="max-w-36 truncate">
+                                  {post.challenge.title}
+                                </span>
+                              </button>
+                            )}
 
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadPost(post)}
-                            title="Baixar foto"
-                            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
-                          >
-                            <Download className="w-5 h-5" />
-                          </button>
+                            {/* LGPD Right to Erasure: Owner deletion trigger */}
+                            {isOwner && (
+                              <button
+                                type="button"
+                                onClick={() => setPostToDelete(post)}
+                                title="Excluir minha publicação (LGPD Art. 18)"
+                                className="p-2 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
-                        {post.challengeId && (
-                          <span className="text-xs font-medium text-sage-800/70 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-gold-500" />
-                            Desafio Concluído
-                          </span>
-                        )}
+                        {/* Media Image (Double-tap to like + Progressive Blur-up & Predictive Preload) */}
+                        <div
+                          onClick={() => handlePhotoTap(post)}
+                          className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
+                        >
+                          <ProgressiveImage
+                            src={post.mediaUrl}
+                            alt={post.caption || `Foto por ${post.authorName}`}
+                            cacheKey={post.id}
+                            priority={index < 2}
+                            containerClassName={
+                              viewMode === 'grid'
+                                ? 'w-full aspect-4/3'
+                                : 'w-full min-h-[260px]'
+                            }
+                            className={
+                              viewMode === 'grid'
+                                ? 'w-full aspect-4/3 object-contain'
+                                : 'w-full max-h-[75vh] object-contain'
+                            }
+                          />
+
+                          {/* Expand to Lightbox Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleOpenLightbox(post.id)
+                            }}
+                            aria-label="Ver em tela cheia"
+                            className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm z-10"
+                          >
+                            <Maximize2 className="w-4 h-4" />
+                          </button>
+
+                          {/* Double-tap Heart Burst Overlay */}
+                          {showHeartBurst && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 animate-in zoom-in-50 fade-in duration-150 z-10">
+                              <Heart className="w-24 h-24 fill-rose-500 text-rose-500 drop-shadow-[0_4px_20px_rgba(244,63,94,0.65)] animate-bounce" />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {post.caption && (
-                        <p className="text-sm sm:text-base text-sage-800/95 leading-relaxed pt-0.5">
-                          <span className="font-bold text-sage-900 mr-2">
-                            {post.authorName}
-                          </span>
-                          {post.caption}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+                      {/* Post Actions & Caption */}
+                      <div className="p-4 sm:px-5 sm:py-4 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleLike(post.id)}
+                              title={
+                                guestUser
+                                  ? 'Curtir foto'
+                                  : 'Entre com Google para curtir'
+                              }
+                              className="inline-flex items-center gap-2 px-3 py-1.5 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all"
+                            >
+                              <Heart
+                                className={`w-6 h-6 transition-colors ${
+                                  isLiked
+                                    ? 'fill-rose-500 text-rose-500'
+                                    : 'text-sage-800/80 stroke-[1.85]'
+                                }`}
+                              />
+                              <span>{post.likesCount}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSharePost(post)}
+                              title="Compartilhar foto"
+                              className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
+                            >
+                              <Share2 className="w-5 h-5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadPost(post)}
+                              title="Baixar foto"
+                              className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
+                            >
+                              <Download className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          {post.challengeId && (
+                            <span className="text-xs font-medium text-sage-800/70 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-gold-500" />
+                              Desafio Concluído
+                            </span>
+                          )}
+                        </div>
+
+                        {post.caption && (
+                          <p className="text-sm sm:text-base text-sage-800/95 leading-relaxed pt-0.5">
+                            <span className="font-bold text-sage-900 mr-2">
+                              {post.authorName}
+                            </span>
+                            {post.caption}
+                          </p>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+
+              {/* Incremental Scroll Windowing Sentinel */}
+              {visibleCount < filteredPosts.length && (
+                <div
+                  ref={loadMoreSentinelRef}
+                  className="py-6 flex items-center justify-center text-xs text-sage-800/60 gap-2"
+                >
+                  <Loader2 className="w-4 h-4 animate-spin text-sage-700" />
+                  <span>Carregando mais fotos...</span>
+                </div>
+              )}
+            </>
           )}
 
           {/* LGPD and Compliance Footer */}
@@ -880,7 +1107,7 @@ export function FeedPage() {
         </div>
 
         {/* Desktop Right Sticky Sidebar (Notebook WebApp Widgets) */}
-        <aside className="hidden lg:block lg:col-span-4 sticky top-6 space-y-5">
+        <aside className="hidden lg:block lg:col-span-4 sticky top-8 space-y-6">
           {/* Wedding Welcome & Quick Stats Card */}
           <div className="bg-gradient-to-br from-sage-900 to-sage-800 text-white rounded-3xl p-6 shadow-md space-y-4 relative overflow-hidden">
             <div className="flex items-center gap-3.5">
@@ -901,7 +1128,7 @@ export function FeedPage() {
 
             <p className="text-sm text-white/85 leading-relaxed">
               Compartilhe seus cliques favoritos da festa, participe dos
-              desafios fotográficos e veja tudo ao vivo no telão!
+              desafios fotográficos e veja tudo no telão!
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -1040,11 +1267,23 @@ export function FeedPage() {
       <PhotoLightboxModal
         post={lightboxPost}
         isLiked={lightboxPost ? likedPostIds.has(lightboxPost.id) : false}
-        onClose={() => setLightboxPostId(null)}
+        onClose={handleCloseLightbox}
         onToggleLike={handleToggleLike}
         onDownload={handleDownloadPost}
         onShare={handleSharePost}
       />
+
+      {/* Share Link Copied Toast */}
+      {shareToastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-sage-900 text-white text-xs sm:text-sm font-semibold shadow-lg border border-white/15 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
+        >
+          <Share2 className="w-4 h-4 text-gold-400" />
+          <span>{shareToastMessage}</span>
+        </div>
+      )}
 
       {/* Terms and Privacy Modal */}
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />

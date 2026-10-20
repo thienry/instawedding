@@ -3,10 +3,9 @@ import { Eye, FileText, Lock, ShieldCheck, Trash2, X } from 'lucide-react'
 interface TermsModalProps {
   readonly isOpen: boolean
   readonly onClose: () => void
-  readonly onAccept?: () => void
 }
 
-export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
+export function TermsModal({ isOpen, onClose }: TermsModalProps) {
   if (!isOpen) return null
 
   return (
@@ -51,15 +50,16 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
           <section className="space-y-1.5">
             <h3 className="font-semibold text-sage-900 flex items-center gap-1.5 text-xs">
               <Eye className="w-4 h-4 text-gold-500" />
-              1. Finalidade e Transmissão no Telão
+              1. Finalidade e Consentimento de Uso
             </h3>
             <p>
               O <strong>InstaWedding</strong> é uma plataforma privada criada
               exclusivamente para a celebração do casamento de{' '}
-              <strong>Thiago & Priscila</strong>. Ao publicar uma foto, você
-              concorda em compartilhá-la com os noivos e convidados presentes,
-              autorizando sua projeção em tempo real no telão da festa e sua
-              inclusão no álbum digital de recordações do casal.
+              <strong>Thiago & Priscila</strong>. Ao utilizar o aplicativo e
+              postar fotos, você consente implicitamente em compartilhá-las com
+              os noivos e convidados presentes, autorizando sua projeção em
+              tempo real no telão da festa e sua inclusão no álbum digital de
+              recordações do casal.
             </p>
           </section>
 
@@ -136,36 +136,14 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-sage-100 bg-sage-50/50 flex items-center justify-end gap-2.5">
-          {onAccept ? (
-            <>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-sage-800 hover:bg-sage-200/50 transition-colors"
-              >
-                Voltar
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onAccept()
-                  onClose()
-                }}
-                className="px-5 py-2 rounded-xl bg-sage-900 hover:bg-sage-800 text-white text-xs font-semibold shadow-xs transition-colors"
-              >
-                Concordo com os Termos
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-sage-900 hover:bg-sage-800 text-white text-xs font-semibold shadow-xs transition-colors"
-            >
-              Fechar
-            </button>
-          )}
+        <div className="p-4 border-t border-sage-100 bg-sage-50/50 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl bg-sage-900 hover:bg-sage-800 text-white text-xs font-semibold shadow-xs transition-colors"
+          >
+            Entendi
+          </button>
         </div>
       </div>
     </div>

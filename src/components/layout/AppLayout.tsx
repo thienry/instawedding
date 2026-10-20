@@ -28,8 +28,8 @@ import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 const SIDEBAR_STORAGE_KEY = 'instawedding_sidebar_collapsed'
 
 const ROUTE_TITLES: Record<string, string> = {
-  '/': 'Casamento de Thiago & Priscila — Álbum & Mural Ao Vivo',
-  '/capture': 'Publicar Foto | Casamento de Thiago & Priscila',
+  '/': 'Casamento de Thiago & Priscila — Álbum & Mural',
+  '/capture': 'Postar Foto | Casamento de Thiago & Priscila',
   '/challenges': 'Desafios da Festa | Casamento de Thiago & Priscila',
   '/admin': 'Painel de Moderação | Casamento de Thiago & Priscila',
 }
@@ -62,7 +62,7 @@ export function AppLayout() {
   useEffect(() => {
     document.title =
       ROUTE_TITLES[location.pathname] ??
-      'Casamento de Thiago & Priscila — Álbum & Mural Ao Vivo'
+      'Casamento de Thiago & Priscila — Álbum & Mural'
   }, [location.pathname])
 
   useEffect(() => {
@@ -72,13 +72,28 @@ export function AppLayout() {
   }, [isOnline])
 
   useEffect(() => {
+    let isMounted = true
+
+    adminAuth.checkSession().then((hasSession) => {
+      if (isMounted) {
+        setAdminUser(hasSession ? adminAuth.getCurrentUser() : null)
+      }
+    })
+
     const unsubscribe = adminAuth.onAuthStateChange((user) => {
-      setAdminUser(user)
+      if (isMounted) {
+        setAdminUser(user)
+      }
     })
     return () => {
+      isMounted = false
       unsubscribe()
     }
   }, [adminAuth])
+
+  const canAccessProjector = Boolean(
+    adminUser && (adminUser.role === 'admin' || adminUser.role === 'moderator')
+  )
 
   const handleLogout = async () => {
     await adminAuth.logout()
@@ -122,7 +137,7 @@ export function AppLayout() {
           {/* Brand Logo & Title */}
           <Link
             to="/"
-            title="Thiago & Priscila — Álbum & Mural Ao Vivo"
+            title="Thiago & Priscila — Álbum & Mural"
             className={`flex items-center py-1 group rounded-2xl transition-all duration-300 ease-in-out ${
               isSidebarCollapsed ? 'justify-center px-0' : 'gap-3.5 px-2'
             }`}
@@ -137,7 +152,7 @@ export function AppLayout() {
                 Thiago &amp; Priscila
               </h1>
               <p className="text-xs font-medium text-sage-800/65 truncate">
-                Álbum &amp; Mural Ao Vivo
+                Álbum &amp; Mural
               </p>
             </div>
           </Link>
@@ -145,13 +160,13 @@ export function AppLayout() {
           {/* Primary Action Button */}
           <Link
             to="/capture"
-            title="Publicar Nova Foto"
+            title="Postar Nova Foto"
             className={`flex items-center justify-center w-full rounded-2xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-900 text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all duration-300 ease-in-out ${
               isSidebarCollapsed ? 'py-3.5 px-0' : 'gap-2.5 py-3.5 px-4'
             }`}
           >
             <Camera className="w-5 h-5 text-gold-400 shrink-0" />
-            <span className={labelTransitionClass}>Publicar Nova Foto</span>
+            <span className={labelTransitionClass}>Postar Nova Foto</span>
           </Link>
 
           {/* Navigation Menu */}
@@ -184,18 +199,20 @@ export function AppLayout() {
               <span className={labelTransitionClass}>Estúdio Fotográfico</span>
             </NavLink>
 
-            <Link
-              to="/projector"
-              title="Modo Telão Ao Vivo"
-              className={`flex items-center rounded-2xl text-sm font-semibold text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-all duration-300 ease-in-out ${
-                isSidebarCollapsed
-                  ? 'justify-center px-3 py-3'
-                  : 'gap-3.5 px-4 py-3'
-              }`}
-            >
-              <Tv className="w-5 h-5 shrink-0 text-gold-500" />
-              <span className={labelTransitionClass}>Modo Telão Ao Vivo</span>
-            </Link>
+            {canAccessProjector && (
+              <Link
+                to="/projector"
+                title="Modo Telão"
+                className={`flex items-center rounded-2xl text-sm font-semibold text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-all duration-300 ease-in-out ${
+                  isSidebarCollapsed
+                    ? 'justify-center px-3 py-3'
+                    : 'gap-3.5 px-4 py-3'
+                }`}
+              >
+                <Tv className="w-5 h-5 shrink-0 text-gold-500" />
+                <span className={labelTransitionClass}>Modo Telão</span>
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -375,13 +392,15 @@ export function AppLayout() {
               </Link>
             )}
 
-            <Link
-              to="/projector"
-              title="Abrir Modo Telão"
-              className="p-2.5 rounded-full text-sage-800/80 hover:text-sage-900 hover:bg-sage-100 transition-colors"
-            >
-              <Tv className="w-5 h-5" />
-            </Link>
+            {canAccessProjector && (
+              <Link
+                to="/projector"
+                title="Abrir Modo Telão"
+                className="p-2.5 rounded-full text-sage-800/80 hover:text-sage-900 hover:bg-sage-100 transition-colors"
+              >
+                <Tv className="w-5 h-5" />
+              </Link>
+            )}
           </div>
         </header>
 
@@ -397,7 +416,7 @@ export function AppLayout() {
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 w-full max-w-6xl mx-auto pb-24 md:pb-12">
+        <main className="flex-1 w-full pb-24 md:pb-12">
           <Outlet />
         </main>
 

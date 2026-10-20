@@ -191,7 +191,7 @@ export function ChallengesPage() {
           </h2>
           <p className="text-sm sm:text-base text-white/85 leading-relaxed">
             Encontre e registre cada momento especial abaixo para animar o telão
-            ao vivo de Thiago &amp; Priscila!
+            de Thiago &amp; Priscila!
           </p>
         </div>
 
@@ -228,11 +228,11 @@ export function ChallengesPage() {
               </h3>
             </div>
             <span className="text-xs font-bold text-sage-800/60 uppercase tracking-wider">
-              Ranking Ao Vivo
+              Ranking
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {topPhotographers.map((person, index) => {
               const medals = ['🥇', '🥈', '🥉']
               return (
@@ -276,7 +276,7 @@ export function ChallengesPage() {
       {/* Challenges Grid (1 col on mobile, 2 cols on notebook/desktop) */}
       <div>
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
@@ -291,7 +291,7 @@ export function ChallengesPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {challenges.map((challenge) => {
               const isCompleted = completedChallengeIds.has(challenge.id)
               const communityCount =

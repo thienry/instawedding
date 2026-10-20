@@ -1,3 +1,5 @@
+import { getAdaptiveNetworkProfile } from '@/utils/blur-placeholder'
+
 export type PhotoFilterId =
   'none' | 'golden' | 'vintage' | 'bw' | 'vivid' | 'dramatic'
 
@@ -101,12 +103,13 @@ export async function renderFilteredAndFramedPhoto(
   originalFilename: string,
   options: RenderPhotoOptions
 ): Promise<File> {
+  const networkProfile = getAdaptiveNetworkProfile()
   const {
     filterId,
     frameId,
     weddingTitle = 'Thiago & Priscila',
     weddingSubtitle = 'Nosso Grande Dia • InstaWedding',
-    maxDimension = 1440,
+    maxDimension = networkProfile.maxWidthOrHeight,
   } = options
 
   const img = await loadImage(sourceUrl)
@@ -306,7 +309,7 @@ export async function renderFilteredAndFramedPhoto(
         )
       },
       'image/webp',
-      0.88
+      networkProfile.quality
     )
   })
 }

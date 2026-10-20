@@ -3,13 +3,13 @@ import { NavLink } from 'react-router-dom'
 
 export function BottomNavigation() {
   const getNavClass = ({ isActive }: { isActive: boolean }): string =>
-    `flex flex-col items-center justify-center py-2 flex-1 text-xs font-semibold transition-colors ${
+    `flex flex-col items-center justify-center py-2 text-xs font-semibold transition-colors ${
       isActive ? 'text-sage-900' : 'text-sage-800/60 hover:text-sage-800'
     }`
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-sage-200/80 shadow-lg pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-around h-18 max-w-lg mx-auto px-2">
+      <div className="grid grid-cols-3 items-center h-18 max-w-lg mx-auto px-2">
         <NavLink to="/" end className={getNavClass}>
           <ImageIcon className="w-6 h-6 mb-1" />
           <span>Feed</span>
@@ -23,7 +23,7 @@ export function BottomNavigation() {
             <Camera className="w-7 h-7" />
           </div>
           <span className="text-xs font-bold text-sage-900 mt-1">
-            Publicar
+            Postar
           </span>
         </NavLink>
 

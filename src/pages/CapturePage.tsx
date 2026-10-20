@@ -16,11 +16,7 @@ import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { TermsModal } from '@/components/common/TermsModal'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
 import { OfflineQueueService } from '@/services/offline-queue.service'
-import {
-  getChallengeRepository,
-  getPostRepository,
-} from '@/services/repositories.factory'
-import { getStorageService } from '@/services/storage.factory'
+import { getChallengeRepository } from '@/services/repositories.factory'
 import { compressPhoto } from '@/utils/compressor'
 import {
   getFilterById,
@@ -28,11 +24,7 @@ import {
   PHOTO_FRAMES,
   renderFilteredAndFramedPhoto,
 } from '@/utils/photo-filters'
-import {
-  getGuestSession,
-  getTermsAcceptedAt,
-  setTermsAccepted,
-} from '@/utils/session'
+import { getGuestSession, setTermsAccepted } from '@/utils/session'
 
 import type { Challenge, GuestUser } from '@/types/domain'
 import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
@@ -69,26 +61,18 @@ export function CapturePage() {
     preselectedChallengeId
   )
   const [challenges, setChallenges] = useState<Challenge[]>([])
-  const [termsAccepted, setTermsAcceptedState] = useState(() =>
-    Boolean(getTermsAcceptedAt())
-  )
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const storageService = getStorageService()
-  const postRepo = getPostRepository()
   const challengeRepo = getChallengeRepository()
 
   useEffect(() => {
     setGuestUser(guestAuthService.getCurrentGuest())
     const unsubscribe = guestAuthService.onAuthStateChange((user) => {
       setGuestUser(user)
-      if (user && getTermsAcceptedAt()) {
-        setTermsAcceptedState(true)
-      }
     })
     return () => {
       unsubscribe()
@@ -117,7 +101,7 @@ export function CapturePage() {
     const localUrl = URL.createObjectURL(file)
     setPreviewUrl(localUrl)
 
-    // Compress in background
+    // Compress in background using Web Worker + adaptive mobile network parameters
     setIsCompressing(true)
     try {
       const compressed = await compressPhoto(file)
@@ -177,16 +161,8 @@ export function CapturePage() {
       return
     }
 
-    if (!termsAccepted) {
-      setErrorMessage(
-        'É necessário aceitar os termos de uso e privacidade para publicar no telão.'
-      )
-      return
-    }
-
     setIsSubmitting(true)
     setErrorMessage('')
-    setUploadProgress(0)
 
     try {
       let fileToUpload: File
@@ -195,16 +171,26 @@ export function CapturePage() {
         (selectedFilter !== 'none' || selectedFrame !== 'none')
       ) {
         setIsCompressing(true)
-        fileToUpload = await renderFilteredAndFramedPhoto(
-          previewUrl,
-          selectedFile?.name || 'wedding-photo.jpg',
-          {
-            filterId: selectedFilter,
-            frameId: selectedFrame,
-            weddingTitle: 'Thiago & Priscila',
+        // Use the already-resized compressedFile when available so Canvas doesn't decode a 12MP raw image again
+        const sourceUrlForCanvas = compressedFile
+          ? URL.createObjectURL(compressedFile)
+          : previewUrl
+        try {
+          fileToUpload = await renderFilteredAndFramedPhoto(
+            sourceUrlForCanvas,
+            selectedFile?.name || 'wedding-photo.jpg',
+            {
+              filterId: selectedFilter,
+              frameId: selectedFrame,
+              weddingTitle: 'Thiago & Priscila',
+            }
+          )
+        } finally {
+          if (compressedFile && sourceUrlForCanvas !== previewUrl) {
+            URL.revokeObjectURL(sourceUrlForCanvas)
           }
-        )
-        setIsCompressing(false)
+          setIsCompressing(false)
+        }
       } else {
         const fallback = compressedFile || selectedFile
         if (!fallback) {
@@ -218,54 +204,33 @@ export function CapturePage() {
       setTermsAccepted(true)
       const session = getGuestSession()
       const effectiveSessionId = guestUser.id || session.sessionId
+      const matchedChallenge =
+        selectedChallengeId !== null
+          ? challenges.find((c) => c.id === selectedChallengeId)
+          : undefined
 
-      // 1. Check if device is offline
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        const base64Url = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = () => reject(reader.error)
-          reader.readAsDataURL(fileToUpload)
-        })
-
-        OfflineQueueService.enqueue({
-          authorName: guestUser.name,
-          authorAvatarUrl: guestUser.avatarUrl,
-          mediaUrl: base64Url,
-          caption: caption.trim() || null,
-          challengeId: selectedChallengeId,
-          clientSessionId: effectiveSessionId,
-        })
-
-        alert(
-          'Você está offline no momento. Sua foto foi salva no aparelho e será publicada automaticamente assim que a conexão voltar!'
-        )
-        navigate('/')
-        return
-      }
-
-      // 2. Upload to storage (Mock or R2)
-      const mediaUrl = await storageService.uploadFile(fileToUpload, (pct) => {
-        setUploadProgress(pct)
-      })
-
-      // 3. Persist post
-      await postRepo.createPost({
+      // Instagram-style optimistic background upload: enqueue in IndexedDB + start upload in background
+      await OfflineQueueService.submitInBackground({
+        file: fileToUpload,
         authorName: guestUser.name,
         authorAvatarUrl: guestUser.avatarUrl,
-        mediaUrl,
         caption: caption.trim() || null,
         challengeId: selectedChallengeId,
+        challenge: matchedChallenge,
         clientSessionId: effectiveSessionId,
       })
 
-      // 4. Navigate back to feed
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+
+      // Immediately return to feed while background upload runs
       navigate('/')
     } catch (err) {
       setErrorMessage(
         err instanceof Error
           ? err.message
-          : 'Falha ao enviar a foto. Tente novamente.'
+          : 'Falha ao preparar a foto. Tente novamente.'
       )
       setUploadProgress(null)
       setIsSubmitting(false)
@@ -317,7 +282,7 @@ export function CapturePage() {
             />
             <div className="space-y-2">
               <h3 className="font-serif text-2xl font-bold text-sage-900">
-                Entre para Publicar Fotos
+                Entre para Postar Fotos
               </h3>
               <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
                 Conecte sua conta Google para enviar fotos ao mural e telão ao
@@ -384,7 +349,7 @@ export function CapturePage() {
               />
               <div className="min-w-0">
                 <p className="text-xs text-sage-800/65 font-medium">
-                  Publicando como
+                  Postando como
                 </p>
                 <p className="text-sm font-bold text-sage-900 truncate">
                   {guestUser.name}
@@ -412,7 +377,7 @@ export function CapturePage() {
               </h3>
               <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
                 Tire uma foto agora com a câmera ou escolha uma imagem especial
-                da sua galeria para personalizar e enviar ao mural ao vivo.
+                da sua galeria para personalizar e enviar ao mural.
               </p>
             </div>
 
@@ -455,7 +420,7 @@ export function CapturePage() {
           className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0"
         >
           {/* Left Column: Photo Preview Container */}
-          <div className="lg:col-span-6 lg:sticky lg:top-6">
+          <div className="lg:col-span-6 lg:sticky lg:top-8">
             <div
               className={`relative rounded-3xl overflow-hidden transition-all shadow-sm ${
                 selectedFrame === 'polaroid'
@@ -531,7 +496,7 @@ export function CapturePage() {
           </div>
 
           {/* Right Column: Studio Controls & Details Form */}
-          <div className="lg:col-span-6 space-y-5">
+          <div className="lg:col-span-6 space-y-6">
             {/* Studio Controls: Filters & Frames */}
             <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-3.5">
               <div className="flex items-center justify-between border-b border-sage-100 pb-3">
@@ -702,36 +667,19 @@ export function CapturePage() {
                 </select>
               </div>
 
-              {/* Terms & LGPD Consent Checkbox */}
-              <div className="pt-1">
-                <label className="flex items-start gap-3 cursor-pointer select-none text-left">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => {
-                      setTermsAcceptedState(e.target.checked)
-                      if (errorMessage) setErrorMessage('')
-                    }}
-                    className="mt-0.5 w-4 h-4 rounded border-sage-300 text-sage-900 focus:ring-sage-800/20"
-                  />
-                  <span className="text-xs sm:text-sm text-sage-800/85 leading-relaxed">
-                    Concordo com os{' '}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setIsTermsModalOpen(true)
-                      }}
-                      className="font-bold text-sage-900 underline hover:text-gold-500 inline-flex items-center gap-1"
-                    >
-                      <span>Termos de Uso &amp; Privacidade</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </button>
-                    . Autorizo a exibição da foto no telão da festa e álbum dos
-                    noivos.
-                  </span>
-                </label>
-              </div>
+              {/* Implicit Terms & LGPD Consent Notice */}
+              <p className="pt-1 text-xs text-sage-800/75 leading-relaxed">
+                Ao utilizar o aplicativo e publicar fotos, você concorda com os{' '}
+                <button
+                  type="button"
+                  onClick={() => setIsTermsModalOpen(true)}
+                  className="font-bold text-sage-900 underline hover:text-gold-500 inline-flex items-center gap-1"
+                >
+                  <span>Termos de Uso &amp; Privacidade</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>{' '}
+                e autoriza a exibição no telão da festa e no álbum dos noivos.
+              </p>
 
               {/* Error Message */}
               {errorMessage && (
@@ -760,18 +708,18 @@ export function CapturePage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || isCompressing || !termsAccepted}
+                disabled={isSubmitting || isCompressing}
                 className="w-full py-4 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Publicando...</span>
+                    <span>Postando...</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    <span>Publicar no Telão</span>
+                    <span>Postar Foto</span>
                   </>
                 )}
               </button>
@@ -783,10 +731,6 @@ export function CapturePage() {
       <TermsModal
         isOpen={isTermsModalOpen}
         onClose={() => setIsTermsModalOpen(false)}
-        onAccept={() => {
-          setTermsAcceptedState(true)
-          if (errorMessage) setErrorMessage('')
-        }}
       />
     </div>
   )

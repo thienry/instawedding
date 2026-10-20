@@ -18,6 +18,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  Tv,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -619,15 +620,25 @@ export function AdminPage() {
         </button>
       </div>
 
-      {/* Navigation Return */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Voltar para o Feed</span>
-        </button>
+      {/* Navigation Return & Projector Shortcut */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar para o Feed</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/projector')}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-sage-900 hover:bg-sage-800 text-sm text-white transition-colors font-semibold shadow-2xs"
+          >
+            <Tv className="w-4 h-4 text-gold-400" />
+            <span>Abrir Modo Telão</span>
+          </button>
+        </div>
 
         <span className="text-xs sm:text-sm text-sage-800/75 flex items-center gap-1.5 font-medium">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -764,7 +775,7 @@ export function AdminPage() {
                 Nenhuma foto encontrada neste filtro.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredPosts.map((post) => (
                   <div
                     key={post.id}
@@ -855,15 +866,15 @@ export function AdminPage() {
           {/* Create Challenge Form */}
           <form
             onSubmit={handleCreateChallenge}
-            className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4 max-w-2xl"
+            className="w-full bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4"
           >
             <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
               <Plus className="w-4 h-4 text-gold-500" />
               <span>Criar Novo Desafio</span>
             </h4>
 
-            <div className="grid grid-cols-4 gap-3">
-              <div>
+            <div className="grid grid-cols-4 lg:grid-cols-12 gap-3 sm:gap-4">
+              <div className="col-span-1 lg:col-span-2 xl:col-span-1">
                 <label className="text-xs font-bold text-sage-800 block mb-1.5">
                   Ícone
                 </label>
@@ -873,10 +884,10 @@ export function AdminPage() {
                   value={newChallengeIcon}
                   onChange={(e) => setNewChallengeIcon(e.target.value)}
                   placeholder="🥂"
-                  className="w-full px-3 py-2.5 rounded-xl border border-sage-200 text-center text-lg bg-white"
+                  className="w-full h-11 px-3 rounded-xl border border-sage-200 text-center text-lg bg-white"
                 />
               </div>
-              <div className="col-span-3">
+              <div className="col-span-3 lg:col-span-4 xl:col-span-5">
                 <label className="text-xs font-bold text-sage-800 block mb-1.5">
                   Título do Desafio
                 </label>
@@ -886,23 +897,22 @@ export function AdminPage() {
                   value={newChallengeTitle}
                   onChange={(e) => setNewChallengeTitle(e.target.value)}
                   placeholder="Ex: Selfie com os Noivos"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-sage-200 text-sm bg-white"
+                  className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-sm bg-white"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-sage-800 block mb-1.5">
-                Descrição para os Convidados
-              </label>
-              <input
-                type="text"
-                required
-                value={newChallengeDesc}
-                onChange={(e) => setNewChallengeDesc(e.target.value)}
-                placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-sage-200 text-sm bg-white"
-              />
+              <div className="col-span-4 lg:col-span-6">
+                <label className="text-xs font-bold text-sage-800 block mb-1.5">
+                  Descrição para os Convidados
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newChallengeDesc}
+                  onChange={(e) => setNewChallengeDesc(e.target.value)}
+                  placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
+                  className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-sm bg-white"
+                />
+              </div>
             </div>
 
             <button
@@ -925,7 +935,7 @@ export function AdminPage() {
           </form>
 
           {/* Existing Challenges Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {challenges.map((challenge) => (
               <div
                 key={challenge.id}
