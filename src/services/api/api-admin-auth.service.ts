@@ -9,6 +9,7 @@ import type {
 
 export class ApiAdminAuthService implements AdminAuthService {
   private currentUser: AdminUser | null = null
+  private authSource: 'oauth' | 'cookie' | null = null
   private readonly listeners = new Set<(user: AdminUser | null) => void>()
   private isInitialized = false
 
@@ -21,7 +22,7 @@ export class ApiAdminAuthService implements AdminAuthService {
   }
 
   async checkSession(): Promise<boolean> {
-    // 1. Check Supabase OAuth session
+    // 1. Check Supabase OAuth session (only if email is in admin/moderator whitelist)
     try {
       const supabase = getSupabaseClient()
       const {
@@ -36,14 +37,10 @@ export class ApiAdminAuthService implements AdminAuthService {
         )
 
         if (user) {
+          this.authSource = 'oauth'
           this.setCurrentUser(user)
           return true
         }
-
-        // Email not authorized in whitelist: sign out immediately
-        await supabase.auth.signOut()
-        this.setCurrentUser(null)
-        return false
       }
     } catch {
       // Supabase not reachable or configured
@@ -62,6 +59,7 @@ export class ApiAdminAuthService implements AdminAuthService {
           user?: AdminUser
         }
         if (data.authenticated && data.user) {
+          this.authSource = 'cookie'
           this.setCurrentUser(data.user)
           return true
         }
@@ -70,6 +68,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       // API endpoint not reachable
     }
 
+    this.authSource = null
     this.setCurrentUser(null)
     return false
   }
@@ -130,6 +129,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       }
 
       if (response.ok && data.success && data.user) {
+        this.authSource = 'cookie'
         this.setCurrentUser(data.user)
         return { success: true, user: data.user }
       }
@@ -150,11 +150,13 @@ export class ApiAdminAuthService implements AdminAuthService {
   }
 
   async logout(): Promise<void> {
-    try {
-      const supabase = getSupabaseClient()
-      await supabase.auth.signOut()
-    } catch {
-      // Ignore Supabase signout error
+    if (this.authSource === 'oauth') {
+      try {
+        const supabase = getSupabaseClient()
+        await supabase.auth.signOut()
+      } catch {
+        // Ignore Supabase signout error
+      }
     }
 
     try {
@@ -166,6 +168,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       // Ignore API logout error
     }
 
+    this.authSource = null
     this.setCurrentUser(null)
   }
 
@@ -184,18 +187,22 @@ export class ApiAdminAuthService implements AdminAuthService {
 
     try {
       const supabase = getSupabaseClient()
-      supabase.auth.onAuthStateChange(async (_event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user?.email) {
           const user = this.resolveRoleFromEmail(
             session.user.email,
             session.user.user_metadata?.full_name || 'Admin Google',
             session.user.user_metadata?.avatar_url
           )
-          this.setCurrentUser(user)
-        } else if (
-          !this.currentUser ||
-          this.currentUser.email.includes('@gmail.com')
-        ) {
+          if (user) {
+            this.authSource = 'oauth'
+            this.setCurrentUser(user)
+          } else if (this.authSource === 'oauth') {
+            this.authSource = null
+            this.setCurrentUser(null)
+          }
+        } else if (this.authSource === 'oauth') {
+          this.authSource = null
           this.setCurrentUser(null)
         }
       })
@@ -210,7 +217,10 @@ export class ApiAdminAuthService implements AdminAuthService {
     avatarUrl?: string
   ): AdminUser | null {
     const normalized = email.trim().toLowerCase()
-    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
+    const adminEmails = (
+      import.meta.env.VITE_ADMIN_EMAILS ||
+      'thmoura14@gmail.com,thiago.noivo@gmail.com,noivos@gmail.com'
+    )
       .split(',')
       .map((e: string) => e.trim().toLowerCase())
       .filter(Boolean)
@@ -220,7 +230,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       .map((e: string) => e.trim().toLowerCase())
       .filter(Boolean)
 
-    if (adminEmails.length === 0 || adminEmails.includes(normalized)) {
+    if (adminEmails.includes(normalized)) {
       return {
         email: normalized,
         name,

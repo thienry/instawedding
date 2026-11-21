@@ -4,14 +4,17 @@ import {
   Camera,
   CheckCircle,
   ExternalLink,
+  Film,
   Image as ImageIcon,
   Loader2,
   LogOut,
   Sparkles,
+  Video,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import { VideoRecorderModal } from '@/components/capture/VideoRecorderModal'
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { TermsModal } from '@/components/common/TermsModal'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
@@ -25,6 +28,11 @@ import {
   renderFilteredAndFramedPhoto,
 } from '@/utils/photo-filters'
 import { getGuestSession, setTermsAccepted } from '@/utils/session'
+import {
+  isVideoFile,
+  normalizeVideoFile,
+  validateVideoFile,
+} from '@/utils/video'
 
 import type { Challenge, GuestUser } from '@/types/domain'
 import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
@@ -52,6 +60,9 @@ export function CapturePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [compressedFile, setCompressedFile] = useState<File | null>(null)
   const [isCompressing, setIsCompressing] = useState(false)
+  const [isVideo, setIsVideo] = useState(false)
+  const [videoDuration, setVideoDuration] = useState<number>(0)
+  const [isRecorderOpen, setIsRecorderOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<PhotoFilterId>('none')
   const [selectedFrame, setSelectedFrame] = useState<PhotoFrameId>('none')
   const [studioTab, setStudioTab] = useState<'filters' | 'frames'>('filters')
@@ -93,9 +104,43 @@ export function CapturePage() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
 
     setErrorMessage('')
+
+    const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024 // 25 MB
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
+      setErrorMessage(
+        `O arquivo selecionado tem ${sizeMb}MB e excede o limite máximo permitido de 25MB.`
+      )
+      return
+    }
+
+    if (isVideoFile(file)) {
+      setIsCompressing(true)
+      try {
+        const validation = await validateVideoFile(file)
+        if (!validation.valid) {
+          setErrorMessage(validation.errorMessage ?? 'Vídeo inválido.')
+          return
+        }
+
+        const normalized = normalizeVideoFile(file)
+        setIsVideo(true)
+        setVideoDuration(validation.durationSeconds)
+        setSelectedFile(normalized)
+        setCompressedFile(normalized)
+        setPreviewUrl(URL.createObjectURL(normalized))
+      } finally {
+        setIsCompressing(false)
+      }
+      return
+    }
+
+    setIsVideo(false)
+    setVideoDuration(0)
     setSelectedFile(file)
 
     const localUrl = URL.createObjectURL(file)
@@ -114,11 +159,24 @@ export function CapturePage() {
     }
   }
 
+  const handleVideoRecorded = (recordedFile: File, durationSeconds: number) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    const normalized = normalizeVideoFile(recordedFile)
+    setErrorMessage('')
+    setIsVideo(true)
+    setVideoDuration(durationSeconds)
+    setSelectedFile(normalized)
+    setCompressedFile(normalized)
+    setPreviewUrl(URL.createObjectURL(normalized))
+  }
+
   const handleResetPhoto = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setSelectedFile(null)
     setPreviewUrl(null)
     setCompressedFile(null)
+    setIsVideo(false)
+    setVideoDuration(0)
     setSelectedFilter('none')
     setSelectedFrame('none')
     setUploadProgress(null)
@@ -167,6 +225,7 @@ export function CapturePage() {
     try {
       let fileToUpload: File
       if (
+        !isVideo &&
         previewUrl &&
         (selectedFilter !== 'none' || selectedFrame !== 'none')
       ) {
@@ -194,7 +253,7 @@ export function CapturePage() {
       } else {
         const fallback = compressedFile || selectedFile
         if (!fallback) {
-          setErrorMessage('Nenhuma foto selecionada.')
+          setErrorMessage('Nenhuma mídia selecionada.')
           setIsSubmitting(false)
           return
         }
@@ -230,7 +289,7 @@ export function CapturePage() {
       setErrorMessage(
         err instanceof Error
           ? err.message
-          : 'Falha ao preparar a foto. Tente novamente.'
+          : 'Falha ao preparar a publicação. Tente novamente.'
       )
       setUploadProgress(null)
       setIsSubmitting(false)
@@ -251,7 +310,7 @@ export function CapturePage() {
       <input
         ref={galleryInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/mp4,video/webm,video/quicktime"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -376,28 +435,51 @@ export function CapturePage() {
                 Registre o Momento
               </h3>
               <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
-                Tire uma foto agora com a câmera ou escolha uma imagem especial
-                da sua galeria para personalizar e enviar ao mural.
+                Tire uma foto, grave um Boomerang (5s) ou escolha fotos e vídeos da
+                sua galeria (até 25MB)!
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            {errorMessage && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-center gap-2 text-rose-700 text-xs sm:text-sm max-w-md mx-auto">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3.5 pt-2">
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl bg-sage-900 text-white hover:bg-sage-800 active:scale-95 transition-all shadow-md space-y-2"
+                className="flex flex-col items-center justify-center p-5 rounded-2xl bg-sage-900 text-white hover:bg-sage-800 active:scale-95 transition-all shadow-md space-y-2"
               >
                 <Camera className="w-7 h-7 text-gold-400" />
-                <span className="text-sm font-bold">Abrir Câmera</span>
+                <span className="text-sm font-bold">Tirar Foto</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsRecorderOpen(true)}
+                className="flex flex-col items-center justify-center p-5 rounded-2xl bg-gradient-to-br from-sage-900 to-sage-800 text-white hover:from-sage-800 hover:to-sage-700 active:scale-95 transition-all shadow-md border border-gold-400/40 space-y-2"
+              >
+                <Film className="w-7 h-7 text-gold-400" />
+                <span className="text-sm font-bold">Boomerang (5s)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl bg-sage-100 text-sage-900 hover:bg-sage-200 active:scale-95 transition-all border border-sage-200 space-y-2"
+                className="col-span-2 flex items-center justify-center gap-3 p-4.5 rounded-2xl bg-sage-100 text-sage-900 hover:bg-sage-200 active:scale-95 transition-all border border-sage-200"
               >
-                <ImageIcon className="w-7 h-7 text-sage-800" />
-                <span className="text-sm font-bold">Escolher da Galeria</span>
+                <ImageIcon className="w-6 h-6 text-sage-800 shrink-0" />
+                <div className="text-left sm:text-center">
+                  <span className="text-sm font-bold block">
+                    Escolher da Galeria
+                  </span>
+                  <span className="text-xs text-sage-800/70">
+                    Fotos e vídeos de até 25MB
+                  </span>
+                </div>
               </button>
             </div>
           </div>
@@ -407,8 +489,8 @@ export function CapturePage() {
             <div className="p-4 bg-gold-400/15 border border-gold-400/35 rounded-2xl flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-gold-500 shrink-0" />
               <p className="text-sm text-sage-900 font-medium">
-                Você iniciou um desafio especial! Sua foto será vinculada
-                automaticamente após a publicação.
+                Você iniciou um desafio especial! Sua publicação será vinculada
+                automaticamente.
               </p>
             </div>
           )}
@@ -419,25 +501,36 @@ export function CapturePage() {
           onSubmit={handleSubmit}
           className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0"
         >
-          {/* Left Column: Photo Preview Container */}
+          {/* Left Column: Media Preview Container */}
           <div className="lg:col-span-6 lg:sticky lg:top-8">
             <div
               className={`relative rounded-3xl overflow-hidden transition-all shadow-sm ${
-                selectedFrame === 'polaroid'
+                !isVideo && selectedFrame === 'polaroid'
                   ? 'bg-white p-4 pb-8 border border-sage-200'
                   : 'border border-sage-200 bg-black/5'
               }`}
             >
               <div className="relative rounded-2xl overflow-hidden bg-slate-950/95 flex items-center justify-center max-h-[65vh]">
-                <img
-                  src={previewUrl}
-                  alt="Prévia da foto"
-                  className="w-full max-h-[65vh] object-contain transition-all duration-150"
-                  style={{ filter: getFilterById(selectedFilter).cssFilter }}
-                />
+                {isVideo ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="w-full max-h-[65vh] object-contain"
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="Prévia da foto"
+                    className="w-full max-h-[65vh] object-contain transition-all duration-150"
+                    style={{ filter: getFilterById(selectedFilter).cssFilter }}
+                  />
+                )}
 
-                {/* Overlays for Frame preview */}
-                {selectedFrame === 'cinema' && (
+                {/* Overlays for Frame preview (Photos only) */}
+                {!isVideo && selectedFrame === 'cinema' && (
                   <>
                     <div className="absolute top-0 inset-x-0 h-7 bg-[#05070a] pointer-events-none" />
                     <div className="absolute bottom-0 inset-x-0 h-7 bg-[#05070a] flex items-center justify-between px-4 text-[11px] text-white/85 font-mono pointer-events-none">
@@ -449,13 +542,13 @@ export function CapturePage() {
                   </>
                 )}
 
-                {selectedFrame === 'golden-border' && (
+                {!isVideo && selectedFrame === 'golden-border' && (
                   <div className="absolute inset-2.5 border-2 border-amber-400 rounded-xl pointer-events-none shadow-[0_0_8px_rgba(251,191,36,0.5)]">
                     <div className="absolute inset-1 border border-amber-200/60 rounded-lg" />
                   </div>
                 )}
 
-                {selectedFrame === 'minimal-floral' && (
+                {!isVideo && selectedFrame === 'minimal-floral' && (
                   <div className="absolute bottom-0 inset-x-0 h-11 bg-gradient-to-t from-black/75 to-transparent flex items-end justify-center pb-2.5 pointer-events-none">
                     <span className="font-serif italic text-white text-xs sm:text-sm drop-shadow-xs">
                       💍 Thiago &amp; Priscila • {CURRENT_YEAR}
@@ -463,26 +556,26 @@ export function CapturePage() {
                   </div>
                 )}
 
-                {/* Change Photo Button */}
+                {/* Change Media Button */}
                 <button
                   type="button"
                   onClick={handleResetPhoto}
                   disabled={isSubmitting}
                   className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold px-3.5 py-2 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm"
                 >
-                  Trocar Foto
+                  {isVideo ? 'Trocar Vídeo' : 'Trocar Foto'}
                 </button>
 
                 {isCompressing && (
                   <div className="absolute inset-0 bg-black/45 flex items-center justify-center backdrop-blur-xs text-white text-sm font-semibold space-x-2 z-20">
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Processando imagem...</span>
+                    <span>Processando mídia...</span>
                   </div>
                 )}
               </div>
 
               {/* Bottom text for Polaroid Frame */}
-              {selectedFrame === 'polaroid' && (
+              {!isVideo && selectedFrame === 'polaroid' && (
                 <div className="pt-4 text-center space-y-0.5 pointer-events-none">
                   <p className="font-serif italic font-bold text-base text-slate-800">
                     Thiago &amp; Priscila
@@ -497,103 +590,126 @@ export function CapturePage() {
 
           {/* Right Column: Studio Controls & Details Form */}
           <div className="lg:col-span-6 space-y-6">
-            {/* Studio Controls: Filters & Frames */}
-            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-3.5">
-              <div className="flex items-center justify-between border-b border-sage-100 pb-3">
-                <div className="flex items-center gap-2 text-sm font-bold text-sage-900">
-                  <Sparkles className="w-4 h-4 text-gold-500" />
-                  <span>Efeitos &amp; Molduras</span>
+            {isVideo ? (
+              <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-gold-400/20 text-sage-900 flex items-center justify-center shrink-0">
+                    <Video className="w-5 h-5 text-gold-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-sage-900">
+                      Vídeo curto pronto para envio
+                    </h4>
+                    <p className="text-xs text-sage-800/70">
+                      Reprodução automática em loop no feed e no telão da festa
+                    </p>
+                  </div>
                 </div>
-
-                {/* Tab Selector */}
-                <div className="flex bg-sage-100/90 p-1 rounded-xl text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => setStudioTab('filters')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all ${
-                      studioTab === 'filters'
-                        ? 'bg-white text-sage-900 shadow-xs font-bold'
-                        : 'text-sage-700 hover:text-sage-900'
-                    }`}
-                  >
-                    Filtros
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStudioTab('frames')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all ${
-                      studioTab === 'frames'
-                        ? 'bg-white text-sage-900 shadow-xs font-bold'
-                        : 'text-sage-700 hover:text-sage-900'
-                    }`}
-                  >
-                    Molduras
-                  </button>
-                </div>
+                {videoDuration > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-sage-100 text-sage-900 text-xs font-bold shrink-0">
+                    {videoDuration.toFixed(1)}s
+                  </span>
+                )}
               </div>
+            ) : (
+              /* Studio Controls: Filters & Frames (Photos only) */
+              <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-3.5">
+                <div className="flex items-center justify-between border-b border-sage-100 pb-3">
+                  <div className="flex items-center gap-2 text-sm font-bold text-sage-900">
+                    <Sparkles className="w-4 h-4 text-gold-500" />
+                    <span>Efeitos &amp; Molduras</span>
+                  </div>
 
-              {/* Carousel Content */}
-              {studioTab === 'filters' ? (
-                <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-                  {PHOTO_FILTERS.map((f) => {
-                    const isSelected = selectedFilter === f.id
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setSelectedFilter(f.id)}
-                        className={`shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-                          isSelected
-                            ? 'ring-2 ring-sage-900 bg-sage-50'
-                            : 'hover:bg-sage-50/60'
-                        }`}
-                      >
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-sage-200 relative shadow-2xs">
-                          <img
-                            src={previewUrl}
-                            alt={f.label}
-                            className="w-full h-full object-cover"
-                            style={{ filter: f.cssFilter }}
-                          />
-                        </div>
-                        <span className="text-xs font-semibold text-sage-800 text-center max-w-[80px] truncate">
-                          {f.label}
-                        </span>
-                      </button>
-                    )
-                  })}
+                  {/* Tab Selector */}
+                  <div className="flex bg-sage-100/90 p-1 rounded-xl text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setStudioTab('filters')}
+                      className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                        studioTab === 'filters'
+                          ? 'bg-white text-sage-900 shadow-xs font-bold'
+                          : 'text-sage-700 hover:text-sage-900'
+                      }`}
+                    >
+                      Filtros
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStudioTab('frames')}
+                      className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                        studioTab === 'frames'
+                          ? 'bg-white text-sage-900 shadow-xs font-bold'
+                          : 'text-sage-700 hover:text-sage-900'
+                      }`}
+                    >
+                      Molduras
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-                  {PHOTO_FRAMES.map((fr) => {
-                    const isSelected = selectedFrame === fr.id
-                    return (
-                      <button
-                        key={fr.id}
-                        type="button"
-                        onClick={() => setSelectedFrame(fr.id)}
-                        className={`shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-                          isSelected
-                            ? 'ring-2 ring-gold-500 bg-gold-400/15'
-                            : 'hover:bg-sage-50/60'
-                        }`}
-                      >
-                        <div className="w-16 h-16 rounded-xl bg-sage-100 flex items-center justify-center border border-sage-200 text-2xl shadow-2xs">
-                          {fr.id === 'none' && '🚫'}
-                          {fr.id === 'polaroid' && '📷'}
-                          {fr.id === 'golden-border' && '✨'}
-                          {fr.id === 'cinema' && '🎬'}
-                          {fr.id === 'minimal-floral' && '💍'}
-                        </div>
-                        <span className="text-xs font-semibold text-sage-800 text-center max-w-[84px] truncate">
-                          {fr.label}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+
+                {/* Carousel Content */}
+                {studioTab === 'filters' ? (
+                  <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+                    {PHOTO_FILTERS.map((f) => {
+                      const isSelected = selectedFilter === f.id
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setSelectedFilter(f.id)}
+                          className={`shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
+                            isSelected
+                              ? 'ring-2 ring-sage-900 bg-sage-50'
+                              : 'hover:bg-sage-50/60'
+                          }`}
+                        >
+                          <div className="w-16 h-16 rounded-xl overflow-hidden border border-sage-200 relative shadow-2xs">
+                            <img
+                              src={previewUrl}
+                              alt={f.label}
+                              className="w-full h-full object-cover"
+                              style={{ filter: f.cssFilter }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-sage-800 text-center max-w-[80px] truncate">
+                            {f.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+                    {PHOTO_FRAMES.map((fr) => {
+                      const isSelected = selectedFrame === fr.id
+                      return (
+                        <button
+                          key={fr.id}
+                          type="button"
+                          onClick={() => setSelectedFrame(fr.id)}
+                          className={`shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
+                            isSelected
+                              ? 'ring-2 ring-gold-500 bg-gold-400/15'
+                              : 'hover:bg-sage-50/60'
+                          }`}
+                        >
+                          <div className="w-16 h-16 rounded-xl bg-sage-100 flex items-center justify-center border border-sage-200 text-2xl shadow-2xs">
+                            {fr.id === 'none' && '🚫'}
+                            {fr.id === 'polaroid' && '📷'}
+                            {fr.id === 'golden-border' && '✨'}
+                            {fr.id === 'cinema' && '🎬'}
+                            {fr.id === 'minimal-floral' && '💍'}
+                          </div>
+                          <span className="text-xs font-semibold text-sage-800 text-center max-w-[84px] truncate">
+                            {fr.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200/80 shadow-xs space-y-4">
               {/* Connected Author Profile Summary */}
@@ -658,7 +774,7 @@ export function CapturePage() {
                   }
                   className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20"
                 >
-                  <option value="">Nenhum desafio (Foto livre)</option>
+                  <option value="">Nenhum desafio (Publicação livre)</option>
                   {challenges.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.icon} {c.title}
@@ -669,7 +785,8 @@ export function CapturePage() {
 
               {/* Implicit Terms & LGPD Consent Notice */}
               <p className="pt-1 text-xs text-sage-800/75 leading-relaxed">
-                Ao utilizar o aplicativo e publicar fotos, você concorda com os{' '}
+                Ao utilizar o aplicativo e publicar fotos ou vídeos, você
+                concorda com os{' '}
                 <button
                   type="button"
                   onClick={() => setIsTermsModalOpen(true)}
@@ -693,7 +810,9 @@ export function CapturePage() {
               {uploadProgress !== null && (
                 <div className="space-y-1.5 pt-1">
                   <div className="flex justify-between text-xs sm:text-sm font-bold text-sage-900">
-                    <span>Enviando foto...</span>
+                    <span>
+                      {isVideo ? 'Enviando vídeo...' : 'Enviando foto...'}
+                    </span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <div className="w-full h-2.5 bg-sage-200 rounded-full overflow-hidden">
@@ -719,7 +838,7 @@ export function CapturePage() {
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    <span>Postar Foto</span>
+                    <span>{isVideo ? 'Postar Vídeo' : 'Postar Foto'}</span>
                   </>
                 )}
               </button>
@@ -727,6 +846,12 @@ export function CapturePage() {
           </div>
         </form>
       )}
+
+      <VideoRecorderModal
+        isOpen={isRecorderOpen}
+        onClose={() => setIsRecorderOpen(false)}
+        onVideoRecorded={handleVideoRecorded}
+      />
 
       <TermsModal
         isOpen={isTermsModalOpen}

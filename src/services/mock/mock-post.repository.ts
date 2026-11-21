@@ -1,4 +1,5 @@
 import { generateUUID } from '@/utils/uuid'
+import { isVideoUrl, resolvePostMediaType } from '@/utils/video'
 
 import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
 import type { PostRepository } from '@/services/contracts/post-repository.contract'
@@ -16,6 +17,7 @@ const SEED_POSTS: readonly Post[] = [
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
     mediaUrl:
       'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
     caption: 'Noite inesquecível celebrando o amor de vocês! 🥂✨',
     challengeId: 1,
     clientSessionId: 'seed-session-1',
@@ -30,6 +32,7 @@ const SEED_POSTS: readonly Post[] = [
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
     mediaUrl:
       'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
     caption: 'A pista já está fervendo! 🕺💃',
     challengeId: 2,
     clientSessionId: 'seed-session-2',
@@ -72,6 +75,7 @@ export class MockPostRepository implements PostRepository {
       .filter((p) => p.isApproved)
       .map((post) => ({
         ...post,
+        mediaType: resolvePostMediaType(post),
         challenge: post.challengeId
           ? challengeMap.get(post.challengeId)
           : undefined,
@@ -100,6 +104,8 @@ export class MockPostRepository implements PostRepository {
       authorName: dto.authorName.trim(),
       authorAvatarUrl: dto.authorAvatarUrl ?? null,
       mediaUrl: dto.mediaUrl,
+      mediaType:
+        dto.mediaType ?? (isVideoUrl(dto.mediaUrl) ? 'video' : 'image'),
       caption: dto.caption?.trim() || null,
       challengeId: dto.challengeId ?? null,
       clientSessionId: dto.clientSessionId,
@@ -194,6 +200,7 @@ export class MockPostRepository implements PostRepository {
     return rawPosts
       .map((post) => ({
         ...post,
+        mediaType: resolvePostMediaType(post),
         challenge: post.challengeId
           ? challengeMap.get(post.challengeId)
           : undefined,

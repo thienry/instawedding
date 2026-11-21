@@ -5,8 +5,14 @@ import {
   generateBlurPlaceholder,
 } from '@/utils/blur-placeholder'
 import { generateUUID } from '@/utils/uuid'
+import { extractVideoPoster, isVideoFile } from '@/utils/video'
 
-import type { Challenge, CreatePostDTO, Post } from '@/types/domain'
+import type {
+  Challenge,
+  CreatePostDTO,
+  Post,
+  PostMediaType,
+} from '@/types/domain'
 
 const OFFLINE_QUEUE_KEY = 'instawedding_offline_post_queue'
 const IDB_NAME = 'instawedding_media_queue_db'
@@ -23,6 +29,7 @@ export interface BackgroundUploadTask {
   readonly challengeId: number | null
   readonly challenge?: Challenge
   readonly clientSessionId: string
+  readonly mediaType: PostMediaType
   readonly previewUrl: string
   readonly blurDataUrl?: string
   readonly progress: number
@@ -36,6 +43,7 @@ interface StoredIdbRecord {
   readonly fileBlob: Blob
   readonly fileName: string
   readonly fileType: string
+  readonly mediaType?: PostMediaType
   readonly authorName: string
   readonly authorAvatarUrl?: string | null
   readonly caption: string | null
@@ -213,6 +221,8 @@ export class OfflineQueueService {
       const file = new File([rec.fileBlob], rec.fileName, {
         type: rec.fileType || 'image/webp',
       })
+      const mediaType: PostMediaType =
+        rec.mediaType ?? (isVideoFile(file) ? 'video' : 'image')
       const previewUrl = URL.createObjectURL(file)
       this.fileMemoryMap.set(rec.id, file)
       this.activeTasks.set(rec.id, {
@@ -223,6 +233,7 @@ export class OfflineQueueService {
         challengeId: rec.challengeId,
         challenge: rec.challenge,
         clientSessionId: rec.clientSessionId,
+        mediaType,
         previewUrl,
         blurDataUrl: rec.blurDataUrl,
         progress: 0,
@@ -243,7 +254,7 @@ export class OfflineQueueService {
   }
 
   /**
-   * Enqueues a photo upload and executes it immediately in the background
+   * Enqueues a photo or short video upload and executes it immediately in the background
    * (Instagram-style optimistic post flow), persisting the binary Blob in
    * IndexedDB until the upload + database creation succeed.
    */
@@ -252,8 +263,14 @@ export class OfflineQueueService {
   ): Promise<string> {
     const id = generateUUID()
     const createdAt = new Date().toISOString()
+    const mediaType: PostMediaType = isVideoFile(params.file)
+      ? 'video'
+      : 'image'
     const previewUrl = URL.createObjectURL(params.file)
-    const blurDataUrl = await generateBlurPlaceholder(params.file)
+    const blurDataUrl =
+      mediaType === 'video'
+        ? await extractVideoPoster(params.file)
+        : await generateBlurPlaceholder(params.file)
     const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
     const initialTask: BackgroundUploadTask = {
@@ -264,6 +281,7 @@ export class OfflineQueueService {
       challengeId: params.challengeId,
       challenge: params.challenge,
       clientSessionId: params.clientSessionId,
+      mediaType,
       previewUrl,
       blurDataUrl: blurDataUrl || undefined,
       progress: isOffline ? 0 : 8,
@@ -280,6 +298,7 @@ export class OfflineQueueService {
       fileBlob: params.file,
       fileName: params.file.name,
       fileType: params.file.type,
+      mediaType,
       authorName: params.authorName,
       authorAvatarUrl: params.authorAvatarUrl ?? null,
       caption: params.caption,
@@ -378,6 +397,7 @@ export class OfflineQueueService {
           authorName: task.authorName,
           authorAvatarUrl: task.authorAvatarUrl,
           mediaUrl,
+          mediaType: task.mediaType,
           caption: task.caption,
           challengeId: task.challengeId,
           clientSessionId: task.clientSessionId,
@@ -431,6 +451,7 @@ export class OfflineQueueService {
         fileBlob: file,
         fileName: file.name,
         fileType: file.type,
+        mediaType: latestTask.mediaType,
         authorName: latestTask.authorName,
         authorAvatarUrl: latestTask.authorAvatarUrl,
         caption: latestTask.caption,

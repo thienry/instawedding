@@ -19,6 +19,7 @@ import {
 } from 'react-router-dom'
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation'
+import { useFeedNotifications } from '@/hooks/useFeedNotifications'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import { OfflineQueueService } from '@/services/offline-queue.service'
@@ -36,6 +37,7 @@ const ROUTE_TITLES: Record<string, string> = {
 
 export function AppLayout() {
   const isOnline = useNetworkStatus()
+  const { totalUnreadCount } = useFeedNotifications()
   const navigate = useNavigate()
   const location = useLocation()
   const adminAuth = getAdminAuthService()
@@ -60,10 +62,12 @@ export function AppLayout() {
   }
 
   useEffect(() => {
-    document.title =
+    const baseTitle =
       ROUTE_TITLES[location.pathname] ??
       'Casamento de Thiago & Priscila — Álbum & Mural'
-  }, [location.pathname])
+    document.title =
+      totalUnreadCount > 0 ? `(${totalUnreadCount}) ${baseTitle}` : baseTitle
+  }, [location.pathname, totalUnreadCount])
 
   useEffect(() => {
     if (isOnline) {
@@ -177,8 +181,22 @@ export function AppLayout() {
               title="Feed de Fotos"
               className={getSidebarLinkClass}
             >
-              <ImageIcon className="w-5 h-5 shrink-0" />
-              <span className={labelTransitionClass}>Feed de Fotos</span>
+              <div className="relative shrink-0">
+                <ImageIcon className="w-5 h-5" />
+                {isSidebarCollapsed && totalUnreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                  </span>
+                )}
+              </div>
+              <span className={`flex-1 ${labelTransitionClass}`}>
+                Feed de Fotos
+              </span>
+              {!isSidebarCollapsed && totalUnreadCount > 0 && (
+                <span className="ml-auto px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-2xs animate-in zoom-in-50 duration-150">
+                  {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                </span>
+              )}
             </NavLink>
 
             <NavLink

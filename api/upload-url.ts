@@ -3,13 +3,24 @@ import crypto from 'node:crypto'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
-const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024 // 15MB
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+])
+const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024 // 25MB
+const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024 // 25MB
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -21,25 +32,33 @@ export async function POST(req: Request): Promise<Response> {
       sessionId?: string
     }
 
-    const contentType = body.contentType || body.fileType
+    const rawContentType = body.contentType || body.fileType || ''
+    const contentType = (rawContentType.split(';')[0] ?? '')
+      .trim()
+      .toLowerCase()
     const { sizeBytes, sessionId } = body
 
     // Validate MIME whitelist
-    if (!contentType || !ALLOWED_MIME_TYPES.has(contentType.toLowerCase())) {
+    if (!contentType || !ALLOWED_MIME_TYPES.has(contentType)) {
       return new Response(
         JSON.stringify({
           error:
-            'Tipo de arquivo não permitido. Apenas JPEG, PNG e WebP são aceitos.',
+            'Tipo de arquivo não permitido. Formatos aceitos: JPEG, PNG, WebP, MP4, WebM e MOV.',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
     }
 
+    const isVideo = contentType.startsWith('video/')
+    const maxAllowedBytes = isVideo
+      ? MAX_VIDEO_SIZE_BYTES
+      : MAX_IMAGE_SIZE_BYTES
+
     // Validate size limit
-    if (!sizeBytes || sizeBytes > MAX_FILE_SIZE_BYTES || sizeBytes <= 0) {
+    if (!sizeBytes || sizeBytes > maxAllowedBytes || sizeBytes <= 0) {
       return new Response(
         JSON.stringify({
-          error: `Tamanho excede o limite permitido (máximo ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB).`,
+          error: `Tamanho excede o limite permitido (máximo ${maxAllowedBytes / (1024 * 1024)}MB).`,
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )

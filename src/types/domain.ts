@@ -13,11 +13,14 @@ export interface CreateChallengeDTO {
   readonly icon: string
 }
 
+export type PostMediaType = 'image' | 'video'
+
 export interface Post {
   readonly id: string
   readonly authorName: string
   readonly authorAvatarUrl?: string | null
   readonly mediaUrl: string
+  readonly mediaType?: PostMediaType
   readonly caption: string | null
   readonly challengeId: number | null
   readonly clientSessionId?: string
@@ -31,6 +34,7 @@ export interface CreatePostDTO {
   readonly authorName: string
   readonly authorAvatarUrl?: string | null
   readonly mediaUrl: string
+  readonly mediaType?: PostMediaType
   readonly caption?: string | null
   readonly challengeId?: number | null
   readonly clientSessionId?: string

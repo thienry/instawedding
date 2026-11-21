@@ -28,6 +28,7 @@ import {
   getChallengeRepository,
   getPostRepository,
 } from '@/services/repositories.factory'
+import { resolvePostMediaType } from '@/utils/video'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 import type { Challenge, Post } from '@/types/domain'
@@ -283,7 +284,8 @@ export function AdminPage() {
         const safeAuthor = post.authorName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
-        a.download = `foto-${String(i + 1).padStart(3, '0')}-${safeAuthor}.webp`
+        const ext = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
+        a.download = `midia-${String(i + 1).padStart(3, '0')}-${safeAuthor}.${ext}`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -768,7 +770,7 @@ export function AdminPage() {
           <div>
             {isLoading ? (
               <p className="text-sm text-center text-sage-800/60 py-8">
-                Carregando fila de publicações...
+                Carregando fila de postagens...
               </p>
             ) : filteredPosts.length === 0 ? (
               <div className="p-10 text-center text-sm text-sage-800/65 bg-white rounded-3xl border border-sage-200 shadow-xs">
@@ -785,12 +787,22 @@ export function AdminPage() {
                         : 'border-rose-300 bg-rose-50/25'
                     }`}
                   >
-                    <div className="w-18 h-18 rounded-2xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200">
-                      <img
-                        src={post.mediaUrl}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-18 h-18 rounded-2xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200 relative">
+                      {resolvePostMediaType(post) === 'video' ? (
+                        <video
+                          src={post.mediaUrl}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={post.mediaUrl}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-1">

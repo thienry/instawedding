@@ -338,8 +338,8 @@ export function ChallengesPage() {
                           <span>
                             Ver {communityCount}{' '}
                             {communityCount === 1
-                              ? 'foto publicada'
-                              : 'fotos publicadas'}
+                              ? 'foto postada'
+                              : 'fotos postadas'}
                           </span>
                         </button>
                       )}

@@ -58,16 +58,19 @@ export class R2StorageService implements StorageService {
     file: File,
     onProgress?: UploadProgressCallback
   ): Promise<string> {
+    const cleanContentType =
+      (file.type.split(';')[0] ?? '').trim().toLowerCase() ||
+      'application/octet-stream'
     const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(
       file.name,
-      file.type,
+      cleanContentType,
       file.size
     )
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open('PUT', uploadUrl, true)
-      xhr.setRequestHeader('Content-Type', file.type)
+      xhr.setRequestHeader('Content-Type', cleanContentType)
 
       if (onProgress && xhr.upload) {
         xhr.upload.onprogress = (event) => {

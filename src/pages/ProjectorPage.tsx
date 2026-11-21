@@ -23,11 +23,13 @@ import { Link } from 'react-router-dom'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { QrCodeSvg } from '@/components/common/QrCodeSvg'
+import { useWakeLock } from '@/hooks/useWakeLock'
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import {
   getPostRepository,
   getRealtimeService,
 } from '@/services/repositories.factory'
+import { resolvePostMediaType } from '@/utils/video'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 import type { Post } from '@/types/domain'
@@ -88,6 +90,9 @@ export function ProjectorPage() {
   const isAuthorized = Boolean(
     adminUser && (adminUser.role === 'admin' || adminUser.role === 'moderator')
   )
+
+  // Prevent screen from dimming or locking while Projector Mode is active
+  useWakeLock(isAuthorized)
 
   // Initial load & fallback polling (only when authorized)
   useEffect(() => {
@@ -329,12 +334,24 @@ export function ProjectorPage() {
           key={`bg-${currentPost.id}`}
           className="absolute inset-0 pointer-events-none overflow-hidden transition-opacity duration-1000"
         >
-          <img
-            src={currentPost.mediaUrl}
-            alt=""
-            aria-hidden="true"
-            className="w-full h-full object-cover scale-125 blur-[90px] opacity-30 saturate-150"
-          />
+          {resolvePostMediaType(currentPost) === 'video' ? (
+            <video
+              src={currentPost.mediaUrl}
+              muted
+              autoPlay
+              loop
+              playsInline
+              aria-hidden="true"
+              className="w-full h-full object-cover scale-125 blur-[90px] opacity-30 saturate-150"
+            />
+          ) : (
+            <img
+              src={currentPost.mediaUrl}
+              alt=""
+              aria-hidden="true"
+              className="w-full h-full object-cover scale-125 blur-[90px] opacity-30 saturate-150"
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-br from-[#070E0A]/90 via-[#0E1C13]/75 to-[#070E0A]/95" />
         </div>
       )}
@@ -518,13 +535,26 @@ export function ProjectorPage() {
                   <div className="absolute inset-2 rounded-xl border border-gold-400/20 pointer-events-none z-20" />
 
                   {/* Color-Matched Blurred Canvas Backdrop inside Frame */}
-                  <img
-                    key={`backdrop-${currentPost.id}`}
-                    src={currentPost.mediaUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-45 scale-110 pointer-events-none"
-                  />
+                  {resolvePostMediaType(currentPost) === 'video' ? (
+                    <video
+                      key={`backdrop-${currentPost.id}`}
+                      src={currentPost.mediaUrl}
+                      muted
+                      autoPlay
+                      loop
+                      playsInline
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-45 scale-110 pointer-events-none"
+                    />
+                  ) : (
+                    <img
+                      key={`backdrop-${currentPost.id}`}
+                      src={currentPost.mediaUrl}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-45 scale-110 pointer-events-none"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/70 pointer-events-none" />
 
                   {/* Floating Top-Left Live Counter Badge */}
@@ -556,16 +586,28 @@ export function ProjectorPage() {
                     </div>
                   )}
 
-                  {/* Main Uncropped High-Resolution Guest Photo */}
-                  <img
-                    key={currentPost.id}
-                    src={currentPost.mediaUrl}
-                    alt={
-                      currentPost.caption ||
-                      `Foto por ${currentPost.authorName}`
-                    }
-                    className="relative z-10 w-full h-full max-h-[calc(100dvh-12.5rem)] object-contain p-3 sm:p-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] animate-in fade-in zoom-in-95 duration-700"
-                  />
+                  {/* Main Uncropped High-Resolution Guest Media */}
+                  {resolvePostMediaType(currentPost) === 'video' ? (
+                    <video
+                      key={currentPost.id}
+                      src={currentPost.mediaUrl}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="relative z-10 w-full h-full max-h-[calc(100dvh-12.5rem)] object-contain p-3 sm:p-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] animate-in fade-in zoom-in-95 duration-700"
+                    />
+                  ) : (
+                    <img
+                      key={currentPost.id}
+                      src={currentPost.mediaUrl}
+                      alt={
+                        currentPost.caption ||
+                        `Foto por ${currentPost.authorName}`
+                      }
+                      className="relative z-10 w-full h-full max-h-[calc(100dvh-12.5rem)] object-contain p-3 sm:p-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] animate-in fade-in zoom-in-95 duration-700"
+                    />
+                  )}
 
                   {/* Animated Golden Slideshow Progress Bar */}
                   {posts.length > 1 && !isPaused && (
@@ -723,11 +765,21 @@ export function ProjectorPage() {
                     : 'border-white/15 opacity-55 hover:opacity-100 hover:border-white/40'
                 }`}
               >
-                <img
-                  src={post.mediaUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                {resolvePostMediaType(post) === 'video' ? (
+                  <video
+                    src={post.mediaUrl}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={post.mediaUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </button>
             ))}
           </div>

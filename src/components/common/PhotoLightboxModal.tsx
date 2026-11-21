@@ -2,6 +2,7 @@ import { Download, Heart, Share2, Sparkles, X } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
+import { resolvePostMediaType } from '@/utils/video'
 
 import type { Post } from '@/types/domain'
 
@@ -32,6 +33,8 @@ export function PhotoLightboxModal({
   }, [post, onClose])
 
   if (!post) return null
+
+  const isVideo = resolvePostMediaType(post) === 'video'
 
   return (
     <div
@@ -77,16 +80,27 @@ export function PhotoLightboxModal({
         </button>
       </div>
 
-      {/* Main Image */}
+      {/* Main Media */}
       <div
         className="flex-1 flex items-center justify-center my-3 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={post.mediaUrl}
-          alt={post.caption || `Foto por ${post.authorName}`}
-          className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl select-none"
-        />
+        {isVideo ? (
+          <video
+            src={post.mediaUrl}
+            controls
+            autoPlay
+            loop
+            playsInline
+            className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+          />
+        ) : (
+          <img
+            src={post.mediaUrl}
+            alt={post.caption || `Foto por ${post.authorName}`}
+            className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl select-none"
+          />
+        )}
       </div>
 
       {/* Bottom Controls & Caption */}

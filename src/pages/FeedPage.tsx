@@ -1,4 +1,5 @@
 import {
+  ArrowUp,
   Award,
   Camera,
   CloudUpload,
@@ -24,20 +25,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
+import { FeedVideoPlayer } from '@/components/common/FeedVideoPlayer'
 import { GuestNameModal } from '@/components/common/GuestNameModal'
 import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
 import { ProgressiveImage } from '@/components/common/ProgressiveImage'
 import { TermsModal } from '@/components/common/TermsModal'
+import { useFeedNotifications } from '@/hooks/useFeedNotifications'
+import { FeedNotificationService } from '@/services/feed-notification.service'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
 import {
   OfflineQueueService,
   type BackgroundUploadTask,
 } from '@/services/offline-queue.service'
-import {
-  getPostRepository,
-  getRealtimeService,
-} from '@/services/repositories.factory'
+import { getPostRepository } from '@/services/repositories.factory'
 import { getGuestSession } from '@/utils/session'
+import { resolvePostMediaType } from '@/utils/video'
 
 import type { GuestUser, Post } from '@/types/domain'
 
@@ -73,7 +75,17 @@ export function FeedPage() {
     : null
   const lightboxPostId = searchParams.get('photoId')
 
+  const {
+    stagedPosts,
+    unseenAwayPostIds,
+    totalUnreadCount,
+    latestAuthors,
+  } = useFeedNotifications()
+
   const [posts, setPosts] = useState<Post[]>([])
+  const [recentlyRevealedIds, setRecentlyRevealedIds] = useState<Set<string>>(
+    new Set()
+  )
   const [pendingUploads, setPendingUploads] = useState<BackgroundUploadTask[]>(
     []
   )
@@ -111,7 +123,6 @@ export function FeedPage() {
   const session = getGuestSession()
   const guestAuthService = getGuestAuthService()
   const postRepo = getPostRepository()
-  const realtimeService = getRealtimeService()
 
   const effectiveSessionId = guestUser?.id ?? session.sessionId
 
@@ -139,6 +150,54 @@ export function FeedPage() {
     }
   }, [guestAuthService])
 
+  const handleRevealNewPosts = useCallback(() => {
+    const { stagedPosts: revealedPosts, revealedPostIds } =
+      FeedNotificationService.consumeStagedAndMarkSeen(posts)
+
+    if (revealedPosts.length > 0) {
+      setPosts((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id))
+        const uniqueNew = revealedPosts.filter((p) => !existingIds.has(p.id))
+        return [...uniqueNew, ...prev]
+      })
+    }
+
+    setRecentlyRevealedIds((prev) => {
+      const next = new Set(prev)
+      for (const id of revealedPostIds) {
+        next.add(id)
+      }
+      return next
+    })
+
+    if (activeTab !== 'all') {
+      setActiveTab('all')
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activeTab, posts])
+
+  const handleDismissNotifications = useCallback(() => {
+    const { stagedPosts: revealedPosts, revealedPostIds } =
+      FeedNotificationService.consumeStagedAndMarkSeen(posts)
+
+    if (revealedPosts.length > 0) {
+      setPosts((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id))
+        const uniqueNew = revealedPosts.filter((p) => !existingIds.has(p.id))
+        return [...uniqueNew, ...prev]
+      })
+    }
+
+    setRecentlyRevealedIds((prev) => {
+      const next = new Set(prev)
+      for (const id of revealedPostIds) {
+        next.add(id)
+      }
+      return next
+    })
+  }, [posts])
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
@@ -148,6 +207,15 @@ export function FeedPage() {
           ? postRepo.getLikedPostIds(effectiveSessionId)
           : Promise.resolve(new Set<string>()),
       ])
+      const { revealedPostIds } =
+        FeedNotificationService.consumeStagedAndMarkSeen(fetchedPosts)
+      setRecentlyRevealedIds((prev) => {
+        const next = new Set(prev)
+        for (const id of revealedPostIds) {
+          next.add(id)
+        }
+        return next
+      })
       setPosts(fetchedPosts)
       setLikedPostIds(likedSet)
     } catch {
@@ -223,6 +291,7 @@ export function FeedPage() {
     ])
       .then(([fetchedPosts, likedSet]) => {
         if (!isMounted) return
+        FeedNotificationService.syncWithFetchedPosts(fetchedPosts)
         setPosts(fetchedPosts)
         setLikedPostIds(likedSet)
         setIsLoading(false)
@@ -231,15 +300,8 @@ export function FeedPage() {
         if (isMounted) setIsLoading(false)
       })
 
-    // Subscribe to new posts in realtime
-    const unsubscribeRealtime = realtimeService.subscribeToNewPosts(
-      (newPost) => {
-        setPosts((prev) => {
-          if (prev.some((p) => p.id === newPost.id)) return prev
-          return [newPost, ...prev]
-        })
-      }
-    )
+    // Ensure global notification listener is active
+    FeedNotificationService.initialize()
 
     // Subscribe to optimistic background upload queue
     const unsubscribeQueue = OfflineQueueService.subscribe((tasks) => {
@@ -251,6 +313,7 @@ export function FeedPage() {
     const unsubscribePublished = OfflineQueueService.onPostPublished(
       (publishedPost) => {
         if (!isMounted) return
+        FeedNotificationService.registerOwnPublishedPost(publishedPost)
         setPosts((prev) => {
           if (prev.some((p) => p.id === publishedPost.id)) return prev
           return [publishedPost, ...prev]
@@ -260,11 +323,10 @@ export function FeedPage() {
 
     return () => {
       isMounted = false
-      unsubscribeRealtime()
       unsubscribeQueue()
       unsubscribePublished()
     }
-  }, [effectiveSessionId, guestUser, postRepo, realtimeService])
+  }, [effectiveSessionId, guestUser, postRepo])
 
   const handleToggleLike = useCallback(
     async (postId: string) => {
@@ -350,7 +412,8 @@ export function FeedPage() {
       const safeAuthor = post.authorName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-      link.download = `casamento-thiago-e-priscila-${safeAuthor}-${post.id.slice(0, 6)}.webp`
+      const ext = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
+      link.download = `casamento-thiago-e-priscila-${safeAuthor}-${post.id.slice(0, 6)}.${ext}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -422,6 +485,7 @@ export function FeedPage() {
     setIsDeleting(true)
     try {
       await postRepo.deletePost(postToDelete.id)
+      FeedNotificationService.removePost(postToDelete.id)
       setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id))
       setLikedPostIds((prev) => {
         const next = new Set(prev)
@@ -760,11 +824,13 @@ export function FeedPage() {
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-900 shrink-0 relative border border-sage-200">
                           <img
                             src={
-                              task.previewUrl ||
-                              task.blurDataUrl ||
-                              '/favicon.svg'
+                              task.mediaType === 'video'
+                                ? task.blurDataUrl || '/favicon.svg'
+                                : task.previewUrl ||
+                                  task.blurDataUrl ||
+                                  '/favicon.svg'
                             }
-                            alt="Publicando foto"
+                            alt="Postando mídia"
                             className="w-full h-full object-cover"
                           />
                           {task.status === 'uploading' && (
@@ -787,7 +853,11 @@ export function FeedPage() {
                             ) : (
                               <>
                                 <CloudUpload className="w-3.5 h-3.5 text-sage-700 shrink-0" />
-                                <span>Publicando sua foto...</span>
+                                <span>
+                                  {task.mediaType === 'video'
+                                    ? 'Postando seu vídeo...'
+                                    : 'Postando sua foto...'}
+                                </span>
                               </>
                             )}
                           </p>
@@ -845,6 +915,67 @@ export function FeedPage() {
             </div>
           )}
 
+          {/* Sticky Floating New Photos Notification Pill (Realtime & While-Away) */}
+          {totalUnreadCount > 0 && (
+            <div className="sticky top-16 md:top-4 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-3 duration-200">
+              <div className="pointer-events-auto inline-flex items-center gap-2 pl-3 pr-2 py-2 rounded-full bg-sage-900/95 text-white shadow-xl border border-gold-400/40 backdrop-blur-md">
+                <button
+                  type="button"
+                  onClick={handleRevealNewPosts}
+                  className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-semibold hover:text-gold-400 transition-colors cursor-pointer"
+                >
+                  {stagedPosts.length > 0 ? (
+                    <span className="w-6 h-6 rounded-full bg-gold-400 text-sage-900 flex items-center justify-center shrink-0">
+                      <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </span>
+                  ) : (
+                    <span className="w-6 h-6 rounded-full bg-gold-400/20 text-gold-400 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+
+                  {latestAuthors.length > 0 && (
+                    <div className="flex items-center -space-x-2 shrink-0">
+                      {latestAuthors.map((author) => (
+                        <div
+                          key={author.name}
+                          className="ring-2 ring-sage-900 rounded-full"
+                        >
+                          <AuthorAvatar
+                            name={author.name}
+                            avatarUrl={author.avatarUrl}
+                            sizeClassName="w-6 h-6 text-[10px]"
+                            fallbackClassName="bg-gold-400 text-sage-900"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <span>
+                    {stagedPosts.length > 0
+                      ? totalUnreadCount === 1
+                        ? '1 nova foto postada'
+                        : `${totalUnreadCount} novas fotos postada`
+                      : totalUnreadCount === 1
+                        ? '1 nova foto desde sua última visita'
+                        : `${totalUnreadCount} novas fotos desde sua última visita`}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDismissNotifications}
+                  title="Marcar como vistas"
+                  aria-label="Marcar novas fotos como vistas"
+                  className="p-1 rounded-full text-white/65 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Feed Content */}
           {isLoading ? (
             <div className="space-y-6">
@@ -873,7 +1004,7 @@ export function FeedPage() {
               <span className="text-4xl block">📷</span>
               <h3 className="font-serif text-xl font-bold text-sage-900">
                 {posts.length === 0
-                  ? 'Nenhuma foto publicada ainda'
+                  ? 'Nenhuma foto postada ainda'
                   : 'Nenhuma foto encontrada neste filtro'}
               </h3>
               <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
@@ -909,11 +1040,18 @@ export function FeedPage() {
                     (Boolean(post.clientSessionId) &&
                       post.clientSessionId === session.sessionId)
                   const showHeartBurst = heartBurstPostId === post.id
+                  const isNewPost =
+                    unseenAwayPostIds.has(post.id) ||
+                    recentlyRevealedIds.has(post.id)
 
                   return (
                     <article
                       key={post.id}
-                      className="bg-white rounded-3xl overflow-hidden border border-sage-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                      className={`bg-white rounded-3xl overflow-hidden border shadow-xs hover:shadow-md transition-all flex flex-col justify-between ${
+                        isNewPost
+                          ? 'border-gold-400/70 ring-1 ring-gold-400/25'
+                          : 'border-sage-200/80'
+                      }`}
                     >
                       <div>
                         {/* Author Header */}
@@ -925,9 +1063,16 @@ export function FeedPage() {
                               size="lg"
                             />
                             <div className="min-w-0">
-                              <h4 className="text-base font-bold text-sage-900 leading-tight truncate">
-                                {post.authorName}
-                              </h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-base font-bold text-sage-900 leading-tight truncate">
+                                  {post.authorName}
+                                </h4>
+                                {isNewPost && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white shrink-0">
+                                    Nova
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-xs text-sage-800/65 block mt-0.5">
                                 {formatRelativeTime(post.createdAt)}
                               </span>
@@ -968,27 +1113,46 @@ export function FeedPage() {
                           </div>
                         </div>
 
-                        {/* Media Image (Double-tap to like + Progressive Blur-up & Predictive Preload) */}
+                        {/* Media Container (Double-tap to like + Progressive Blur-up / Auto-play Video) */}
                         <div
                           onClick={() => handlePhotoTap(post)}
                           className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
                         >
-                          <ProgressiveImage
-                            src={post.mediaUrl}
-                            alt={post.caption || `Foto por ${post.authorName}`}
-                            cacheKey={post.id}
-                            priority={index < 2}
-                            containerClassName={
-                              viewMode === 'grid'
-                                ? 'w-full aspect-4/3'
-                                : 'w-full min-h-[260px]'
-                            }
-                            className={
-                              viewMode === 'grid'
-                                ? 'w-full aspect-4/3 object-contain'
-                                : 'w-full max-h-[75vh] object-contain'
-                            }
-                          />
+                          {resolvePostMediaType(post) === 'video' ? (
+                            <FeedVideoPlayer
+                              src={post.mediaUrl}
+                              cacheKey={post.id}
+                              containerClassName={
+                                viewMode === 'grid'
+                                  ? 'w-full aspect-4/3'
+                                  : 'w-full min-h-[260px]'
+                              }
+                              className={
+                                viewMode === 'grid'
+                                  ? 'w-full aspect-4/3 object-contain'
+                                  : 'w-full max-h-[75vh] object-contain'
+                              }
+                            />
+                          ) : (
+                            <ProgressiveImage
+                              src={post.mediaUrl}
+                              alt={
+                                post.caption || `Foto por ${post.authorName}`
+                              }
+                              cacheKey={post.id}
+                              priority={index < 2}
+                              containerClassName={
+                                viewMode === 'grid'
+                                  ? 'w-full aspect-4/3'
+                                  : 'w-full min-h-[260px]'
+                              }
+                              className={
+                                viewMode === 'grid'
+                                  ? 'w-full aspect-4/3 object-contain'
+                                  : 'w-full max-h-[75vh] object-contain'
+                              }
+                            />
+                          )}
 
                           {/* Expand to Lightbox Button */}
                           <button
@@ -1137,7 +1301,7 @@ export function FeedPage() {
                   {posts.length}
                 </p>
                 <p className="text-xs text-white/75 font-medium">
-                  Fotos Publicadas
+                  Fotos Postadas
                 </p>
               </div>
               <div className="bg-white/10 rounded-2xl p-3 border border-white/10">
@@ -1227,7 +1391,7 @@ export function FeedPage() {
             </div>
             <div className="text-center space-y-1.5">
               <h3 className="font-serif text-lg font-bold text-sage-900">
-                Excluir publicação?
+                Excluir post?
               </h3>
               <p className="text-sm text-sage-800/75 leading-relaxed">
                 Esta foto será removida permanentemente do feed e do telão da

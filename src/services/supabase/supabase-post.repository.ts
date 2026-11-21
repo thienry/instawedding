@@ -1,13 +1,20 @@
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
+import { isVideoUrl } from '@/utils/video'
 
 import type { PostRepository } from '@/services/contracts/post-repository.contract'
-import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
+import type {
+  CreatePostDTO,
+  Post,
+  PostMediaType,
+  ToggleLikeResult,
+} from '@/types/domain'
 
 interface SupabasePostRow {
   id: string
   author_name: string
   author_avatar_url?: string | null
   media_url: string
+  media_type?: PostMediaType | null
   caption: string | null
   challenge_id: number | null
   client_session_id?: string
@@ -196,11 +203,17 @@ export class SupabasePostRepository implements PostRepository {
   }
 
   private mapRowToPost(row: SupabasePostRow): Post {
+    const mediaType: PostMediaType =
+      row.media_type === 'video' || isVideoUrl(row.media_url)
+        ? 'video'
+        : 'image'
+
     return {
       id: row.id,
       authorName: row.author_name,
       authorAvatarUrl: row.author_avatar_url ?? null,
       mediaUrl: row.media_url,
+      mediaType,
       caption: row.caption,
       challengeId: row.challenge_id,
       clientSessionId: row.client_session_id,

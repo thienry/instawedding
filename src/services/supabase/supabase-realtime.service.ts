@@ -1,12 +1,13 @@
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { generateUUID } from '@/utils/uuid'
+import { isVideoUrl } from '@/utils/video'
 
 import type {
   PostSubscriptionCallback,
   RealtimeService,
   UnsubscribeFunction,
 } from '@/services/contracts/realtime.contract'
-import type { Post } from '@/types/domain'
+import type { Post, PostMediaType } from '@/types/domain'
 
 export class SupabaseRealtimeService implements RealtimeService {
   subscribeToNewPosts(callback: PostSubscriptionCallback): UnsubscribeFunction {
@@ -26,9 +27,12 @@ export class SupabaseRealtimeService implements RealtimeService {
           const newRow = payload.new as {
             id: string
             author_name: string
+            author_avatar_url?: string | null
             media_url: string
+            media_type?: PostMediaType | null
             caption: string | null
             challenge_id: number | null
+            client_session_id?: string
             likes_count: number
             is_approved: boolean
             created_at: string
@@ -55,12 +59,20 @@ export class SupabaseRealtimeService implements RealtimeService {
             }
           }
 
+          const mediaType: PostMediaType =
+            newRow.media_type === 'video' || isVideoUrl(newRow.media_url)
+              ? 'video'
+              : 'image'
+
           const post: Post = {
             id: newRow.id,
             authorName: newRow.author_name,
+            authorAvatarUrl: newRow.author_avatar_url ?? null,
             mediaUrl: newRow.media_url,
+            mediaType,
             caption: newRow.caption,
             challengeId: newRow.challenge_id,
+            clientSessionId: newRow.client_session_id,
             likesCount: newRow.likes_count,
             isApproved: newRow.is_approved,
             createdAt: newRow.created_at,
