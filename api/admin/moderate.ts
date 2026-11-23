@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { createClient } from '@supabase/supabase-js'
 
 import { getAdminTokenFromRequest, verifyAdminToken } from '@/api/_lib/security'

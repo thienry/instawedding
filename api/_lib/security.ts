@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import process from 'node:process'
 
 const JWT_SECRET =
   process.env.ADMIN_JWT_SECRET ||

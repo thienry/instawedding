@@ -22,7 +22,7 @@ export async function GET(req: Request): Promise<Response> {
 
   if (!payload) {
     return new Response(JSON.stringify({ authenticated: false }), {
-      status: 401,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
   }
