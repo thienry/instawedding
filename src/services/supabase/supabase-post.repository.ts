@@ -20,6 +20,7 @@ interface SupabasePostRow {
   client_session_id?: string
   likes_count: number
   is_approved: boolean
+  show_on_projector?: boolean | null
   created_at: string
   challenges?: {
     id: number
@@ -52,6 +53,7 @@ export class SupabasePostRepository implements PostRepository {
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const supabase = getSupabaseClient()
+    const showOnProjector = dto.showOnProjector ?? true
     const basePayload = {
       author_name: dto.authorName.trim(),
       media_url: dto.mediaUrl,
@@ -65,11 +67,27 @@ export class SupabasePostRepository implements PostRepository {
       .insert({
         ...basePayload,
         author_avatar_url: dto.authorAvatarUrl ?? null,
+        show_on_projector: showOnProjector,
       })
       .select(POST_SELECT_QUERY)
       .single()
 
     if (error) {
+      const fallbackWithAvatar = await supabase
+        .from('posts')
+        .insert({
+          ...basePayload,
+          author_avatar_url: dto.authorAvatarUrl ?? null,
+        })
+        .select(POST_SELECT_QUERY)
+        .single()
+
+      if (!fallbackWithAvatar.error && fallbackWithAvatar.data) {
+        return this.mapRowToPost(
+          fallbackWithAvatar.data as unknown as SupabasePostRow
+        )
+      }
+
       const fallbackResult = await supabase
         .from('posts')
         .insert(basePayload)
@@ -219,6 +237,7 @@ export class SupabasePostRepository implements PostRepository {
       clientSessionId: row.client_session_id,
       likesCount: row.likes_count,
       isApproved: row.is_approved,
+      showOnProjector: row.show_on_projector !== false,
       createdAt: row.created_at,
       challenge: row.challenges
         ? {

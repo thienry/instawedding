@@ -22,13 +22,16 @@ CREATE TABLE IF NOT EXISTS public.posts (
   client_session_id TEXT NOT NULL DEFAULT 'anonymous',
   likes_count INTEGER NOT NULL DEFAULT 0 CHECK (likes_count >= 0),
   is_approved BOOLEAN NOT NULL DEFAULT true,
+  show_on_projector BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS author_avatar_url TEXT;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS show_on_projector BOOLEAN NOT NULL DEFAULT true;
 
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON public.posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_is_approved ON public.posts (is_approved);
+CREATE INDEX IF NOT EXISTS idx_posts_show_on_projector ON public.posts (show_on_projector);
 
 -- 3. Likes Table
 CREATE TABLE IF NOT EXISTS public.likes (
@@ -150,3 +153,32 @@ VALUES
   (4, 'Mesa de Doces', 'Mostre seu doce ou pedaço de bolo favorito da festa!', '🍰', true),
   (5, 'Novos Amigos', 'Foto em grupo com convidados que você conheceu hoje.', '🤝', true)
 ON CONFLICT (id) DO NOTHING;
+
+-- 8. Ceremonialists Table (Authorized moderator emails granted by Master Admin)
+CREATE TABLE IF NOT EXISTS public.ceremonialists (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by TEXT NOT NULL DEFAULT 'thmoura14@gmail.com'
+);
+
+CREATE INDEX IF NOT EXISTS idx_ceremonialists_email ON public.ceremonialists (lower(email));
+
+ALTER TABLE public.ceremonialists ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read ceremonialists" ON public.ceremonialists;
+CREATE POLICY "Allow public read ceremonialists"
+  ON public.ceremonialists FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert ceremonialists" ON public.ceremonialists;
+CREATE POLICY "Allow public insert ceremonialists"
+  ON public.ceremonialists FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public delete ceremonialists" ON public.ceremonialists;
+CREATE POLICY "Allow public delete ceremonialists"
+  ON public.ceremonialists FOR DELETE
+  USING (true);
+

@@ -40,12 +40,36 @@ export function PhotoLightboxModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 animate-in fade-in duration-150 overflow-hidden"
       onClick={onClose}
     >
+      {/* Ambient Color-Matched Blurred Backdrop of the Media itself */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
+      >
+        {isVideo ? (
+          <video
+            src={post.mediaUrl}
+            muted
+            loop
+            playsInline
+            autoPlay
+            className="w-full h-full object-cover scale-125 blur-3xl opacity-35 saturate-150"
+          />
+        ) : (
+          <img
+            src={post.mediaUrl}
+            alt=""
+            className="w-full h-full object-cover scale-125 blur-3xl opacity-35 saturate-150"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
       {/* Top Bar */}
       <div
-        className="flex items-center justify-between text-white max-w-2xl w-full mx-auto pt-1"
+        className="relative z-10 flex items-center justify-between text-white max-w-2xl w-full mx-auto pt-1"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2.5">
@@ -82,7 +106,7 @@ export function PhotoLightboxModal({
 
       {/* Main Media */}
       <div
-        className="flex-1 flex items-center justify-center my-3 overflow-hidden"
+        className="relative z-10 flex-1 flex items-center justify-center my-3 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {isVideo ? (
@@ -105,7 +129,7 @@ export function PhotoLightboxModal({
 
       {/* Bottom Controls & Caption */}
       <div
-        className="max-w-2xl w-full mx-auto space-y-3 pb-2 text-white"
+        className="relative z-10 max-w-2xl w-full mx-auto space-y-3 pb-2 text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {post.caption && (

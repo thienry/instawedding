@@ -35,6 +35,7 @@ export interface BackgroundUploadTask {
   readonly progress: number
   readonly status: UploadTaskStatus
   readonly errorMessage?: string
+  readonly showOnProjector?: boolean
   readonly createdAt: string
 }
 
@@ -53,6 +54,7 @@ interface StoredIdbRecord {
   readonly blurDataUrl?: string
   readonly status: UploadTaskStatus
   readonly errorMessage?: string
+  readonly showOnProjector?: boolean
   readonly createdAt: string
 }
 
@@ -70,6 +72,7 @@ export interface SubmitBackgroundUploadParams {
   readonly challengeId: number | null
   readonly challenge?: Challenge
   readonly clientSessionId: string
+  readonly showOnProjector?: boolean
 }
 
 type QueueChangeListener = (tasks: BackgroundUploadTask[]) => void
@@ -244,6 +247,7 @@ export class OfflineQueueService {
               ? 'failed'
               : rec.status,
         errorMessage: rec.errorMessage,
+        showOnProjector: rec.showOnProjector ?? true,
         createdAt: rec.createdAt,
       })
     }
@@ -286,6 +290,7 @@ export class OfflineQueueService {
       blurDataUrl: blurDataUrl || undefined,
       progress: isOffline ? 0 : 8,
       status: isOffline ? 'queued-offline' : 'uploading',
+      showOnProjector: params.showOnProjector ?? true,
       createdAt,
     }
 
@@ -307,6 +312,7 @@ export class OfflineQueueService {
       clientSessionId: params.clientSessionId,
       blurDataUrl: blurDataUrl || undefined,
       status: initialTask.status,
+      showOnProjector: params.showOnProjector ?? true,
       createdAt,
     })
 
@@ -401,6 +407,7 @@ export class OfflineQueueService {
           caption: task.caption,
           challengeId: task.challengeId,
           clientSessionId: task.clientSessionId,
+          showOnProjector: task.showOnProjector ?? true,
         })
 
         if (task.blurDataUrl) {

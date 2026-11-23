@@ -8,12 +8,15 @@ import {
   Image as ImageIcon,
   Loader2,
   LogOut,
+  PenTool,
   Sparkles,
+  Tv,
   Video,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import { GuestbookModal } from '@/components/capture/GuestbookModal'
 import { VideoRecorderModal } from '@/components/capture/VideoRecorderModal'
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 import { TermsModal } from '@/components/common/TermsModal'
@@ -49,6 +52,7 @@ export function CapturePage() {
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const guestAuthService = getGuestAuthService()
   const [guestUser, setGuestUser] = useState<GuestUser | null>(() =>
@@ -63,9 +67,11 @@ export function CapturePage() {
   const [isVideo, setIsVideo] = useState(false)
   const [videoDuration, setVideoDuration] = useState<number>(0)
   const [isRecorderOpen, setIsRecorderOpen] = useState(false)
+  const [isGuestbookOpen, setIsGuestbookOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<PhotoFilterId>('none')
   const [selectedFrame, setSelectedFrame] = useState<PhotoFrameId>('none')
   const [studioTab, setStudioTab] = useState<'filters' | 'frames'>('filters')
+  const [showOnProjector, setShowOnProjector] = useState(true)
 
   const [caption, setCaption] = useState('')
   const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(
@@ -101,6 +107,15 @@ export function CapturePage() {
     }
     fetchChallenges()
   }, [challengeRepo])
+
+  useEffect(() => {
+    if (previewUrl && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      const timer = setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [previewUrl])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -170,6 +185,19 @@ export function CapturePage() {
     setPreviewUrl(URL.createObjectURL(normalized))
   }
 
+  const handleGuestbookCardGenerated = (file: File, message: string) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setErrorMessage('')
+    setIsVideo(false)
+    setVideoDuration(0)
+    setSelectedFilter('none')
+    setSelectedFrame('none')
+    setSelectedFile(file)
+    setCompressedFile(file)
+    setCaption(message)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
+
   const handleResetPhoto = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setSelectedFile(null)
@@ -179,6 +207,7 @@ export function CapturePage() {
     setVideoDuration(0)
     setSelectedFilter('none')
     setSelectedFrame('none')
+    setShowOnProjector(true)
     setUploadProgress(null)
     setErrorMessage('')
   }
@@ -277,6 +306,7 @@ export function CapturePage() {
         challengeId: selectedChallengeId,
         challenge: matchedChallenge,
         clientSessionId: effectiveSessionId,
+        showOnProjector,
       })
 
       if (previewUrl) {
@@ -316,18 +346,49 @@ export function CapturePage() {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Voltar ao feed</span>
-        </button>
-        <h2 className="font-serif text-lg sm:text-xl font-bold text-sage-900">
-          Estúdio Fotográfico
-        </h2>
+      <div className="flex items-center justify-between gap-3">
+        {previewUrl ? (
+          <>
+            <button
+              type="button"
+              onClick={handleResetPhoto}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Trocar mídia</span>
+            </button>
+            <h2 className="font-serif text-lg sm:text-xl font-bold text-sage-900 truncate">
+              Nova Publicação
+            </h2>
+            <button
+              type="button"
+              onClick={() => formRef.current?.requestSubmit()}
+              disabled={isSubmitting || isCompressing}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 shrink-0"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4 text-gold-400" />
+              )}
+              <span>{isVideo ? 'Postar Vídeo' : 'Postar Foto'}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Voltar ao feed</span>
+            </button>
+            <h2 className="font-serif text-lg sm:text-xl font-bold text-sage-900">
+              Estúdio Fotográfico
+            </h2>
+          </>
+        )}
       </div>
 
       {!guestUser ? (
@@ -469,15 +530,34 @@ export function CapturePage() {
               <button
                 type="button"
                 onClick={() => galleryInputRef.current?.click()}
-                className="col-span-2 flex items-center justify-center gap-3 p-4.5 rounded-2xl bg-sage-100 text-sage-900 hover:bg-sage-200 active:scale-95 transition-all border border-sage-200"
+                className="col-span-2 flex items-center justify-center gap-3 p-4 rounded-2xl bg-sage-100 text-sage-900 hover:bg-sage-200 active:scale-95 transition-all border border-sage-200"
               >
-                <ImageIcon className="w-6 h-6 text-sage-800 shrink-0" />
+                <ImageIcon className="w-5 h-5 text-sage-800 shrink-0" />
                 <div className="text-left sm:text-center">
                   <span className="text-sm font-bold block">
                     Escolher da Galeria
                   </span>
                   <span className="text-xs text-sage-800/70">
                     Fotos e vídeos de até 25MB
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGuestbookOpen(true)}
+                className="col-span-2 flex items-center justify-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-[#112419] via-[#1B3827] to-[#112419] text-white hover:from-[#173022] hover:to-[#173022] active:scale-95 transition-all shadow-md border border-gold-400/50"
+              >
+                <PenTool className="w-5 h-5 text-gold-400 shrink-0" />
+                <div className="text-left sm:text-center">
+                  <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>Livro de Recados Digital</span>
+                    <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-gold-400 text-sage-950">
+                      Novo
+                    </span>
+                  </span>
+                  <span className="text-xs text-gold-200/80">
+                    Envie seus votos e mensagem carinhosa para Thiago &amp; Priscila
                   </span>
                 </div>
               </button>
@@ -498,6 +578,7 @@ export function CapturePage() {
       ) : (
         /* Preview & Details Form (2 Columns on Notebook/Desktop) */
         <form
+          ref={formRef}
           onSubmit={handleSubmit}
           className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0"
         >
@@ -510,7 +591,7 @@ export function CapturePage() {
                   : 'border border-sage-200 bg-black/5'
               }`}
             >
-              <div className="relative rounded-2xl overflow-hidden bg-slate-950/95 flex items-center justify-center max-h-[65vh]">
+              <div className="relative rounded-2xl overflow-hidden bg-slate-950/95 flex items-center justify-center max-h-[38vh] sm:max-h-[48vh] lg:max-h-[62vh]">
                 {isVideo ? (
                   <video
                     src={previewUrl}
@@ -518,13 +599,13 @@ export function CapturePage() {
                     autoPlay
                     loop
                     playsInline
-                    className="w-full max-h-[65vh] object-contain"
+                    className="w-full max-h-[38vh] sm:max-h-[48vh] lg:max-h-[62vh] object-contain"
                   />
                 ) : (
                   <img
                     src={previewUrl}
                     alt="Prévia da foto"
-                    className="w-full max-h-[65vh] object-contain transition-all duration-150"
+                    className="w-full max-h-[38vh] sm:max-h-[48vh] lg:max-h-[62vh] object-contain transition-all duration-150"
                     style={{ filter: getFilterById(selectedFilter).cssFilter }}
                   />
                 )}
@@ -585,6 +666,13 @@ export function CapturePage() {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Mobile quick guidance banner */}
+            <div className="lg:hidden mt-2.5 px-3 py-2 rounded-xl bg-sage-100/80 border border-sage-200/70 text-center">
+              <p className="text-xs font-medium text-sage-800/85">
+                👇 Role para adicionar legenda e telão ou clique em <span className="font-bold text-sage-900">Postar</span> no topo.
+              </p>
             </div>
           </div>
 
@@ -693,12 +781,17 @@ export function CapturePage() {
                               : 'hover:bg-sage-50/60'
                           }`}
                         >
-                          <div className="w-16 h-16 rounded-xl bg-sage-100 flex items-center justify-center border border-sage-200 text-2xl shadow-2xs">
+                          <div className="w-16 h-16 rounded-xl bg-sage-100 flex items-center justify-center border border-sage-200 text-2xl shadow-2xs relative">
                             {fr.id === 'none' && '🚫'}
                             {fr.id === 'polaroid' && '📷'}
                             {fr.id === 'golden-border' && '✨'}
                             {fr.id === 'cinema' && '🎬'}
                             {fr.id === 'minimal-floral' && '💍'}
+                            {fr.id === 'minimal-floral' && (
+                              <span className="absolute -top-1.5 -right-1.5 bg-gold-500 text-[9px] font-black uppercase text-white px-1 py-0.2 rounded-full shadow-xs">
+                                Oficial
+                              </span>
+                            )}
                           </div>
                           <span className="text-xs font-semibold text-sage-800 text-center max-w-[84px] truncate">
                             {fr.label}
@@ -783,6 +876,37 @@ export function CapturePage() {
                 </select>
               </div>
 
+              {/* Toggle Telão da Festa */}
+              <div className="p-3.5 sm:p-4 rounded-2xl border border-sage-200 bg-sage-50/70 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-gold-400/20 text-sage-900 shrink-0">
+                    <Tv className="w-5 h-5 text-gold-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-sage-900">
+                        Exibir no Telão da Festa
+                      </span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
+                        Ao vivo
+                      </span>
+                    </div>
+                    <p className="text-xs text-sage-800/75 mt-0.5">
+                      Transmitir automaticamente no telão do casamento após o envio.
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={showOnProjector}
+                    onChange={(e) => setShowOnProjector(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-900"></div>
+                </label>
+              </div>
+
               {/* Implicit Terms & LGPD Consent Notice */}
               <p className="pt-1 text-xs text-sage-800/75 leading-relaxed">
                 Ao utilizar o aplicativo e publicar fotos ou vídeos, você
@@ -851,6 +975,13 @@ export function CapturePage() {
         isOpen={isRecorderOpen}
         onClose={() => setIsRecorderOpen(false)}
         onVideoRecorded={handleVideoRecorded}
+      />
+
+      <GuestbookModal
+        isOpen={isGuestbookOpen}
+        onClose={() => setIsGuestbookOpen(false)}
+        authorName={guestUser?.name ?? ''}
+        onCardGenerated={handleGuestbookCardGenerated}
       />
 
       <TermsModal

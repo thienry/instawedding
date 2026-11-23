@@ -1,3 +1,5 @@
+import { getCeremonialistRepository } from '@/services/repositories.factory'
+
 import type {
   AdminAuthResult,
   AdminAuthService,
@@ -48,37 +50,35 @@ export class MockAdminAuthService implements AdminAuthService {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const email = emailInput.trim().toLowerCase()
 
-    const adminEmails = (
-      import.meta.env.VITE_ADMIN_EMAILS ||
-      'thmoura14@gmail.com,thiago.noivo@gmail.com,noivos@gmail.com'
-    )
-      .split(',')
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean)
-
-    const modEmails = (
-      import.meta.env.VITE_MODERATOR_EMAILS ||
-      'cerimonial@gmail.com,assessoria@gmail.com'
-    )
-      .split(',')
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean)
+    const masterAdminEmail = 'thmoura14@gmail.com'
 
     let role: 'admin' | 'moderator' = 'admin'
     let name = 'Administrador'
 
-    if (adminEmails.includes(email)) {
+    if (email === masterAdminEmail) {
       role = 'admin'
-      const username = email.split('@')[0]
-      name = `${username.charAt(0).toUpperCase() + username.slice(1)} (Admin)`
-    } else if (modEmails.includes(email)) {
-      role = 'moderator'
-      const username = email.split('@')[0]
-      name = `${username.charAt(0).toUpperCase() + username.slice(1)} (Cerimonial)`
+      name = 'Thiago (Admin Master)'
     } else {
-      return {
-        success: false,
-        message: `O e-mail "${email}" não possui permissão pré-cadastrada no painel administrativo.`,
+      const ceremonialRepo = getCeremonialistRepository()
+      const isCeremonial = await ceremonialRepo.isCeremonialistEmail(email)
+
+      const modEmails = (
+        import.meta.env.VITE_MODERATOR_EMAILS ||
+        'cerimonial@gmail.com,assessoria@gmail.com'
+      )
+        .split(',')
+        .map((e: string) => e.trim().toLowerCase())
+        .filter(Boolean)
+
+      if (isCeremonial || modEmails.includes(email)) {
+        role = 'moderator'
+        const username = email.split('@')[0]
+        name = `${username.charAt(0).toUpperCase() + username.slice(1)} (Cerimonial)`
+      } else {
+        return {
+          success: false,
+          message: `O e-mail "${email}" não possui permissão pré-cadastrada no painel administrativo.`,
+        }
       }
     }
 

@@ -20,6 +20,7 @@ import {
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation'
 import { useFeedNotifications } from '@/hooks/useFeedNotifications'
+import { useInactivityTimeout } from '@/hooks/useInactivityTimeout'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import { OfflineQueueService } from '@/services/offline-queue.service'
@@ -36,6 +37,7 @@ const ROUTE_TITLES: Record<string, string> = {
 }
 
 export function AppLayout() {
+  useInactivityTimeout()
   const isOnline = useNetworkStatus()
   const { totalUnreadCount } = useFeedNotifications()
   const navigate = useNavigate()

@@ -37,6 +37,8 @@ import type { Post } from '@/types/domain'
 const SLIDESHOW_INTERVAL_MS = 8000
 const FALLBACK_POLL_INTERVAL_MS = 30000
 
+export type ProjectorFilterMode = 'all' | 'highlights' | 'challenges'
+
 export function ProjectorPage() {
   const adminAuth = getAdminAuthService()
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() =>
@@ -45,6 +47,7 @@ export function ProjectorPage() {
   const [isVerifyingAuth, setIsVerifyingAuth] = useState(true)
 
   const [posts, setPosts] = useState<Post[]>([])
+  const [filterMode, setFilterMode] = useState<ProjectorFilterMode>('all')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -104,7 +107,10 @@ export function ProjectorPage() {
         .getPosts()
         .then((fetched) => {
           if (!isCancelled && fetched.length > 0) {
-            setPosts(fetched)
+            const projectorPosts = fetched.filter(
+              (p) => p.showOnProjector !== false
+            )
+            setPosts(projectorPosts)
           }
         })
         .catch(() => {
@@ -130,6 +136,8 @@ export function ProjectorPage() {
     if (!isAuthorized) return
 
     const unsubscribe = realtimeService.subscribeToNewPosts((incomingPost) => {
+      if (incomingPost.showOnProjector === false) return
+
       setPosts((prev) => {
         if (prev.some((p) => p.id === incomingPost.id)) return prev
         return [incomingPost, ...prev]
@@ -152,18 +160,33 @@ export function ProjectorPage() {
     }
   }, [realtimeService, isAuthorized])
 
+  const displayedPosts = useMemo(() => {
+    if (filterMode === 'highlights') {
+      return [...posts].sort((a, b) => b.likesCount - a.likesCount)
+    }
+    if (filterMode === 'challenges') {
+      const list = posts.filter((p) => p.challengeId !== null)
+      return list.length > 0 ? list : posts
+    }
+    return posts
+  }, [posts, filterMode])
+
+  const safeCurrentIndex =
+    displayedPosts.length > 0 ? currentIndex % displayedPosts.length : 0
+  const currentPost = displayedPosts[safeCurrentIndex]
+
   // Slideshow auto-advance timer
   useEffect(() => {
-    if (posts.length <= 1 || isPaused) return
+    if (displayedPosts.length <= 1 || isPaused) return
 
     const timer = window.setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % posts.length)
+      setCurrentIndex((prev) => (prev + 1) % displayedPosts.length)
     }, SLIDESHOW_INTERVAL_MS)
 
     return () => {
       window.clearInterval(timer)
     }
-  }, [posts.length, isPaused])
+  }, [displayedPosts.length, isPaused])
 
   // Auto-hide controls after inactivity
   const handleMouseMove = () => {
@@ -197,14 +220,16 @@ export function ProjectorPage() {
   }, [])
 
   const handlePrevSlide = useCallback(() => {
-    if (posts.length === 0) return
-    setCurrentIndex((prev) => (prev - 1 + posts.length) % posts.length)
-  }, [posts.length])
+    if (displayedPosts.length === 0) return
+    setCurrentIndex(
+      (prev) => (prev - 1 + displayedPosts.length) % displayedPosts.length
+    )
+  }, [displayedPosts.length])
 
   const handleNextSlide = useCallback(() => {
-    if (posts.length === 0) return
-    setCurrentIndex((prev) => (prev + 1) % posts.length)
-  }, [posts.length])
+    if (displayedPosts.length === 0) return
+    setCurrentIndex((prev) => (prev + 1) % displayedPosts.length)
+  }, [displayedPosts.length])
 
   // Keyboard shortcuts for projector operator (Arrows, Space, F, Q)
   useEffect(() => {
@@ -228,8 +253,6 @@ export function ProjectorPage() {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isAuthorized, handlePrevSlide, handleNextSlide, toggleFullscreen, isQrModalOpen])
-
-  const currentPost = posts[currentIndex]
 
   const totalLikesCount = useMemo(
     () => posts.reduce((acc, post) => acc + post.likesCount, 0),
@@ -429,13 +452,58 @@ export function ProjectorPage() {
               </div>
             </div>
 
-            {/* Event Stats inside Left Header Box */}
-            <div className="hidden md:flex items-center gap-3 text-xs shrink-0">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/35 border border-white/10">
-                <Camera className="w-3.5 h-3.5 text-gold-400" />
-                <span className="font-bold text-white">{posts.length}</span>
-                <span className="text-white/65">fotos</span>
+            {/* Event Stats & Filter Modes */}
+            <div className="hidden md:flex items-center gap-2.5 text-xs shrink-0">
+              <div className="flex items-center bg-black/40 border border-white/10 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterMode('all')
+                    setCurrentIndex(0)
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    filterMode === 'all'
+                      ? 'bg-gold-400 text-slate-950 shadow-xs'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                  title="Todas as fotos e vídeos em ordem cronológica"
+                >
+                  Todas ({posts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterMode('highlights')
+                    setCurrentIndex(0)
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    filterMode === 'highlights'
+                      ? 'bg-gold-400 text-slate-950 shadow-xs'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                  title="Fotos e vídeos mais curtidos da noite"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Destaques</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterMode('challenges')
+                    setCurrentIndex(0)
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    filterMode === 'challenges'
+                      ? 'bg-gold-400 text-slate-950 shadow-xs'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                  title="Apenas fotos de desafios cumpridos"
+                >
+                  <Trophy className="w-3 h-3" />
+                  <span>Desafios</span>
+                </button>
               </div>
+
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/35 border border-white/10">
                 <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
                 <span className="font-bold text-white">{totalLikesCount}</span>
@@ -460,7 +528,7 @@ export function ProjectorPage() {
                   : 'opacity-40 hover:opacity-100'
               }`}
             >
-              {posts.length > 1 && (
+              {displayedPosts.length > 1 && (
                 <div className="flex items-center gap-0.5 bg-black/35 border border-white/10 rounded-xl p-1">
                   <button
                     type="button"
@@ -561,7 +629,7 @@ export function ProjectorPage() {
                   <div className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/65 backdrop-blur-md border border-white/15 text-xs font-semibold text-white/90 shadow-lg">
                     <Camera className="w-3.5 h-3.5 text-gold-400" />
                     <span>
-                      Foto {currentIndex + 1} de {posts.length}
+                      Foto {safeCurrentIndex + 1} de {displayedPosts.length}
                     </span>
                     <span className="text-white/35">•</span>
                     <span className="text-white/75">
@@ -575,16 +643,44 @@ export function ProjectorPage() {
                     </span>
                   </div>
 
-                  {/* Floating Top-Right Challenge Badge */}
-                  {currentPost.challenge && (
-                    <div className="absolute top-4 right-4 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold-500/95 to-gold-400/95 text-[#09120C] text-xs font-extrabold shadow-[0_8px_25px_rgba(197,168,128,0.45)] border border-white/50">
-                      <Trophy className="w-3.5 h-3.5 shrink-0" />
-                      <span>
-                        {currentPost.challenge.icon}{' '}
-                        {currentPost.challenge.title}
+                  {/* Floating Top-Right Badges (Highlights & Challenges) */}
+                  <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                    {currentPost.likesCount >= 3 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-rose-500/90 to-rose-400/90 text-white text-xs font-extrabold shadow-lg border border-white/40">
+                        <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                        <span>{currentPost.likesCount} curtidas</span>
+                      </div>
+                    )}
+                    {currentPost.challenge && (
+                      <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold-500/95 to-gold-400/95 text-[#09120C] text-xs font-extrabold shadow-[0_8px_25px_rgba(197,168,128,0.45)] border border-white/50">
+                        <Trophy className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {currentPost.challenge.icon}{' '}
+                          {currentPost.challenge.title}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Permanent Subtle Quick-Scan QR Chip */}
+                  <button
+                    type="button"
+                    onClick={() => setIsQrModalOpen(true)}
+                    className="absolute bottom-4 left-4 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-black/75 hover:bg-black/90 backdrop-blur-md border border-gold-400/40 text-left transition-all group cursor-pointer shadow-lg"
+                    title="Apareça no Telão — Clique para ampliar o QR Code"
+                  >
+                    <div className="p-1 rounded-lg bg-white shrink-0 group-hover:scale-105 transition-transform">
+                      <QrCodeSvg value={captureUrl} size={30} />
+                    </div>
+                    <div className="hidden sm:block">
+                      <span className="text-[10px] font-black uppercase text-gold-400 block tracking-wider leading-none">
+                        Apareça no Telão
+                      </span>
+                      <span className="text-[11px] text-white/90 font-medium">
+                        Aponte a câmera
                       </span>
                     </div>
-                  )}
+                  </button>
 
                   {/* Main Uncropped High-Resolution Guest Media */}
                   {resolvePostMediaType(currentPost) === 'video' ? (
@@ -610,10 +706,10 @@ export function ProjectorPage() {
                   )}
 
                   {/* Animated Golden Slideshow Progress Bar */}
-                  {posts.length > 1 && !isPaused && (
+                  {displayedPosts.length > 1 && !isPaused && (
                     <div className="absolute bottom-0 inset-x-0 h-1.5 bg-white/10 z-30 overflow-hidden">
                       <div
-                        key={`progress-${currentPost.id}-${currentIndex}`}
+                        key={`progress-${currentPost.id}-${safeCurrentIndex}`}
                         style={{
                           animation: `projectorProgress ${SLIDESHOW_INTERVAL_MS}ms linear forwards`,
                         }}

@@ -1,9 +1,12 @@
 import {
   ArrowLeft,
+  Camera,
   CheckCircle2,
   Download,
   Eye,
   EyeOff,
+  FileSpreadsheet,
+  Heart,
   Image as ImageIcon,
   KeyRound,
   Loader2,
@@ -19,21 +22,26 @@ import {
   Trash2,
   Trophy,
   Tv,
+  UserCheck,
+  UserPlus,
+  Users,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import {
+  getCeremonialistRepository,
   getChallengeRepository,
   getPostRepository,
 } from '@/services/repositories.factory'
+import { buildZipArchive, type ZipEntry } from '@/utils/zip-exporter'
 import { resolvePostMediaType } from '@/utils/video'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
-import type { Challenge, Post } from '@/types/domain'
+import type { Ceremonialist, Challenge, Post } from '@/types/domain'
 
-type AdminTab = 'photos' | 'challenges'
+type AdminTab = 'photos' | 'challenges' | 'ceremonial'
 type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
 
 export function AdminPage() {
@@ -70,9 +78,22 @@ export function AdminPage() {
   const [newChallengeDesc, setNewChallengeDesc] = useState('')
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false)
 
+  // Ceremonialists states
+  const [ceremonialists, setCeremonialists] = useState<Ceremonialist[]>([])
+  const [newCeremonialEmail, setNewCeremonialEmail] = useState('')
+  const [newCeremonialName, setNewCeremonialName] = useState('')
+  const [isAddingCeremonialist, setIsAddingCeremonialist] = useState(false)
+  const [ceremonialError, setCeremonialError] = useState('')
+  const [ceremonialSuccess, setCeremonialSuccess] = useState('')
+
   const postRepo = getPostRepository()
   const challengeRepo = getChallengeRepository()
+  const ceremonialRepo = getCeremonialistRepository()
   const adminAuth = getAdminAuthService()
+
+  const isMasterAdmin =
+    currentUser?.role === 'admin' &&
+    currentUser?.email === 'thmoura14@gmail.com'
 
   useEffect(() => {
     let isMounted = true
@@ -123,6 +144,24 @@ export function AdminPage() {
       isMounted = false
     }
   }, [currentUser, postRepo, challengeRepo])
+
+  useEffect(() => {
+    if (!currentUser || !isMasterAdmin) return
+    let isMounted = true
+
+    ceremonialRepo
+      .getCeremonialists()
+      .then((list) => {
+        if (isMounted) setCeremonialists(list)
+      })
+      .catch(() => {
+        // Suppress initial ceremonialists load error
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, isMasterAdmin, ceremonialRepo])
 
   const handleRequestOtp = async (
     e?: React.FormEvent,
@@ -214,6 +253,63 @@ export function AdminPage() {
     await handleForceClearAllSessions()
   }
 
+  const stats = useMemo(() => {
+    const totalPosts = posts.length
+    const approvedPosts = posts.filter((p) => p.isApproved)
+    const totalPhotos = posts.filter(
+      (p) => resolvePostMediaType(p) !== 'video'
+    ).length
+    const totalVideos = posts.filter(
+      (p) => resolvePostMediaType(p) === 'video'
+    ).length
+
+    // Top Liked Post
+    let topLikedPost: Post | null = null
+    for (const post of posts) {
+      if (!topLikedPost || post.likesCount > topLikedPost.likesCount) {
+        topLikedPost = post
+      }
+    }
+
+    // Top Contributor (Convidado que mais enviou mídias aprovadas)
+    const authorCounts = new Map<string, number>()
+    for (const post of approvedPosts) {
+      authorCounts.set(
+        post.authorName,
+        (authorCounts.get(post.authorName) ?? 0) + 1
+      )
+    }
+    let topAuthor = ''
+    let topAuthorCount = 0
+    for (const [author, count] of authorCounts.entries()) {
+      if (count > topAuthorCount) {
+        topAuthor = author
+        topAuthorCount = count
+      }
+    }
+
+    // Challenge Participation
+    const challengePostsCount = posts.filter(
+      (p) => p.challengeId != null
+    ).length
+    const challengeRate =
+      totalPosts > 0
+        ? Math.round((challengePostsCount / totalPosts) * 100)
+        : 0
+
+    return {
+      totalPosts,
+      approvedPosts: approvedPosts.length,
+      totalPhotos,
+      totalVideos,
+      topLikedPost,
+      topAuthor: topAuthor || 'Nenhum ainda',
+      topAuthorCount,
+      challengePostsCount,
+      challengeRate,
+    }
+  }, [posts])
+
   const handleToggleApproval = async (postId: string) => {
     try {
       const newStatus = await postRepo.togglePostApproval(postId)
@@ -272,32 +368,102 @@ export function AdminPage() {
     setIsDownloadingAlbum(true)
     setDownloadProgress({ current: 0, total: approvedPosts.length })
 
-    for (let i = 0; i < approvedPosts.length; i++) {
-      const post = approvedPosts[i]
-      setDownloadProgress({ current: i + 1, total: approvedPosts.length })
-      try {
-        const res = await fetch(post.mediaUrl)
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        const safeAuthor = post.authorName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-        const ext = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
-        a.download = `midia-${String(i + 1).padStart(3, '0')}-${safeAuthor}.${ext}`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        await new Promise((resolve) => window.setTimeout(resolve, 350))
-      } catch {
-        // Continue to next photo if individual fetch fails
+    try {
+      const zipEntries: ZipEntry[] = []
+
+      for (let i = 0; i < approvedPosts.length; i++) {
+        const post = approvedPosts[i]
+        setDownloadProgress({ current: i + 1, total: approvedPosts.length })
+        try {
+          const res = await fetch(post.mediaUrl)
+          if (!res.ok) continue
+          const buffer = await res.arrayBuffer()
+          const safeAuthor =
+            post.authorName
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '') || 'convidado'
+          const ext = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
+          const filename = `foto-${String(i + 1).padStart(3, '0')}-${safeAuthor}.${ext}`
+
+          zipEntries.push({
+            filename,
+            data: new Uint8Array(buffer),
+            date: new Date(post.createdAt),
+          })
+        } catch {
+          // Continue if individual fetch fails
+        }
       }
+
+      if (zipEntries.length === 0) {
+        alert('Não foi possível carregar as mídias para gerar o arquivo ZIP.')
+        return
+      }
+
+      const zipBlob = buildZipArchive(zipEntries)
+      const downloadUrl = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = `album-casamento-thiago-e-priscila-${new Date().toISOString().slice(0, 10)}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(downloadUrl)
+    } catch {
+      alert('Ocorreu um erro ao empacotar o álbum em ZIP.')
+    } finally {
+      setIsDownloadingAlbum(false)
+      setDownloadProgress(null)
+    }
+  }
+
+  const handleExportCsv = () => {
+    if (posts.length === 0) {
+      alert('Não há postagens para exportar.')
+      return
     }
 
-    setIsDownloadingAlbum(false)
-    setDownloadProgress(null)
+    const headers = [
+      'ID',
+      'Autor',
+      'Tipo',
+      'Curtidas',
+      'Desafio',
+      'Legenda',
+      'Data',
+      'Status',
+      'URL',
+    ]
+    const rows = posts.map((p) => [
+      p.id,
+      `"${p.authorName.replace(/"/g, '""')}"`,
+      resolvePostMediaType(p),
+      p.likesCount,
+      p.challenge?.title ? `"${p.challenge.title.replace(/"/g, '""')}"` : '""',
+      p.caption ? `"${p.caption.replace(/"/g, '""')}"` : '""',
+      new Date(p.createdAt).toLocaleString('pt-BR'),
+      p.isApproved ? 'Aprovado' : 'Oculto',
+      p.mediaUrl,
+    ])
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map((r) => r.join(';')),
+    ].join('\r\n')
+    const blob = new Blob(['\uFEFF' + csvContent], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `relatorio-fotos-thiago-e-priscila-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const handleCreateChallenge = async (e: React.FormEvent) => {
@@ -346,6 +512,73 @@ export function AdminPage() {
       setChallenges((prev) => prev.filter((c) => c.id !== id))
     } catch {
       alert('Não foi possível excluir o desafio.')
+    }
+  }
+
+  const handleAddCeremonialist = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isMasterAdmin) {
+      setCeremonialError('Apenas o Administrador Master pode conceder acessos.')
+      return
+    }
+
+    const cleanEmail = newCeremonialEmail.trim().toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setCeremonialError('Por favor, informe um endereço de e-mail válido.')
+      return
+    }
+
+    setCeremonialError('')
+    setCeremonialSuccess('')
+    setIsAddingCeremonialist(true)
+
+    try {
+      const created = await ceremonialRepo.addCeremonialist({
+        email: cleanEmail,
+        name: newCeremonialName.trim() || undefined,
+      })
+
+      setCeremonialists((prev) => [
+        created,
+        ...prev.filter(
+          (c) => c.email.toLowerCase() !== created.email.toLowerCase()
+        ),
+      ])
+      setNewCeremonialEmail('')
+      setNewCeremonialName('')
+      setCeremonialSuccess(`Acesso concedido com sucesso para ${cleanEmail}!`)
+    } catch (err) {
+      setCeremonialError(
+        err instanceof Error
+          ? err.message
+          : 'Falha ao conceder acesso de cerimonial.'
+      )
+    } finally {
+      setIsAddingCeremonialist(false)
+    }
+  }
+
+  const handleRemoveCeremonialist = async (id: string, email: string) => {
+    if (!isMasterAdmin) return
+    if (
+      !window.confirm(
+        `Tem certeza que deseja revogar o acesso de cerimonial para "${email}"?`
+      )
+    ) {
+      return
+    }
+
+    setCeremonialError('')
+    setCeremonialSuccess('')
+
+    try {
+      await ceremonialRepo.removeCeremonialist(id)
+      setCeremonialists((prev) => prev.filter((c) => c.id !== id))
+      setCeremonialSuccess(`Acesso revogado com sucesso para ${email}.`)
+    } catch (err) {
+      setCeremonialError(
+        err instanceof Error ? err.message : 'Falha ao revogar acesso.'
+      )
     }
   }
 
@@ -648,8 +881,12 @@ export function AdminPage() {
         </span>
       </div>
 
-      {/* Main Section Switcher: Photos vs Challenges */}
-      <div className="grid grid-cols-2 gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl max-w-md">
+      {/* Main Section Switcher: Photos vs Challenges vs Ceremonial (Master Admin) */}
+      <div
+        className={`grid ${
+          isMasterAdmin ? 'grid-cols-3 max-w-xl' : 'grid-cols-2 max-w-md'
+        } gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl`}
+      >
         <button
           type="button"
           onClick={() => setActiveTab('photos')}
@@ -674,23 +911,127 @@ export function AdminPage() {
           <Trophy className="w-4 h-4 text-gold-500" />
           <span>Desafios ({challenges.length})</span>
         </button>
+        {isMasterAdmin && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('ceremonial')}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'ceremonial'
+                ? 'bg-white text-sage-900 shadow-xs'
+                : 'text-sage-800 hover:text-sage-900'
+            }`}
+          >
+            <UserCheck className="w-4 h-4 text-emerald-600" />
+            <span>Cerimonial ({ceremonialists.length})</span>
+          </button>
+        )}
       </div>
 
       {activeTab === 'photos' ? (
         <>
-          {/* Stats & Album Actions */}
+          {/* 1. Live Event Metrics Dashboard (4 Cards) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* Card 1: Total Mídias */}
+            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-sage-600">
+                  Mídias do Evento
+                </span>
+                <span className="p-2 rounded-xl bg-sage-100 text-sage-800">
+                  <Camera className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="mt-3">
+                <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
+                  {stats.totalPosts}
+                </h4>
+                <p className="text-xs text-sage-700/80 font-medium mt-1.5">
+                  {stats.totalPhotos} fotos • {stats.totalVideos} vídeos (
+                  {stats.approvedPosts} aprovadas)
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: Foto Mais Curtida */}
+            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
+                  Mais Curtida
+                </span>
+                <span className="p-2 rounded-xl bg-rose-50 text-rose-600">
+                  <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                </span>
+              </div>
+              <div className="mt-3">
+                <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
+                  {stats.topLikedPost?.likesCount ?? 0}{' '}
+                  <span className="text-sm font-sans font-semibold text-sage-600">
+                    likes
+                  </span>
+                </h4>
+                <p className="text-xs text-sage-700/80 font-medium mt-1.5 truncate">
+                  Por {stats.topLikedPost?.authorName ?? 'Nenhum voto ainda'}
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Fotógrafo(a) da Noite */}
+            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-gold-600">
+                  Fotógrafo da Noite
+                </span>
+                <span className="p-2 rounded-xl bg-gold-50 text-gold-600">
+                  <Trophy className="w-4 h-4 text-gold-600" />
+                </span>
+              </div>
+              <div className="mt-3">
+                <h4 className="font-serif text-xl sm:text-2xl font-bold text-sage-900 leading-tight truncate">
+                  {stats.topAuthor}
+                </h4>
+                <p className="text-xs text-sage-700/80 font-medium mt-1.5">
+                  {stats.topAuthorCount} fotos enviadas
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4: Desafios Cumpridos */}
+            <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                  Gincana da Festa
+                </span>
+                <span className="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                </span>
+              </div>
+              <div className="mt-3">
+                <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
+                  {stats.challengePostsCount}{' '}
+                  <span className="text-sm font-sans font-semibold text-sage-600">
+                    desafios
+                  </span>
+                </h4>
+                <p className="text-xs text-sage-700/80 font-medium mt-1.5">
+                  {stats.challengeRate}% de participação dos convidados
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Album Actions Toolbar */}
           <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-sage-800/75 font-medium">
-                  Total de Fotos Enviadas na Festa
+                  Exportação &amp; Moderação de Mídias
                 </p>
-                <h3 className="font-serif text-3xl font-bold text-sage-900 mt-0.5">
-                  {posts.length}
+                <h3 className="font-serif text-2xl font-bold text-sage-900 mt-0.5">
+                  Galeria do Casamento ({stats.approvedPosts} aprovadas)
                 </h3>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
                   disabled={isDownloadingAlbum || posts.length === 0}
@@ -702,16 +1043,27 @@ export function AdminPage() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>
                         {downloadProgress
-                          ? `${downloadProgress.current}/${downloadProgress.total}`
-                          : 'Baixando...'}
+                          ? `Empacotando ZIP (${downloadProgress.current}/${downloadProgress.total})...`
+                          : 'Gerando ZIP...'}
                       </span>
                     </>
                   ) : (
                     <>
                       <Download className="w-4 h-4" />
-                      <span>Baixar Álbum Completo</span>
+                      <span>Baixar Álbum (.ZIP)</span>
                     </>
                   )}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={posts.length === 0}
+                  onClick={handleExportCsv}
+                  title="Exportar planilha CSV com links e metadados das fotos"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-sm font-semibold transition-colors border border-sage-200/80 shadow-2xs"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+                  <span>Relatório (.CSV)</span>
                 </button>
 
                 {isAdmin && (
@@ -872,7 +1224,7 @@ export function AdminPage() {
             )}
           </div>
         </>
-      ) : (
+      ) : activeTab === 'challenges' ? (
         /* CHALLENGES MANAGEMENT TAB */
         <div className="space-y-6">
           {/* Create Challenge Form */}
@@ -1013,7 +1365,159 @@ export function AdminPage() {
             ))}
           </div>
         </div>
-      )}
+      ) : isMasterAdmin ? (
+        <div className="space-y-6">
+          {/* Card: Add Ceremonialist */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-sage-900 leading-tight">
+                  Conceder Acesso de Cerimonial
+                </h3>
+                <p className="text-xs text-sage-800/70 mt-0.5">
+                  Adicione e-mails da assessoria/cerimonial para que possam moderar fotos e gerenciar desafios.
+                </p>
+              </div>
+            </div>
+
+            {ceremonialError && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span>{ceremonialError}</span>
+              </div>
+            )}
+
+            {ceremonialSuccess && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{ceremonialSuccess}</span>
+              </div>
+            )}
+
+            <form
+              onSubmit={handleAddCeremonialist}
+              className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2"
+            >
+              <div className="sm:col-span-6">
+                <label className="text-xs font-semibold text-sage-800 block mb-1.5">
+                  E-mail do Cerimonialista *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-800/50" />
+                  <input
+                    type="email"
+                    required
+                    value={newCeremonialEmail}
+                    onChange={(e) => setNewCeremonialEmail(e.target.value)}
+                    placeholder="cerimonial@assessoria.com.br"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-sage-300 text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
+                  />
+                </div>
+              </div>
+
+              <div className="sm:col-span-4">
+                <label className="text-xs font-semibold text-sage-800 block mb-1.5">
+                  Nome / Identificação (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={newCeremonialName}
+                  onChange={(e) => setNewCeremonialName(e.target.value)}
+                  placeholder="Ex: Equipe de Cerimonial"
+                  className="w-full px-4 py-2.5 rounded-2xl border border-sage-300 text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
+                />
+              </div>
+
+              <div className="sm:col-span-2 flex items-end">
+                <button
+                  type="submit"
+                  disabled={isAddingCeremonialist || !newCeremonialEmail.trim()}
+                  className="w-full py-2.5 px-4 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs h-[42px]"
+                >
+                  {isAddingCeremonialist ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Conceder</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* List of Active Ceremonialists */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-sage-900">
+                  Cerimonialistas Cadastrados ({ceremonialists.length})
+                </h3>
+                <p className="text-xs text-sage-800/70">
+                  Usuários com acesso concedido entram no painel de moderação com papel de Cerimonial.
+                </p>
+              </div>
+            </div>
+
+            {ceremonialists.length === 0 ? (
+              <div className="p-8 text-center border-2 border-dashed border-sage-200 rounded-2xl space-y-2">
+                <Users className="w-8 h-8 text-sage-800/40 mx-auto" />
+                <p className="text-xs text-sage-800/70">
+                  Nenhum cerimonialista cadastrado ainda. Adicione o primeiro e-mail no formulário acima.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-sage-100">
+                {ceremonialists.map((ceremonial) => (
+                  <div
+                    key={ceremonial.id}
+                    className="py-3.5 flex items-center justify-between gap-3 first:pt-1 last:pb-1"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-900 font-bold flex items-center justify-center border border-sage-200 text-sm shrink-0">
+                        {(ceremonial.name || ceremonial.email)
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-sage-900 truncate">
+                            {ceremonial.name || ceremonial.email}
+                          </p>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sage-200 text-sage-800 shrink-0">
+                            🛡️ Cerimonial
+                          </span>
+                        </div>
+                        <p className="text-xs text-sage-800/65 truncate">
+                          {ceremonial.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleRemoveCeremonialist(
+                          ceremonial.id,
+                          ceremonial.email
+                        )
+                      }
+                      title="Revogar Acesso"
+                      className="p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

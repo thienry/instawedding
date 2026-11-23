@@ -1,3 +1,4 @@
+import { getCeremonialistRepository } from '@/services/repositories.factory'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
 import type {
@@ -30,7 +31,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       } = await supabase.auth.getSession()
 
       if (session?.user?.email) {
-        const user = this.resolveRoleFromEmail(
+        const user = await this.resolveRoleFromEmail(
           session.user.email,
           session.user.user_metadata?.full_name || 'Admin Google',
           session.user.user_metadata?.avatar_url
@@ -189,18 +190,19 @@ export class ApiAdminAuthService implements AdminAuthService {
       const supabase = getSupabaseClient()
       supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user?.email) {
-          const user = this.resolveRoleFromEmail(
+          void this.resolveRoleFromEmail(
             session.user.email,
             session.user.user_metadata?.full_name || 'Admin Google',
             session.user.user_metadata?.avatar_url
-          )
-          if (user) {
-            this.authSource = 'oauth'
-            this.setCurrentUser(user)
-          } else if (this.authSource === 'oauth') {
-            this.authSource = null
-            this.setCurrentUser(null)
-          }
+          ).then((user) => {
+            if (user) {
+              this.authSource = 'oauth'
+              this.setCurrentUser(user)
+            } else if (this.authSource === 'oauth') {
+              this.authSource = null
+              this.setCurrentUser(null)
+            }
+          })
         } else if (this.authSource === 'oauth') {
           this.authSource = null
           this.setCurrentUser(null)
@@ -211,38 +213,52 @@ export class ApiAdminAuthService implements AdminAuthService {
     }
   }
 
-  private resolveRoleFromEmail(
+  private async resolveRoleFromEmail(
     email: string,
     name: string,
     avatarUrl?: string
-  ): AdminUser | null {
+  ): Promise<AdminUser | null> {
     const normalized = email.trim().toLowerCase()
-    const adminEmails = (
-      import.meta.env.VITE_ADMIN_EMAILS ||
-      'thmoura14@gmail.com,thiago.noivo@gmail.com,noivos@gmail.com'
+    const masterAdminEmail = (
+      import.meta.env.VITE_ADMIN_EMAILS || 'thmoura14@gmail.com'
     )
-      .split(',')
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean)
+      .split(',')[0]
+      .trim()
+      .toLowerCase() || 'thmoura14@gmail.com'
+
+    if (normalized === masterAdminEmail) {
+      return {
+        email: normalized,
+        name: name || 'Thiago (Admin Master)',
+        role: 'admin',
+        avatarUrl,
+      }
+    }
+
+    try {
+      const ceremonialRepo = getCeremonialistRepository()
+      const isCeremonial = await ceremonialRepo.isCeremonialistEmail(normalized)
+      if (isCeremonial) {
+        return {
+          email: normalized,
+          name: name || 'Cerimonial',
+          role: 'moderator',
+          avatarUrl,
+        }
+      }
+    } catch {
+      // Ceremonialist lookup error
+    }
 
     const modEmails = (import.meta.env.VITE_MODERATOR_EMAILS || '')
       .split(',')
       .map((e: string) => e.trim().toLowerCase())
       .filter(Boolean)
 
-    if (adminEmails.includes(normalized)) {
-      return {
-        email: normalized,
-        name,
-        role: 'admin',
-        avatarUrl,
-      }
-    }
-
     if (modEmails.includes(normalized)) {
       return {
         email: normalized,
-        name,
+        name: name || 'Cerimonial',
         role: 'moderator',
         avatarUrl,
       }

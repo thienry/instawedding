@@ -68,12 +68,35 @@ export function FeedVideoPlayer({
     <div
       className={`relative overflow-hidden bg-slate-950 flex items-center justify-center ${containerClassName}`}
     >
+      {/* Ambient Blurred Video/Poster Backdrop: Eliminates black bars on mismatched aspect ratios / desktop web */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
+      >
+        {posterUrl ? (
+          <img
+            src={posterUrl}
+            alt=""
+            className="w-full h-full object-cover scale-125 blur-2xl opacity-45 saturate-125"
+          />
+        ) : (
+          <video
+            src={src}
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover scale-125 blur-2xl opacity-40 saturate-125"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+
       {posterUrl && !isLoaded && (
         <img
           src={posterUrl}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-80 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-80 pointer-events-none z-[1]"
         />
       )}
 
@@ -86,7 +109,7 @@ export function FeedVideoPlayer({
         playsInline
         preload="metadata"
         onLoadedData={() => setIsLoaded(true)}
-        className={`relative z-[1] ${className}`}
+        className={`relative z-[2] ${className}`}
       />
 
       {showControlsOverlay && (

@@ -1,10 +1,13 @@
+import { MockCeremonialistRepository } from '@/services/mock/mock-ceremonialist.repository'
 import { MockChallengeRepository } from '@/services/mock/mock-challenge.repository'
 import { MockPostRepository } from '@/services/mock/mock-post.repository'
 import { MockRealtimeService } from '@/services/mock/mock-realtime.service'
+import { SupabaseCeremonialistRepository } from '@/services/supabase/supabase-ceremonialist.repository'
 import { SupabaseChallengeRepository } from '@/services/supabase/supabase-challenge.repository'
 import { SupabasePostRepository } from '@/services/supabase/supabase-post.repository'
 import { SupabaseRealtimeService } from '@/services/supabase/supabase-realtime.service'
 
+import type { CeremonialistRepository } from '@/services/contracts/ceremonialist-repository.contract'
 import type { ChallengeRepository } from '@/services/contracts/challenge-repository.contract'
 import type { PostRepository } from '@/services/contracts/post-repository.contract'
 import type { RealtimeService } from '@/services/contracts/realtime.contract'
@@ -14,6 +17,16 @@ const isMockEnabled = import.meta.env.VITE_USE_MOCKS !== 'false'
 let challengeRepoInstance: ChallengeRepository | null = null
 let realtimeServiceInstance: RealtimeService | null = null
 let postRepoInstance: PostRepository | null = null
+let ceremonialistRepoInstance: CeremonialistRepository | null = null
+
+export function getCeremonialistRepository(): CeremonialistRepository {
+  if (!ceremonialistRepoInstance) {
+    ceremonialistRepoInstance = isMockEnabled
+      ? new MockCeremonialistRepository()
+      : new SupabaseCeremonialistRepository()
+  }
+  return ceremonialistRepoInstance
+}
 
 export function getChallengeRepository(): ChallengeRepository {
   if (!challengeRepoInstance) {

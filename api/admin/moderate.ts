@@ -49,20 +49,21 @@ export async function POST(req: Request): Promise<Response> {
     )
   }
 
-  // 3. Initialize Supabase Admin client with SERVICE_ROLE_KEY
-  const supabaseUrl = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  // 3. Initialize Supabase Admin client with Secret Key / Service Role
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const secretKey =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !secretKey) {
     return new Response(
       JSON.stringify({
-        error: 'Supabase Service Role não configurado no servidor.',
+        error: 'Supabase Secret Key / Service Role não configurado no servidor.',
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  const supabaseAdmin = createClient(supabaseUrl, secretKey, {
     auth: { persistSession: false },
   })
 

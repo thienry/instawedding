@@ -111,6 +111,7 @@ export class MockPostRepository implements PostRepository {
       clientSessionId: dto.clientSessionId,
       likesCount: 0,
       isApproved: true,
+      showOnProjector: dto.showOnProjector ?? true,
       createdAt: new Date().toISOString(),
       challenge: challenge ?? undefined,
     }

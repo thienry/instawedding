@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { createClient } from '@supabase/supabase-js'
 
 import {
   buildClearOtpCookieHeader,
@@ -19,20 +20,53 @@ interface OtpRequestBody {
   challengeToken?: string
 }
 
-function resolveUserRole(
+async function resolveUserRole(
   email: string
-): { role: UserRole; name: string } | null {
+): Promise<{ role: UserRole; name: string } | null> {
   const normalizedEmail = email.toLowerCase().trim()
 
-  const adminEmails = (
+  const masterAdminEmail = (
     process.env.ADMIN_EMAILS ||
     process.env.VITE_ADMIN_EMAILS ||
-    'thmoura14@gmail.com,thiago.noivo@gmail.com'
+    'thmoura14@gmail.com'
   )
     .toLowerCase()
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean)
+    .split(',')[0]
+    .trim() || 'thmoura14@gmail.com'
+
+  if (normalizedEmail === masterAdminEmail) {
+    return { role: 'admin', name: 'Thiago (Admin Master)' }
+  }
+
+  // Check ceremonialists table in Supabase
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const serviceRoleKey =
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY
+
+  if (supabaseUrl && serviceRoleKey) {
+    try {
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false },
+      })
+      const { data } = await supabaseAdmin
+        .from('ceremonialists')
+        .select('name')
+        .eq('email', normalizedEmail)
+        .maybeSingle()
+
+      if (data) {
+        return {
+          role: 'moderator',
+          name: data.name?.trim() ? `${data.name.trim()} (Cerimonial)` : 'Equipe Cerimonial',
+        }
+      }
+    } catch {
+      // Supabase query error fallback
+    }
+  }
 
   const modEmails = (
     process.env.MODERATOR_EMAILS ||
@@ -43,12 +77,6 @@ function resolveUserRole(
     .split(',')
     .map((e) => e.trim())
     .filter(Boolean)
-
-  if (adminEmails.includes(normalizedEmail)) {
-    const username = normalizedEmail.split('@')[0]
-    const capitalized = username.charAt(0).toUpperCase() + username.slice(1)
-    return { role: 'admin', name: `${capitalized} (Admin)` }
-  }
 
   if (modEmails.includes(normalizedEmail)) {
     const username = normalizedEmail.split('@')[0]
@@ -154,7 +182,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // 1. SOLICITAÇÃO DE OTP
   if (action === 'request') {
-    const userRoleInfo = resolveUserRole(normalizedEmail)
+    const userRoleInfo = await resolveUserRole(normalizedEmail)
 
     if (!userRoleInfo) {
       return new Response(

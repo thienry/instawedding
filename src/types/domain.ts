@@ -26,6 +26,7 @@ export interface Post {
   readonly clientSessionId?: string
   readonly likesCount: number
   readonly isApproved: boolean
+  readonly showOnProjector?: boolean
   readonly createdAt: string
   readonly challenge?: Challenge
 }
@@ -38,6 +39,7 @@ export interface CreatePostDTO {
   readonly caption?: string | null
   readonly challengeId?: number | null
   readonly clientSessionId?: string
+  readonly showOnProjector?: boolean
 }
 
 export interface ToggleLikeResult {
@@ -64,3 +66,17 @@ export interface PresignedUploadResult {
   readonly uploadUrl: string
   readonly publicUrl: string
 }
+
+export interface Ceremonialist {
+  readonly id: string
+  readonly email: string
+  readonly name?: string | null
+  readonly createdAt: string
+  readonly createdBy: string
+}
+
+export interface CreateCeremonialistDTO {
+  readonly email: string
+  readonly name?: string
+}
+

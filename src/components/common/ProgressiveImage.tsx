@@ -107,13 +107,30 @@ export function ProgressiveImage({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-full flex items-center justify-center overflow-hidden ${containerClassName}`}
+      className={`relative w-full h-full flex items-center justify-center overflow-hidden bg-slate-950 ${containerClassName}`}
     >
+      {/* Ambient Blurred Backdrop: Eliminates black bars on mismatched aspect ratios / desktop web */}
+      {shouldLoad && !hasError && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
+        >
+          <img
+            src={effectiveSrc}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover scale-125 blur-2xl opacity-45 saturate-125 transition-opacity duration-500"
+          />
+          <div className="absolute inset-0 bg-black/35" />
+        </div>
+      )}
+
       {/* 1. Instant Blur-Up Placeholder or Shimmer Skeleton while downloading */}
       {!isLoaded && !hasError && (
         <div
           aria-hidden="true"
-          className="absolute inset-0 overflow-hidden pointer-events-none"
+          className="absolute inset-0 overflow-hidden pointer-events-none z-[1]"
         >
           {blurPlaceholder ? (
             <img
@@ -122,7 +139,7 @@ export function ProgressiveImage({
               className="w-full h-full object-cover scale-110 blur-xl opacity-80"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 animate-pulse" />
+            <div className="w-full h-full bg-gradient-to-r from-slate-900/60 via-slate-800/40 to-slate-900/60 animate-pulse backdrop-blur-xs" />
           )}
         </div>
       )}
@@ -158,7 +175,7 @@ export function ProgressiveImage({
           fetchPriority={priority ? 'high' : 'auto'}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          className={`${className} transition-opacity duration-300 ${
+          className={`relative z-[2] ${className} transition-opacity duration-300 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
