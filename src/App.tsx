@@ -7,7 +7,9 @@ import { FeedPage } from '@/features/feed/FeedPage'
 
 // Lazy-loaded routes for 4G performance & chunk isolation
 const CapturePage = lazy(() =>
-  import('@/pages/CapturePage').then((m) => ({ default: m.CapturePage }))
+  import('@/features/capture/CapturePage').then((m) => ({
+    default: m.CapturePage,
+  }))
 )
 const ChallengesPage = lazy(() =>
   import('@/pages/ChallengesPage').then((m) => ({ default: m.ChallengesPage }))

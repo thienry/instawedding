@@ -13,8 +13,8 @@ Realtime wedding photo wall PWA. React 19 + Vite + Tailwind v4, Supabase (Postgr
 ## Map
 
 - `src/App.tsx`: routes `/`, `/capture`, `/challenges`, `/admin` and `/projector` (outside `AppLayout`)
-- `src/features/<name>/`: screens already split (Admin, Feed, Projector): page, `components/`, `hooks/` and `utils/`
-- `src/pages/`: remaining screens. Capture is huge: grep for the section, do not read it whole
+- `src/features/<name>/`: screens already split (Admin, Capture, Feed, Projector): page, `components/`, `hooks/` and `utils/`
+- `src/pages/`: Challenges, not split yet, and the smoke tests of every page
 - `src/types/domain.ts`: models and DTOs
 - `src/services/contracts/`: interfaces; implementations in `mock/`, `supabase/`, `r2/` and `api/`
 - `src/services/api/api.client.ts`: calls to the admin API

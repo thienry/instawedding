@@ -112,14 +112,15 @@ Redesigned at the author's request, so the layout differs from the original page
 
 **4.4 Capture** (993 lines, critical: test photo, video and offline on a real device)
 
-- [ ] hooks: `useMediaSelection`, `usePostSubmit`
-- [ ] components: `GuestProfileBar`, `MediaPreview`, `StudioControls`, `PostDetailsForm`
+- [x] hooks: `useMediaSelection`, `usePostDraft`, `usePostSubmit`
+- [x] components: `CaptureHeader`, `SignInGate`, `GuestProfileBar`, `CaptureChoices`, `ChallengeHint`, `MediaPreview` (`FrameOverlay`), `VideoSummary`, `StudioControls` (`FilterCarousel`, `FrameCarousel`), `PostDetailsForm` (`AuthorSummary`, `ChallengeSelect`, `ProjectorToggle`)
+- [ ] check photo, video and offline on a real device (author)
 
 **4.5 Shared**
 
 - [x] `topContributors` and `totalLikesCount`: Feed and Projector use `utils/post-stats.ts`
-- [ ] Guest login is repeated in Feed and Capture: consider `useGuestAuth`
-- [ ] Revisit the 4 remaining oxlint warnings
+- [x] Guest login repeated in Feed and Capture moved to `src/hooks/useGuestAuth.ts`
+- [ ] Revisit the 3 remaining oxlint warnings
 
 **Done when:** baseline targets are met and no smoke test was changed just to pass.
 
@@ -152,6 +153,12 @@ Feed, found while splitting:
 - [x] A failed like restores the heart but not the count
 - [x] The notice of new posts says "novas fotos postada"
 - [x] The download name drops accents instead of converting them (the admin ZIP converts)
+
+Capture, found while splitting:
+
+- [x] Choosing another photo while the first is still being compressed can post the first one (the late result overwrites the new file)
+- [x] The caption of a guestbook card stays when the media is changed
+- [x] Signing out with a photo selected leaves "Postar" in the header, doing nothing
 
 Projector, fixed by the redesign:
 
