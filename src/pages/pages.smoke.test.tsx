@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { expect, it, vi } from 'vitest'
 
@@ -157,42 +163,79 @@ it('admin: hides a photo', async () => {
 })
 
 it.each([
-  ['togglePostApproval', 'Ocultar do Telão', /Não foi possível alterar/],
-  ['deletePostAsAdmin', /^Excluir Definitivamente/, /Não foi possível excluir/],
-  ['clearAllPosts', /Zerar/, /Não foi possível zerar/],
+  ['togglePostApproval', 'Ocultar do Telão', null, /Não foi possível alterar/],
+  [
+    'deletePostAsAdmin',
+    /^Excluir Definitivamente/,
+    'Excluir Foto',
+    /Não foi possível excluir/,
+  ],
+  ['clearAllPosts', /apaga todos/, 'Zerar Feed', /Não foi possível zerar/],
 ] as const)(
   'admin: reports a %s failure and keeps the photo',
-  async (method, control, message) => {
+  async (method, control, confirmLabel, message) => {
     signInAdmin()
-    vi.spyOn(getPostRepository(), method).mockRejectedValue(new Error('denied'))
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    vi.spyOn(window, 'prompt').mockReturnValue('ZERAR')
+    const action = vi
+      .spyOn(getPostRepository(), method)
+      .mockRejectedValue(new Error('denied'))
     open(<AdminPage />)
-    await screen.findByTitle('Ocultar do Telão')
-    fireEvent.click(
-      screen.queryByTitle(control) ??
-        screen.getByRole('button', { name: control })
-    )
-    await waitFor(() =>
-      expect(alert).toHaveBeenCalledWith(expect.stringMatching(message))
-    )
+    fireEvent.click(await screen.findByTitle(control))
+    if (confirmLabel) {
+      const dialog = within(await screen.findByRole('alertdialog'))
+      expect(action).not.toHaveBeenCalled()
+      const field = dialog.queryByRole('textbox')
+      if (field) fireEvent.change(field, { target: { value: 'ZERAR' } })
+      fireEvent.click(dialog.getByRole('button', { name: confirmLabel }))
+    }
+    const notice = within(await screen.findByRole('dialog'))
+    notice.getByText(message)
+    fireEvent.click(notice.getByRole('button', { name: 'Entendi' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.getByTitle('Ocultar do Telão')).toBeTruthy()
   }
 )
+
+it('admin: does nothing when a deletion is cancelled', async () => {
+  signInAdmin()
+  const action = vi.spyOn(getPostRepository(), 'deletePostAsAdmin')
+  open(<AdminPage />)
+  const trigger = await screen.findByTitle(/^Excluir Definitivamente/)
+  for (const cancel of [
+    () => fireEvent.click(screen.getByRole('button', { name: 'Cancelar' })),
+    () => fireEvent.keyDown(screen.getByRole('alertdialog'), { key: 'Escape' }),
+  ]) {
+    fireEvent.click(trigger)
+    await screen.findByRole('alertdialog')
+    cancel()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  }
+  expect(action).not.toHaveBeenCalled()
+})
+
+it('admin: only clears the feed after the exact word is typed', async () => {
+  signInAdmin()
+  const action = vi.spyOn(getPostRepository(), 'clearAllPosts')
+  open(<AdminPage />)
+  fireEvent.click(await screen.findByTitle(/apaga todos/))
+  const dialog = within(await screen.findByRole('alertdialog'))
+  const submit = dialog.getByRole('button', { name: 'Zerar Feed' })
+  fireEvent.click(submit)
+  fireEvent.change(dialog.getByRole('textbox'), { target: { value: 'zerar' } })
+  fireEvent.submit(submit.closest('form')!)
+  expect(action).not.toHaveBeenCalled()
+  fireEvent.change(dialog.getByRole('textbox'), { target: { value: 'ZERAR' } })
+  fireEvent.click(submit)
+  await waitFor(() => expect(action).toHaveBeenCalledOnce())
+})
 
 it('feed: reports a failed deletion and keeps the photo', async () => {
   signInGuest()
   vi.spyOn(getPostRepository(), 'deletePost').mockRejectedValue(
     new Error('denied')
   )
-  const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
   open(<FeedPage />, { clientSessionId: 'g1' })
   fireEvent.click(await screen.findByTitle(/Excluir/))
   fireEvent.click(await screen.findByRole('button', { name: 'Excluir Foto' }))
-  await waitFor(() =>
-    expect(alert).toHaveBeenCalledWith(
-      expect.stringMatching(/Não foi possível excluir/)
-    )
-  )
+  await screen.findByText(/Não foi possível excluir/)
   expect(screen.getAllByText(SEED_AUTHOR).length).toBeGreaterThan(0)
 })

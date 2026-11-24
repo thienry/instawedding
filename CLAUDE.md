@@ -37,6 +37,7 @@ Realtime wedding photo wall PWA. React 19 + Vite + Tailwind v4, Supabase (Postgr
 - Import with the `@/` alias; `import type` goes last (Prettier sorts)
 - No `enum` or parameter properties (`erasableSyntaxOnly`)
 - Domain properties are `readonly`
+- Never use browser `alert`, `confirm` or `prompt`: use `useDialog`
 - No re-export files (`index.ts`)
 
 ## Tests
