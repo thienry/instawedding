@@ -4,7 +4,10 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { ProjectorPage } from '@/features/projector/ProjectorPage'
-import { getRealtimeService } from '@/services/repositories.factory'
+import {
+  getPostRepository,
+  getRealtimeService,
+} from '@/services/repositories.factory'
 import { setupBrowser } from '@/test/browser'
 
 import type { Post } from '@/types/domain'
@@ -132,4 +135,54 @@ it('skips broken media instead of stopping', async () => {
   )
   await wait(8100)
   expect(shown()).toBe('Foto por Author 2')
+})
+
+it.each([
+  ['plays a 10 s video to the end', 10, 9900, 10_100],
+  ['limits a longer video', 60, 10_700, 10_900],
+  ['limits a video of unknown duration', Infinity, 10_700, 10_900],
+  ['keeps a short video for a whole slide', 2, 7900, 8100],
+])('%s', async (_, seconds, before, after) => {
+  const media = HTMLMediaElement.prototype
+  vi.spyOn(media, 'load').mockImplementation(() => {})
+  vi.spyOn(media, 'duration', 'get').mockReturnValue(seconds)
+  vi.spyOn(media, 'src', 'set').mockImplementation(function (
+    this: HTMLMediaElement
+  ) {
+    queueMicrotask(() => this.onloadedmetadata?.(new Event('loadedmetadata')))
+  })
+  await open([post('1', { mediaUrl: '/media/1.mp4' }), post('2')])
+  await wait(before - 10)
+  expect(shown()).toBeUndefined()
+  await wait(after - before)
+  expect(shown()).toBe('Foto por Author 2')
+})
+
+it('empties the stage when every post is hidden', async () => {
+  const announce = await open(posts)
+  vi.spyOn(getPostRepository(), 'getPosts').mockResolvedValue([])
+  await wait(30_000)
+  screen.getByText('Aguardando o primeiro clique da noite!')
+  await announce(post('0'))
+  expect(shown()).toBe('Foto por Author 0')
+})
+
+it('keeps the posts when a refresh fails', async () => {
+  await open(posts)
+  vi.spyOn(getPostRepository(), 'getPosts').mockRejectedValue(new Error())
+  await wait(30_100)
+  expect(shown()).toMatch(/Foto por/)
+})
+
+it('leaves browser shortcuts and focused buttons alone', async () => {
+  await open(posts)
+  const requestFullscreen = vi.fn().mockResolvedValue(undefined)
+  document.documentElement.requestFullscreen = requestFullscreen
+  fireEvent.keyDown(window, { key: 'f', ctrlKey: true })
+  expect(requestFullscreen).not.toHaveBeenCalled()
+  fireEvent.keyDown(window, { key: 'f' })
+  expect(requestFullscreen).toHaveBeenCalledOnce()
+  // A prevented event returns false
+  const button = screen.getByTitle(/Próxima foto/)
+  expect(fireEvent.keyUp(button, { key: ' ' })).toBe(false)
 })

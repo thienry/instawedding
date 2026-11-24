@@ -162,9 +162,9 @@ Projector, fixed by the redesign:
 - [x] `animate-in` classes did nothing (the plugin is not installed), so there were no transitions
 - [x] A rejected session check left the loading screen forever
 
-Projector, open:
+Projector, found while splitting:
 
-- [ ] Videos of up to 10 s are cut by the 8 s slide
-- [ ] Hiding every post keeps the last ones on display (an empty refresh is ignored)
-- [ ] Space also clicks the focused button in some browsers, and Ctrl+F toggles full screen
-- [ ] `animate-in` classes also do nothing in the other screens that use them
+- [x] Videos of up to 10 s are cut by the 8 s slide
+- [x] Hiding every post keeps the last ones on display (an empty refresh is ignored)
+- [x] Space also clicks the focused button in some browsers, and Ctrl+F toggles full screen
+- [x] `animate-in` classes also do nothing in the other screens that use them

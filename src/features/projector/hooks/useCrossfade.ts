@@ -21,7 +21,7 @@ export function useCrossfade(slide: Slide): Crossfade {
   const [current, setCurrent] = useState(slide)
   const [leaving, setLeaving] = useState<Slide | null>(null)
 
-  if (slide.post !== current.post || slide.ratio !== current.ratio) {
+  if (slide.post !== current.post || slide.media !== current.media) {
     if (slide.post.id !== current.post.id) setLeaving(current)
     setCurrent(slide)
   }

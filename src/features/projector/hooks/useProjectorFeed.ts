@@ -33,9 +33,7 @@ export function useProjectorFeed(): ProjectorFeed {
     const refresh = async () => {
       try {
         const fetched = await postRepository.getPosts()
-        if (isMounted && fetched.length > 0) {
-          setPosts(fetched.filter(isShownOnProjector))
-        }
+        if (isMounted) setPosts(fetched.filter(isShownOnProjector))
       } catch {
         // Keep showing the current posts
       }

@@ -29,6 +29,8 @@ export interface Slideshow {
   readonly togglePause: () => void
   /** Whether the time of the slide on display is running. */
   readonly isRunning: boolean
+  /** Time the slide stays on display. */
+  readonly durationMs: number
   readonly showPrevious: () => void
   readonly showNext: () => void
   readonly showPost: (post: Post) => void
@@ -73,6 +75,7 @@ export function useSlideshow(
     slides[(index + 1) % slides.length]
   )
   const isRunning = hasManySlides && !isPaused && isReady
+  const durationMs = slide?.media?.durationMs ?? SLIDE_DURATION_MS
 
   const step = (offset: number) => {
     if (slides.length === 0) return
@@ -85,9 +88,9 @@ export function useSlideshow(
 
   useEffect(() => {
     if (!isRunning) return
-    const timeoutId = window.setTimeout(advance, SLIDE_DURATION_MS)
+    const timeoutId = window.setTimeout(advance, durationMs)
     return () => window.clearTimeout(timeoutId)
-  }, [isRunning, currentPostId])
+  }, [isRunning, currentPostId, durationMs])
 
   return {
     slides,
@@ -101,6 +104,7 @@ export function useSlideshow(
     isPaused,
     togglePause: () => setIsPaused((prev) => !prev),
     isRunning,
+    durationMs,
     showPrevious: () => step(-1),
     showNext: () => step(1),
     showPost: (post) =>
