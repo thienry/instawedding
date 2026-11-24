@@ -25,7 +25,7 @@ export function ProgressiveImage({
 }: ProgressiveImageProps) {
   const isAlreadyDecoded = decodedImageUrls.has(src)
   const [shouldLoad, setShouldLoad] = useState<boolean>(
-    priority || isAlreadyDecoded
+    priority || isAlreadyDecoded || typeof IntersectionObserver === 'undefined'
   )
   const [isLoaded, setIsLoaded] = useState<boolean>(isAlreadyDecoded)
   const [hasError, setHasError] = useState<boolean>(false)
@@ -39,10 +39,7 @@ export function ProgressiveImage({
 
   // Predictive viewport preloader: starts fetching 650px before user scrolls to the photo
   useEffect(() => {
-    if (shouldLoad || typeof IntersectionObserver === 'undefined') {
-      setShouldLoad(true)
-      return
-    }
+    if (shouldLoad) return
 
     const element = containerRef.current
     if (!element) return

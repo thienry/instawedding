@@ -114,13 +114,14 @@ Redesigned at the author's request, so the layout differs from the original page
 
 - [x] hooks: `useMediaSelection`, `usePostDraft`, `usePostSubmit`
 - [x] components: `CaptureHeader`, `SignInGate`, `GuestProfileBar`, `CaptureChoices`, `ChallengeHint`, `MediaPreview` (`FrameOverlay`), `VideoSummary`, `StudioControls` (`FilterCarousel`, `FrameCarousel`), `PostDetailsForm` (`AuthorSummary`, `ChallengeSelect`, `ProjectorToggle`)
-- [ ] check photo, video and offline on a real device (author)
+- [x] check photo, video and offline on a real device (author)
 
 **4.5 Shared**
 
 - [x] `topContributors` and `totalLikesCount`: Feed and Projector use `utils/post-stats.ts`
 - [x] Guest login repeated in Feed and Capture moved to `src/hooks/useGuestAuth.ts`
-- [ ] Revisit the 3 remaining oxlint warnings
+- [x] Revisit the remaining oxlint warnings (0 left, 1 justified in `VideoRecorderModal`)
+- [x] Challenges (370 lines), not in the original plan: `useChallengeBoard`, `utils/challenge-progress.ts`, `ChallengesBanner`, `PhotographerRanking` (uses `utils/post-stats.ts`), `ChallengeCard`, `ChallengesSkeleton`
 
 **Done when:** baseline targets are met and no smoke test was changed just to pass.
 
@@ -159,6 +160,15 @@ Capture, found while splitting:
 - [x] Choosing another photo while the first is still being compressed can post the first one (the late result overwrites the new file)
 - [x] The caption of a guestbook card stays when the media is changed
 - [x] Signing out with a photo selected leaves "Postar" in the header, doing nothing
+
+Boomerang recorder, found while reviewing its lint warning:
+
+- [x] Leaving the page while recording still delivers the clip
+- [x] Closing the modal before the camera is ready can leave the camera on
+
+Challenges, found while splitting:
+
+- [x] A failed load shows an empty page, with no message
 
 Projector, fixed by the redesign:
 

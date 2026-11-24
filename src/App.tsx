@@ -12,7 +12,9 @@ const CapturePage = lazy(() =>
   }))
 )
 const ChallengesPage = lazy(() =>
-  import('@/pages/ChallengesPage').then((m) => ({ default: m.ChallengesPage }))
+  import('@/features/challenges/ChallengesPage').then((m) => ({
+    default: m.ChallengesPage,
+  }))
 )
 const AdminPage = lazy(() =>
   import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage }))

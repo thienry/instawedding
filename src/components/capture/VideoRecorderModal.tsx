@@ -47,6 +47,7 @@ export function VideoRecorderModal({
   const streamRef = useRef<MediaStream | null>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const cameraRequestRef = useRef(0)
   const timerIntervalRef = useRef<number | null>(null)
 
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>(
@@ -59,9 +60,14 @@ export function VideoRecorderModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const stopTracks = useCallback(() => {
+    cameraRequestRef.current += 1
     if (timerIntervalRef.current) {
       window.clearInterval(timerIntervalRef.current)
       timerIntervalRef.current = null
+    }
+    if (recorderRef.current) {
+      // The clip is only delivered when the recording is completed
+      recorderRef.current.onstop = null
     }
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       try {
@@ -97,50 +103,45 @@ export function VideoRecorderModal({
         return
       }
 
-      try {
+      // stopTracks starts a new request, so a late camera is turned off
+      const request = cameraRequestRef.current
+      const isCurrent = () => cameraRequestRef.current === request
+
+      const openCamera = async (audio: boolean) => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: mode },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
-          audio: withAudio,
+          audio,
         })
-
+        if (!isCurrent()) {
+          for (const track of stream.getTracks()) track.stop()
+          return
+        }
         streamRef.current = stream
+        if (!audio) setIncludeAudio(false)
         if (videoPreviewRef.current) {
           videoPreviewRef.current.srcObject = stream
           await videoPreviewRef.current.play().catch(() => {})
         }
+      }
+
+      try {
+        await openCamera(withAudio).catch((error: unknown) => {
+          // Falls back to no audio if the microphone permission was denied
+          if (!withAudio || !isCurrent()) throw error
+          return openCamera(false)
+        })
       } catch {
-        // Fallback without audio if microphone permission was denied
-        if (withAudio) {
-          try {
-            const videoOnlyStream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                facingMode: { ideal: mode },
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-              audio: false,
-            })
-            streamRef.current = videoOnlyStream
-            setIncludeAudio(false)
-            if (videoPreviewRef.current) {
-              videoPreviewRef.current.srcObject = videoOnlyStream
-              await videoPreviewRef.current.play().catch(() => {})
-            }
-            setIsInitializing(false)
-            return
-          } catch {
-            // Fall through to error message
-          }
+        if (isCurrent()) {
+          setErrorMessage(
+            'Permissão de câmera negada ou indisponível. Verifique as permissões do navegador.'
+          )
         }
-        setErrorMessage(
-          'Permissão de câmera negada ou indisponível. Verifique as permissões do navegador.'
-        )
       } finally {
-        setIsInitializing(false)
+        if (isCurrent()) setIsInitializing(false)
       }
     },
     [stopTracks]
@@ -148,6 +149,8 @@ export function VideoRecorderModal({
 
   useEffect(() => {
     if (!isOpen) {
+      // The state mirrors the camera, an external system released here
+      // oxlint-disable-next-line react/set-state-in-effect
       stopTracks()
       return
     }
