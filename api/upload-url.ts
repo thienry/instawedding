@@ -1,10 +1,11 @@
 import crypto from 'node:crypto'
 import process from 'node:process'
 
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 import { fail } from './_lib/http.js'
+import { createR2 } from './_lib/media.js'
 import { withinRateLimit } from './_lib/rate-limit.js'
 import { getBearerUser } from './_lib/supabase.js'
 
@@ -81,27 +82,9 @@ export async function POST(req: Request): Promise<Response> {
       )
     }
 
-    const accountId = process.env.R2_ACCOUNT_ID
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
-    const bucketName = process.env.R2_BUCKET_NAME || 'instawedding'
     const publicDomain = process.env.R2_PUBLIC_DOMAIN || '/media'
-
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      return new Response(JSON.stringify({ error: 'Storage S3/R2 não configurado no servidor.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
-
-    const s3Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    })
+    const storage = createR2()
+    if (!storage) return fail(500, 'Storage S3/R2 não configurado no servidor.')
 
     const now = new Date()
     const year = now.getFullYear()
@@ -110,7 +93,7 @@ export async function POST(req: Request): Promise<Response> {
     const objectKey = `uploads/${year}/${month}/${crypto.randomUUID()}.${ext}`
 
     const command = new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: storage.bucket,
       Key: objectKey,
       ContentType: contentType,
       // Signed into the URL: R2 rejects a body of any other size
@@ -118,7 +101,7 @@ export async function POST(req: Request): Promise<Response> {
     })
 
     // Generate presigned PUT URL expiring in 5 minutes (300 seconds)
-    const uploadUrl = await getSignedUrl(s3Client, command, {
+    const uploadUrl = await getSignedUrl(storage.client, command, {
       expiresIn: 300,
       // The SDK leaves content-type unsigned by default, which would let a
       // client upload HTML to a URL issued for an image

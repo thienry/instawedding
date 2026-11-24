@@ -56,9 +56,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-sage-800/75 font-medium">
-            Exportação &amp; Moderação de Mídias
-          </p>
+          <p className="text-sm text-sage-700 font-medium">Exportação &amp; Moderação de Mídias</p>
           <h3 className="font-serif text-2xl font-bold text-sage-900 mt-0.5">
             Galeria do Casamento ({approvedPosts} aprovadas)
           </h3>
@@ -112,7 +110,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+            className={`min-h-11 px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
               filter === id ? activeClass : idleClass
             }`}>
             {label} ({counts[id]})

@@ -21,18 +21,18 @@ const ICON_TABS: readonly IconTab[] = [
     id: 'challenges',
     label: 'Desafios',
     Icon: Trophy,
-    iconClass: 'text-gold-500',
+    iconClass: 'text-gold-600',
   },
   {
     id: 'mine',
-    label: 'Minhas Fotos',
+    label: 'Minhas',
     Icon: Camera,
     iconClass: 'text-sage-800',
   },
 ]
 
 function tabClass(isActive: boolean): string {
-  return `px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+  return `min-h-11 px-3.5 sm:px-4 rounded-full text-sm font-semibold transition-all ${
     isActive
       ? 'bg-sage-900 text-white shadow-sm'
       : 'bg-white text-sage-800 border border-sage-200 hover:bg-sage-100'
@@ -48,7 +48,7 @@ interface FilterTabsProps {
 /** Feed filters. */
 export function FilterTabs({ activeTab, onChange, postCount }: FilterTabsProps) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 scrollbar-none">
       <button
         type="button"
         onClick={() => onChange('all')}

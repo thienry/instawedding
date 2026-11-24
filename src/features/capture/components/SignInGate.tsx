@@ -18,7 +18,7 @@ export function SignInGate({ isSigningIn, errorMessage, onSignIn }: SignInGatePr
         />
         <div className="space-y-2">
           <h3 className="font-serif text-2xl font-bold text-sage-900">Entre para Postar Fotos</h3>
-          <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
+          <p className="text-sm text-sage-700 max-w-md mx-auto leading-relaxed">
             Conecte sua conta Google para enviar fotos ao mural e telão ao vivo. Sua foto de perfil
             e nome serão usados automaticamente na assinatura!
           </p>

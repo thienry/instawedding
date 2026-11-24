@@ -33,15 +33,17 @@ export function PostDetailsForm({
       <AuthorSummary guestUser={guestUser} onSignOut={onSignOut} />
 
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-sage-900 block">
-          Legenda <span className="text-sage-800/50 font-normal">(opcional)</span>
+        <label htmlFor="post-caption" className="text-sm font-bold text-sage-900 block">
+          Legenda <span className="text-sage-700 font-normal">(opcional)</span>
         </label>
         <textarea
+          id="post-caption"
+          maxLength={2000}
           rows={2}
           value={draft.caption}
           onChange={(e) => draft.setCaption(e.target.value)}
           placeholder="Deixe um recado carinhoso para os noivos..."
-          className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20 resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20 resize-none"
         />
       </div>
 
@@ -50,7 +52,7 @@ export function PostDetailsForm({
       <ProjectorToggle draft={draft} />
 
       {/* Implicit Terms & LGPD Consent Notice */}
-      <p className="pt-1 text-xs text-sage-800/75 leading-relaxed">
+      <p className="pt-1 text-xs text-sage-700 leading-relaxed">
         Ao utilizar o aplicativo e publicar fotos ou vídeos, você concorda com os{' '}
         <button
           type="button"
@@ -69,22 +71,27 @@ export function PostDetailsForm({
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting || media.isProcessing}
-        className="w-full py-4 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2">
-        {isSubmitting ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Postando...</span>
-          </>
-        ) : (
-          <>
-            <CheckCircle className="w-5 h-5" />
-            <span>{media.isVideo ? 'Postar Vídeo' : 'Postar Foto'}</span>
-          </>
-        )}
-      </button>
+      {/* Replaces the bottom navigation on small screens */}
+      <div
+        data-post-bar
+        className="fixed lg:static bottom-0 inset-x-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-0 bg-white/95 lg:bg-transparent border-t border-sage-200 lg:border-0">
+        <button
+          type="submit"
+          disabled={isSubmitting || media.isProcessing}
+          className="w-full min-h-13 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-base transition-all shadow-md flex items-center justify-center gap-2">
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Postando...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-5 h-5" />
+              <span>{media.isVideo ? 'Postar Vídeo' : 'Postar Foto'}</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   )
 }

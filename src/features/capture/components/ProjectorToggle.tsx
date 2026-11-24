@@ -17,11 +17,11 @@ export function ProjectorToggle({ draft }: ProjectorToggleProps) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-sage-900">Exibir no Telão da Festa</span>
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
+            <span className="text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
               Ao vivo
             </span>
           </div>
-          <p className="text-xs text-sage-800/75 mt-0.5">
+          <p className="text-xs text-sage-700 mt-0.5">
             Transmitir automaticamente no telão do casamento após o envio.
           </p>
         </div>
@@ -31,9 +31,10 @@ export function ProjectorToggle({ draft }: ProjectorToggleProps) {
           type="checkbox"
           checked={draft.showOnProjector}
           onChange={(e) => draft.setShowOnProjector(e.target.checked)}
+          aria-label="Exibir no Telão da Festa"
           className="sr-only peer"
         />
-        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-900"></div>
+        <div className="w-11 h-6 bg-slate-300 peer-focus-visible:ring-2 peer-focus-visible:ring-sage-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-900"></div>
       </label>
     </div>
   )

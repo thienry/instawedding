@@ -20,7 +20,7 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
       }}
       className="space-y-3">
       <div className="relative">
-        <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-800/50" />
+        <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-700" />
         <input
           type="email"
           required

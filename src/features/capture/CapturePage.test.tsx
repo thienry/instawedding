@@ -21,10 +21,10 @@ vi.mock('@/utils/video', async (importOriginal) => ({
 }))
 vi.mock('@/components/capture/GuestbookModal', () => ({
   GuestbookModal: ({
-    onCardGenerated,
+    onSend,
   }: {
-    onCardGenerated: (file: File, message: string) => void
-  }) => <button onClick={() => onCardGenerated(card, 'Felicidades')}>card</button>,
+    onSend: (file: File, showOnProjector: boolean) => Promise<void>
+  }) => <button onClick={() => void onSend(card, false)}>card</button>,
 }))
 
 setupBrowser()
@@ -108,13 +108,13 @@ it('posts the compressed photo with its details', async () => {
   )
 })
 
-it('posts the original photo when compression fails', async () => {
-  vi.mocked(compressPhoto).mockRejectedValue(new Error('no worker'))
+it('never posts the original when it cannot be processed', async () => {
+  vi.mocked(compressPhoto).mockRejectedValue(new Error('unreadable'))
   open()
   select(photo)
-  await post()
-  await screen.findByText('feed')
-  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ file: photo }))
+  await screen.findByText(/Não foi possível ler esta foto/)
+  expect(document.querySelector('form')).toBeNull()
+  expect(submit).not.toHaveBeenCalled()
 })
 
 it('renders the chosen filter and frame into the photo', async () => {
@@ -125,7 +125,7 @@ it('renders the chosen filter and frame into the photo', async () => {
   await screen.findByAltText('Prévia da foto')
   fireEvent.click(screen.getByAltText('P&B Elegante'))
   fireEvent.click(screen.getByRole('button', { name: 'Molduras' }))
-  fireEvent.click(screen.getByText('📷'))
+  fireEvent.click(screen.getByText('Polaroid Noivos'))
   await post()
   await screen.findByText('feed')
   expect(renderFilteredAndFramedPhoto).toHaveBeenCalledWith(
@@ -163,13 +163,18 @@ it('rejects invalid videos and files over 25 MB', async () => {
   expect(document.querySelector('form')).toBeNull()
 })
 
-it('posts a guestbook card with its message as the caption', async () => {
-  open()
+it('sends a guestbook card without the photo studio', async () => {
+  open('/capture?challengeId=1')
   fireEvent.click(screen.getByText('card'))
-  await post()
   await screen.findByText('feed')
   expect(submit).toHaveBeenCalledWith(
-    expect.objectContaining({ file: card, caption: 'Felicidades' })
+    expect.objectContaining({
+      file: card,
+      caption: '💌 Recado para os noivos',
+      challengeId: null,
+      clientSessionId: 'g1',
+      showOnProjector: false,
+    })
   )
 })
 
@@ -232,28 +237,11 @@ it('ignores the compression of a photo that was replaced', async () => {
   expect(submit.mock.calls[0]![0].file).toBe(compressed)
 })
 
-it('ignores the compression of a photo replaced by a card', async () => {
-  let finish = (_file: File) => {}
-  vi.mocked(compressPhoto).mockReturnValueOnce(new Promise((resolve) => (finish = resolve)))
+it('keeps the caption when the media is replaced', async () => {
   open()
-  select(photo)
-  fireEvent.click(await screen.findByText('Trocar mídia'))
-  fireEvent.click(screen.getByText('card'))
-  await act(async () => finish(compressed))
-  await post()
-  await screen.findByText('feed')
-  expect(submit.mock.calls[0]![0].file).toBe(card)
-})
-
-it('drops the caption of a card, but keeps a typed one', async () => {
-  const caption = () => screen.getByPlaceholderText<HTMLTextAreaElement>(/recado carinhoso/)
-  open()
-  fireEvent.click(screen.getByText('card'))
-  expect(caption().value).toBe('Felicidades')
-  fireEvent.click(screen.getByText('Trocar mídia'))
   select(photo)
   await screen.findByAltText('Prévia da foto')
-  expect(caption().value).toBe('')
+  const caption = () => screen.getByPlaceholderText<HTMLTextAreaElement>(/recado carinhoso/)
   fireEvent.change(caption(), { target: { value: 'Oi' } })
   fireEvent.click(screen.getByText('Trocar mídia'))
   select(photo)

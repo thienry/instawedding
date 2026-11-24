@@ -30,7 +30,7 @@ const anon = (sql: string) => as('anon', sql)
 const insertPost = (owner: string, extra: Record<string, string> = {}) => {
   const row: Record<string, string> = {
     author_name: `'Ana'`,
-    media_url: `'/media/a.webp'`,
+    media_url: `'/media/uploads/2026/12/${POST}.webp'`,
     client_session_id: `'${owner}'`,
     ...extra,
   }
@@ -89,13 +89,22 @@ describe('posts', () => {
   })
 
   it.each([
-    ['likes_count', '99'],
-    ['is_approved', 'false'],
     ['media_url', `'javascript:alert(1)'`],
+    ['media_url', `'https://x.test/a.webp'`],
+    ['author_avatar_url', `'http://x.test/a.png'`],
+    ['author_name', `'  '`],
     ['author_name', `repeat('a', 121)`],
     ['caption', `repeat('a', 2001)`],
   ])('rejects a forged %s', async (column, value) => {
     await expect(ana(insertPost(ANA, { [column]: value }))).rejects.toThrow('row-level security')
+  })
+
+  it.each([
+    ['likes_count', '99'],
+    ['is_approved', 'false'],
+    ['created_at', `'2030-01-01'`],
+  ])('does not let guests choose %s', async (column, value) => {
+    await expect(ana(insertPost(ANA, { [column]: value }))).rejects.toThrow('permission denied')
   })
 
   it('lets guests delete only their own posts, even hidden ones', async () => {

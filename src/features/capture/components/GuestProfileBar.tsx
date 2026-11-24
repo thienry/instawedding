@@ -16,14 +16,14 @@ export function GuestProfileBar({ guestUser, onSignOut }: GuestProfileBarProps) 
       <div className="flex items-center gap-3 min-w-0">
         <AuthorAvatar name={guestUser.name} avatarUrl={guestUser.avatarUrl} size="md" />
         <div className="min-w-0">
-          <p className="text-xs text-sage-800/65 font-medium">Postando como</p>
+          <p className="text-xs text-sage-700 font-medium">Postando como</p>
           <p className="text-sm font-bold text-sage-900 truncate">{guestUser.name}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={onSignOut}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold text-rose-700 transition-colors shrink-0"
+        className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold text-rose-700 transition-colors shrink-0"
         title="Desconectar conta Google">
         <LogOut className="w-3.5 h-3.5" />
         <span>Sair</span>

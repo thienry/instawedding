@@ -10,7 +10,7 @@ interface FilterCarouselProps {
 /** Photo filters, previewed on the photo itself. */
 export function FilterCarousel({ media, previewUrl }: FilterCarouselProps) {
   return (
-    <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+    <div className="flex items-center gap-2.5 overflow-x-auto p-1 scrollbar-none">
       {PHOTO_FILTERS.map((f) => {
         const isSelected = media.filterId === f.id
         return (

@@ -20,7 +20,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
       }}
       className="w-full bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4">
       <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
-        <Plus className="w-4 h-4 text-gold-500" />
+        <Plus className="w-4 h-4 text-gold-600" />
         <span>Criar Novo Desafio</span>
       </h4>
 

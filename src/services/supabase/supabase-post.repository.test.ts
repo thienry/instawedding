@@ -38,30 +38,16 @@ beforeEach(() => {
 })
 
 describe('deletePost', () => {
-  it('resolves when the row is deleted', async () => {
-    const methods = database({ DELETE: [{ id: ID }] })
+  it('goes through the server and surfaces its error', async () => {
+    const fetch = vi.fn(async () => Response.json({ success: true }))
+    vi.stubGlobal('fetch', fetch)
     await repo.deletePost(ID)
-    expect(methods).toEqual(['DELETE'])
-  })
-
-  it('rejects on a database error', async () => {
-    database({ DELETE: 'error' })
-    await expect(repo.deletePost(ID)).rejects.toThrow('denied')
-  })
-
-  it('rejects when RLS silently blocks it', async () => {
-    database({ DELETE: [], GET: [{ id: ID }] })
-    await expect(repo.deletePost(ID)).rejects.toThrow('not deleted')
-  })
-
-  it('resolves when the post is already gone', async () => {
-    database({ DELETE: [], GET: [] })
-    await repo.deletePost(ID)
-  })
-
-  it('rejects when it cannot confirm the post is gone', async () => {
-    database({ DELETE: [], GET: 'error' })
-    await expect(repo.deletePost(ID)).rejects.toThrow('denied')
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/delete-post',
+      expect.objectContaining({ body: JSON.stringify({ postId: ID }) })
+    )
+    vi.stubGlobal('fetch', async () => Response.json({ error: 'Negado' }, { status: 403 }))
+    await expect(repo.deletePost(ID)).rejects.toThrow('Negado')
   })
 })
 

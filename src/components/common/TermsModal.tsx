@@ -27,7 +27,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                 className="font-serif text-base font-bold text-sage-900 leading-tight">
                 Termos de Uso & Privacidade
               </h2>
-              <p className="text-[11px] text-sage-800/70">
+              <p className="text-[11px] text-sage-700">
                 Casamento Thiago & Priscila (InstaWedding)
               </p>
             </div>
@@ -46,7 +46,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           {/* Section 1: Finalidade e Uso de Imagem */}
           <section className="space-y-1.5">
             <h3 className="font-semibold text-sage-900 flex items-center gap-1.5 text-xs">
-              <Eye className="w-4 h-4 text-gold-500" />
+              <Eye className="w-4 h-4 text-gold-600" />
               1. Finalidade e Consentimento de Uso
             </h3>
             <p>
@@ -75,8 +75,8 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                 monitoramento de comportamento ou perfil de consumo.
               </li>
               <li>
-                <strong>Identificação mínima:</strong> Solicitamos apenas o seu nome ou apelido para
-                assinar as fotos enviadas.
+                <strong>Identificação:</strong> O login com Google fornece seu nome, e-mail e foto
+                de perfil. Nome e foto assinam suas publicações; o e-mail não aparece no mural.
               </li>
             </ul>
           </section>
@@ -88,10 +88,9 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
               3. Proteção Automática de Metadados (Privacy by Design)
             </h3>
             <p>
-              Antes de qualquer foto ser transmitida para o servidor, o navegador do seu aparelho
-              comprime e remove automaticamente todos os metadados sensíveis do arquivo (dados{' '}
-              <em>EXIF</em>, incluindo coordenadas de geolocalização por GPS e dados técnicos do seu
-              aparelho).
+              Antes do envio, o seu aparelho comprime cada foto e remove os metadados, incluindo a
+              localização por GPS. <strong>Vídeos da galeria são enviados como estão</strong> e
+              podem conter esses dados.
             </p>
           </section>
 
@@ -104,8 +103,8 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <p>
               Você mantém o controle sobre o que compartilhou. A qualquer momento durante o evento,
               você pode excluir qualquer foto publicada por você utilizando o botão de exclusão
-              disponível diretamente no card da sua publicação no Feed. A foto será removida
-              instantaneamente do feed e do telão.
+              disponível diretamente no card da sua publicação no Feed. O arquivo é apagado e a
+              publicação sai do feed e do telão em instantes.
             </p>
           </section>
 

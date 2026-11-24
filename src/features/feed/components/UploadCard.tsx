@@ -71,7 +71,7 @@ export function UploadCard({ task }: UploadCardProps) {
             <button
               type="button"
               onClick={() => void OfflineQueueService.retryTask(task.id)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-sage-900 text-white hover:bg-sage-800 transition-colors">
+              className="min-h-11 px-4 rounded-full text-xs font-semibold bg-sage-900 text-white hover:bg-sage-800 transition-colors">
               Tentar agora
             </button>
           )}
@@ -80,7 +80,7 @@ export function UploadCard({ task }: UploadCardProps) {
             onClick={() => void OfflineQueueService.cancelTask(task.id)}
             title="Cancelar envio"
             aria-label="Cancelar envio"
-            className="p-1.5 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+            className="touch-target p-1.5 rounded-full text-sage-700 hover:text-rose-600 hover:bg-rose-50 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

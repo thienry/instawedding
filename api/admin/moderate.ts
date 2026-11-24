@@ -1,5 +1,6 @@
 import { requireIdentity } from '../_lib/auth.js'
 import { fail, json, readJson } from '../_lib/http.js'
+import { deleteMedia } from '../_lib/media.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
 interface ModerateBody {
@@ -54,13 +55,18 @@ export async function POST(req: Request): Promise<Response> {
         return json({ success: true, isApproved })
       }
       case 'delete_post': {
-        const { error } = await posts().delete().eq('id', postId!)
+        const { data, error } = await posts().delete().eq('id', postId!).select('media_url')
         if (error) throw error
+        await deleteMedia(data.map((post) => post.media_url as string))
         return json({ success: true })
       }
       case 'clear_all': {
-        const { error } = await posts().delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        const { data, error } = await posts()
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+          .select('media_url')
         if (error) throw error
+        await deleteMedia(data.map((post) => post.media_url as string))
         return json({ success: true })
       }
       default:

@@ -72,9 +72,9 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
 
       <MetricCard
         title="Fotógrafo da Noite"
-        titleClass="text-gold-500"
-        icon={<Trophy className="w-4 h-4 text-gold-500" />}
-        iconClass="bg-gold-400/20 text-gold-500">
+        titleClass="text-gold-600"
+        icon={<Trophy className="w-4 h-4 text-gold-600" />}
+        iconClass="bg-gold-400/20 text-gold-600">
         <h4 className="font-serif text-xl sm:text-2xl font-bold text-sage-900 leading-tight truncate">
           {topAuthor?.name ?? 'Nenhum ainda'}
         </h4>

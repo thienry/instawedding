@@ -32,7 +32,7 @@ export function OtpCodeForm({ login }: OtpCodeFormProps) {
           placeholder={'0'.repeat(OTP_LENGTH)}
           className="w-full px-4 py-3 rounded-2xl border border-sage-200 bg-white text-center font-mono text-xl tracking-[0.4em] font-bold text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-800/30 transition-all shadow-xs"
         />
-        <p className="text-[11px] text-sage-800/60 text-center">
+        <p className="text-[11px] text-sage-700 text-center">
           Digite os {OTP_LENGTH} dígitos numéricos
         </p>
       </div>
@@ -58,7 +58,7 @@ export function OtpCodeForm({ login }: OtpCodeFormProps) {
         <button
           type="button"
           onClick={restart}
-          className="text-xs text-sage-800/70 hover:text-sage-900 font-medium transition-colors">
+          className="text-xs text-sage-700 hover:text-sage-900 font-medium transition-colors">
           ← Trocar e-mail ou reenviar código
         </button>
       </div>

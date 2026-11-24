@@ -84,7 +84,7 @@ export function DialogModal({
           <h3 id={`${id}-title`} className="font-serif text-lg font-bold text-sage-900">
             {title}
           </h3>
-          <p id={`${id}-message`} className="text-sm text-sage-800/75 leading-relaxed break-words">
+          <p id={`${id}-message`} className="text-sm text-sage-700 leading-relaxed break-words">
             {message}
           </p>
         </div>

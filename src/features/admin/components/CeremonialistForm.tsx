@@ -22,7 +22,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
           <h3 className="font-serif text-lg font-bold text-sage-900 leading-tight">
             Conceder Acesso de Cerimonial
           </h3>
-          <p className="text-xs text-sage-800/70 mt-0.5">
+          <p className="text-xs text-sage-700 mt-0.5">
             Adicione e-mails da assessoria/cerimonial para que possam moderar fotos e gerenciar
             desafios.
           </p>
@@ -56,7 +56,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
             E-mail do Cerimonialista *
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-800/50" />
+            <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-700" />
             <input
               type="email"
               required

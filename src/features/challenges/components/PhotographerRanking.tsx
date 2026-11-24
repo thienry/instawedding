@@ -22,10 +22,10 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
     <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200/80 shadow-xs space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Award className="w-5 h-5 text-gold-500" />
+          <Award className="w-5 h-5 text-gold-600" />
           <h3 className="font-serif text-lg font-bold text-sage-900">Top Fotógrafos da Noite</h3>
         </div>
-        <span className="text-xs font-bold text-sage-800/60 uppercase tracking-wider">Ranking</span>
+        <span className="text-xs font-bold text-sage-700 uppercase tracking-wider">Ranking</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -33,22 +33,26 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
           return (
             <div
               key={person.name}
-              className={`rounded-2xl p-4 border flex sm:flex-col items-center justify-between sm:justify-center sm:text-center gap-3 ${
+              className={`rounded-2xl p-4 border min-w-0 flex sm:flex-col items-center justify-between sm:justify-center sm:text-center gap-3 ${
                 index === 0
                   ? 'bg-gold-400/10 border-gold-400/45 shadow-2xs'
                   : 'bg-sage-50/80 border-sage-200/70'
               }`}>
-              <div className="flex sm:flex-col items-center gap-3 sm:gap-1.5 min-w-0">
+              <div className="flex sm:flex-col items-center gap-3 sm:gap-1.5 min-w-0 max-w-full">
                 <div className="relative">
                   <AuthorAvatar name={person.name} avatarUrl={person.avatarUrl} size="md" />
                   <span className="absolute -bottom-1 -right-1 text-base leading-none">
                     {MEDALS[index]}
                   </span>
                 </div>
-                <p className="text-base font-bold text-sage-900 truncate">{person.name}</p>
+                <p className="text-base font-bold text-sage-900 truncate max-w-full">
+                  {person.name}
+                </p>
               </div>
               <div className="flex items-center justify-center gap-3 text-xs sm:text-sm text-sage-800/85 font-semibold shrink-0">
-                <span>📷 {person.postCount} fotos</span>
+                <span>
+                  📷 {person.postCount} {person.postCount === 1 ? 'foto' : 'fotos'}
+                </span>
                 <span className="inline-flex items-center gap-1 text-rose-600">
                   <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
                   {person.likes}

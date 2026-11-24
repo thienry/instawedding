@@ -35,7 +35,7 @@ export function ChallengesPage() {
       ) : hasError ? (
         <ChallengesError onRetry={retry} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           {challenges.map((challenge) => (
             <ChallengeCard
               key={challenge.id}

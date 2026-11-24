@@ -13,7 +13,7 @@ const MOCK_ACCOUNTS: readonly MockAccount[] = [
     name: 'Thiago (Noivo)',
     email: MOCK_ADMIN_EMAIL,
     badge: '👑 Admin',
-    badgeClass: 'bg-gold-500/20 text-gold-500',
+    badgeClass: 'bg-gold-500/20 text-gold-600',
     hoverClass: 'hover:border-gold-500',
   },
   {
@@ -35,7 +35,7 @@ export function MockLoginShortcuts({ onSelect }: MockLoginShortcutsProps) {
 
   return (
     <div className="pt-2">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-sage-800/70 block mb-2 text-center">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-sage-700 block mb-2 text-center">
         Atalhos de Teste Rápido (Mock)
       </span>
       <div className="space-y-1.5">
@@ -47,10 +47,10 @@ export function MockLoginShortcuts({ onSelect }: MockLoginShortcutsProps) {
             className={`w-full p-2.5 rounded-xl border border-sage-200 bg-white ${hoverClass} hover:bg-sage-50/60 flex items-center justify-between text-left transition-colors`}>
             <div className="min-w-0">
               <span className="text-xs font-bold text-sage-900 block truncate">{name}</span>
-              <span className="text-[11px] text-sage-800/60 block truncate">{email}</span>
+              <span className="text-[11px] text-sage-700 block truncate">{email}</span>
             </div>
             <span
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm ${badgeClass} shrink-0`}>
+              className={`text-[11px] font-bold px-1.5 py-0.5 rounded-sm ${badgeClass} shrink-0`}>
               {badge}
             </span>
           </button>

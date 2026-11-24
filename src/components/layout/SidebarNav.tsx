@@ -28,7 +28,7 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
         <div className="relative shrink-0">
           <ImageIcon className="w-5 h-5" />
           {isCollapsed && unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+            <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -58,7 +58,7 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
           className={`flex items-center rounded-2xl text-sm font-semibold text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-all duration-300 ease-in-out ${
             isCollapsed ? 'justify-center px-3 py-3' : 'gap-3.5 px-4 py-3'
           }`}>
-          <Tv className="w-5 h-5 shrink-0 text-gold-500" />
+          <Tv className="w-5 h-5 shrink-0 text-gold-600" />
           <span className={labelTransitionClass}>Modo Telão</span>
         </Link>
       )}

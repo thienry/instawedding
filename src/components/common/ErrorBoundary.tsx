@@ -46,13 +46,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             <div className="space-y-1.5">
               <h2 className="font-serif text-lg font-bold text-sage-900">Ops! Algo deu errado</h2>
-              <p className="text-xs text-sage-800/70">
+              <p className="text-xs text-sage-700">
                 Ocorreu uma instabilidade momentânea na exibição desta página.
               </p>
             </div>
 
             {this.state.error && (
-              <pre className="text-[10px] text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-left overflow-x-auto max-h-28">
+              <pre className="text-[11px] text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-left overflow-x-auto max-h-28">
                 {this.state.error.message}
               </pre>
             )}

@@ -23,10 +23,10 @@ export function TopContributors({ posts }: TopContributorsProps) {
     <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Award className="w-5 h-5 text-gold-500" />
+          <Award className="w-5 h-5 text-gold-600" />
           <h3 className="font-serif text-base font-bold text-sage-900">Top Fotógrafos da Noite</h3>
         </div>
-        <Link to="/challenges" className="text-xs font-semibold text-gold-500 hover:underline">
+        <Link to="/challenges" className="text-xs font-semibold text-gold-600 hover:underline">
           Ver todos
         </Link>
       </div>

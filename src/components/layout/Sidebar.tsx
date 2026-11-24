@@ -27,8 +27,8 @@ export function Sidebar({
 
   return (
     <aside
-      className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 bg-white border-r border-sage-200/80 z-30 justify-between shadow-2xs transition-[width,padding] duration-300 ease-in-out ${
-        isCollapsed ? 'md:w-20 p-3' : 'md:w-64 lg:w-72 p-5'
+      className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 overflow-y-auto bg-white border-r border-sage-200/80 z-30 justify-between shadow-2xs transition-[width,padding] duration-300 ease-in-out ${
+        isCollapsed ? 'lg:w-20 p-3' : 'lg:w-72 p-5'
       }`}>
       <div className="space-y-6">
         {/* Brand Logo & Title */}
@@ -47,7 +47,7 @@ export function Sidebar({
             <h1 className="font-serif text-xl font-bold tracking-tight text-sage-900 leading-tight truncate">
               Thiago &amp; Priscila
             </h1>
-            <p className="text-xs font-medium text-sage-800/65 truncate">Álbum &amp; Mural</p>
+            <p className="text-xs font-medium text-sage-700 truncate">Álbum &amp; Mural</p>
           </div>
         </Link>
 

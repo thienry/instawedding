@@ -9,7 +9,7 @@ interface VideoRecorderModalProps {
   readonly onVideoRecorded: (file: File, durationSeconds: number) => void
 }
 
-/** Full-screen Boomerang recorder. */
+/** Full-screen short video recorder. */
 export function VideoRecorderModal({
   isOpen,
   maxDurationSeconds = 5,
@@ -40,7 +40,7 @@ export function VideoRecorderModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Gravador de Boomerang"
+      aria-label="Gravador de vídeo curto"
       className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 select-none animate-in fade-in duration-150">
       {/* Top Bar */}
       <div className="flex items-center justify-between max-w-lg w-full mx-auto pt-1 z-10">
@@ -48,8 +48,8 @@ export function VideoRecorderModal({
           <Sparkles className="w-3.5 h-3.5 text-gold-400" />
           <span>
             {includeAudio
-              ? `Boomerang com Som (${maxDurationSeconds}s)`
-              : `Boomerang (${maxDurationSeconds}s)`}
+              ? `Vídeo com som (${maxDurationSeconds}s)`
+              : `Vídeo curto (${maxDurationSeconds}s)`}
           </span>
         </div>
 
@@ -116,7 +116,7 @@ export function VideoRecorderModal({
         <p className="text-center text-xs text-white/75">
           {isRecording
             ? 'Toque no botão central para concluir antes ou aguarde os 5 segundos.'
-            : 'Grave um momento estilo Boomerang de até 5 segundos!'}
+            : 'Grave um momento de até 5 segundos!'}
         </p>
 
         <div className="flex items-center justify-around">

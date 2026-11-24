@@ -12,6 +12,8 @@ import type { GuestUser } from '@/types/domain'
 interface PostSubmit {
   readonly isSubmitting: boolean
   readonly submit: (guestUser: GuestUser) => Promise<void>
+  /** Queues a guestbook card, which has no other details. */
+  readonly submitCard: (guestUser: GuestUser, file: File, showOnProjector: boolean) => Promise<void>
 }
 
 /**
@@ -59,5 +61,19 @@ export function usePostSubmit(
     }
   }
 
-  return { isSubmitting, submit }
+  const submitCard = async (guestUser: GuestUser, file: File, showOnProjector: boolean) => {
+    setTermsAccepted(true)
+    await OfflineQueueService.submitInBackground({
+      file,
+      authorName: guestUser.name,
+      authorAvatarUrl: guestUser.avatarUrl,
+      caption: '💌 Recado para os noivos',
+      challengeId: null,
+      clientSessionId: guestUser.id,
+      showOnProjector,
+    })
+    navigate('/')
+  }
+
+  return { isSubmitting, submit, submitCard }
 }

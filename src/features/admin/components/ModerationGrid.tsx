@@ -13,21 +13,19 @@ export function ModerationGrid({ moderation, isLoading, isAdmin }: ModerationGri
   const { filteredPosts, toggleApproval, deletePost } = moderation
 
   if (isLoading) {
-    return (
-      <p className="text-sm text-center text-sage-800/60 py-8">Carregando fila de postagens...</p>
-    )
+    return <p className="text-sm text-center text-sage-700 py-8">Carregando fila de postagens...</p>
   }
 
   if (filteredPosts.length === 0) {
     return (
-      <div className="p-10 text-center text-sm text-sage-800/65 bg-white rounded-3xl border border-sage-200 shadow-xs">
+      <div className="p-10 text-center text-sm text-sage-700 bg-white rounded-3xl border border-sage-200 shadow-xs">
         Nenhuma foto encontrada neste filtro.
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       {filteredPosts.map((post) => (
         <ModerationCard
           key={post.id}

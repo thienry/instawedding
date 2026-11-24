@@ -32,7 +32,7 @@ export function ChallengeCard({ challenge, onToggle, onDelete }: ChallengeCardPr
               {isActive ? 'Ativo' : 'Pausado'}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-sage-800/75 truncate">{description}</p>
+          <p className="text-xs sm:text-sm text-sage-700 truncate">{description}</p>
         </div>
       </div>
 

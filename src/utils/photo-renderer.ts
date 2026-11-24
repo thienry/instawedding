@@ -1,4 +1,6 @@
 import { getAdaptiveNetworkProfile } from '@/utils/blur-placeholder'
+import { canvasToFile } from '@/utils/canvas-file'
+import { applyColorFilter, supportsCanvasFilter } from '@/utils/color-filter'
 import { getFilterById } from '@/utils/photo-filters'
 import { drawFrame } from '@/utils/photo-frames'
 
@@ -28,7 +30,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 /**
  * Applies selected filter and frame to the image on an offscreen Canvas
- * and outputs an optimized WebP File ready for upload.
+ * and outputs an optimized File ready for upload, without metadata.
  */
 export async function renderFilteredAndFramedPhoto(
   sourceUrl: string,
@@ -46,6 +48,7 @@ export async function renderFilteredAndFramedPhoto(
 
   const img = await loadImage(sourceUrl)
   const filter = getFilterById(filterId)
+  const hasEffects = filterId !== 'none' || frameId !== 'none'
 
   let width = img.naturalWidth || img.width
   let height = img.naturalHeight || img.height
@@ -74,31 +77,22 @@ export async function renderFilteredAndFramedPhoto(
     width,
     height,
     drawPhoto: (x, y) => {
-      ctx.filter = filter.cssFilter
+      if (filter.cssFilter === 'none' || supportsCanvasFilter()) {
+        ctx.filter = filter.cssFilter
+        ctx.drawImage(img, x, y, width, height)
+        ctx.filter = 'none'
+        return
+      }
       ctx.drawImage(img, x, y, width, height)
-      ctx.filter = 'none'
+      const photo = ctx.getImageData(x, y, width, height)
+      applyColorFilter(photo.data, filter.cssFilter)
+      ctx.putImageData(photo, x, y)
     },
     title: weddingTitle,
     subtitle: weddingSubtitle,
   })
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Failed to generate image blob from Canvas.'))
-          return
-        }
-        const cleanName = originalFilename.replace(/\.[^/.]+$/, '') + '-filtered.webp'
-        resolve(
-          new File([blob], cleanName, {
-            type: 'image/webp',
-            lastModified: Date.now(),
-          })
-        )
-      },
-      'image/webp',
-      networkProfile.quality
-    )
-  })
+  const baseName = originalFilename.replace(/\.[^/.]+$/, '')
+  const suffix = hasEffects ? '-filtered' : ''
+  return canvasToFile(canvas, `${baseName}${suffix}`, networkProfile.quality)
 }

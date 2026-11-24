@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { GuestbookModal } from '@/components/capture/GuestbookModal'
@@ -28,27 +28,16 @@ export function CapturePage() {
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
-  const formRef = useRef<HTMLFormElement>(null)
 
   const [errorMessage, setErrorMessage] = useState('')
   const [openModal, setOpenModal] = useState<'recorder' | 'guestbook' | 'terms' | null>(null)
-  const [isCardCaption, setIsCardCaption] = useState(false)
   const closeModal = () => setOpenModal(null)
 
   const { guestUser, isSigningIn, signIn, signOut } = useGuestAuth()
   const media = useMediaSelection(setErrorMessage)
   const draft = usePostDraft(preselectedChallengeId)
-  const { isSubmitting, submit } = usePostSubmit(media, draft, setErrorMessage)
+  const { isSubmitting, submit, submitCard } = usePostSubmit(media, draft, setErrorMessage)
   const { previewUrl, isVideo } = media
-
-  // On phones the form starts below the fold
-  useEffect(() => {
-    if (!previewUrl || window.innerWidth >= 1024) return
-    const timer = setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 150)
-    return () => clearTimeout(timer)
-  }, [previewUrl])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -63,21 +52,14 @@ export function CapturePage() {
     media.selectRecording(file, durationSeconds)
   }
 
-  const handleCardGenerated = (file: File, message: string) => {
-    setErrorMessage('')
-    media.selectCard(file)
-    draft.setCaption(message)
-    setIsCardCaption(true)
+  const handleSendCard = async (file: File, showOnProjector: boolean) => {
+    if (guestUser) await submitCard(guestUser, file, showOnProjector)
   }
 
   const handleReset = () => {
     setErrorMessage('')
     media.clear()
     draft.setShowOnProjector(true)
-    if (isCardCaption) {
-      draft.setCaption('')
-      setIsCardCaption(false)
-    }
   }
 
   const handleSignIn = async () => {
@@ -118,13 +100,7 @@ export function CapturePage() {
         className="hidden"
       />
 
-      <CaptureHeader
-        media={media}
-        canPost={guestUser !== null && previewUrl !== null}
-        isSubmitting={isSubmitting}
-        onReset={handleReset}
-        onPost={() => formRef.current?.requestSubmit()}
-      />
+      <CaptureHeader canPost={guestUser !== null && previewUrl !== null} onReset={handleReset} />
 
       {!guestUser ? (
         <SignInGate
@@ -146,16 +122,15 @@ export function CapturePage() {
         </div>
       ) : (
         <form
-          ref={formRef}
           onSubmit={handleSubmit}
-          className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0">
+          className="lg:grid lg:grid-cols-2 lg:gap-8 items-start space-y-5 lg:space-y-0 pb-20 lg:pb-0">
           <MediaPreview
             media={media}
             previewUrl={previewUrl}
             isSubmitting={isSubmitting}
             onReset={handleReset}
           />
-          <div className="lg:col-span-6 space-y-6">
+          <div className="min-w-0 space-y-5">
             {isVideo ? (
               <VideoSummary durationSeconds={media.videoDuration} />
             ) : (
@@ -183,7 +158,7 @@ export function CapturePage() {
         isOpen={openModal === 'guestbook'}
         onClose={closeModal}
         authorName={guestUser?.name ?? ''}
-        onCardGenerated={handleCardGenerated}
+        onSend={handleSendCard}
       />
       <TermsModal isOpen={openModal === 'terms'} onClose={closeModal} />
     </div>

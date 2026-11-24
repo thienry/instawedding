@@ -15,7 +15,7 @@ export function EmptyFeed({ hasPosts, challengeId }: EmptyFeedProps) {
       <h3 className="font-serif text-xl font-bold text-sage-900">
         {hasPosts ? 'Nenhuma foto encontrada neste filtro' : 'Nenhuma foto postada ainda'}
       </h3>
-      <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
+      <p className="text-sm text-sage-700 max-w-md mx-auto leading-relaxed">
         {hasPosts
           ? 'Experimente trocar a aba acima ou publique uma nova foto agora.'
           : 'Seja o primeiro a registrar e compartilhar um momento especial da festa de Thiago & Priscila!'}

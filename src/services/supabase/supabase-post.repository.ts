@@ -1,4 +1,4 @@
-import { adminRequest } from '@/services/api/api.client'
+import { adminRequest, deleteOwnPost } from '@/services/api/api.client'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { isVideoUrl } from '@/utils/video'
 
@@ -175,28 +175,8 @@ export class SupabasePostRepository implements PostRepository {
   }
 
   async deletePost(postId: string): Promise<void> {
-    const supabase = getSupabaseClient()
-    // RLS blocks deletes silently, so check the affected rows
-    const { data: deleted, error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', postId)
-      .select('id')
-
-    if (error) {
-      throw new Error(`Failed to delete post in Supabase: ${error.message}`)
-    }
-    if (deleted.length > 0) return
-
-    const { data: remaining, error: readError } = await supabase
-      .from('posts')
-      .select('id')
-      .eq('id', postId)
-
-    if (readError) {
-      throw new Error(`Failed to confirm deletion: ${readError.message}`)
-    }
-    if (remaining.length > 0) throw new Error('Post was not deleted')
+    // Through the server, which also deletes the media
+    await deleteOwnPost(postId)
   }
 
   async deletePostAsAdmin(postId: string): Promise<void> {

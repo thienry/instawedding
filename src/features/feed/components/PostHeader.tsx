@@ -16,7 +16,7 @@ interface PostHeaderProps {
 /** Author, challenge and deletion button of a post. */
 export function PostHeader({ post, isNew, onSelectChallenge, onDelete }: PostHeaderProps) {
   return (
-    <div className="p-4 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
+    <div className="p-3.5 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
       <div className="flex items-center space-x-3 min-w-0">
         <AuthorAvatar name={post.authorName} avatarUrl={post.authorAvatarUrl} size="lg" />
         <div className="min-w-0">
@@ -30,7 +30,7 @@ export function PostHeader({ post, isNew, onSelectChallenge, onDelete }: PostHea
               </span>
             )}
           </div>
-          <span className="text-xs text-sage-800/65 block mt-0.5">
+          <span className="text-xs text-sage-700 block mt-0.5">
             {formatRelativeTime(post.createdAt)}
           </span>
         </div>
@@ -41,9 +41,9 @@ export function PostHeader({ post, isNew, onSelectChallenge, onDelete }: PostHea
           <button
             type="button"
             onClick={onSelectChallenge}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gold-400/15 text-gold-500 border border-gold-400/35 hover:bg-gold-400/25 transition-colors">
+            className="inline-flex items-center touch-target gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gold-400/15 text-gold-600 border border-gold-400/35 hover:bg-gold-400/25 transition-colors">
             <span className="text-sm">{post.challenge.icon}</span>
-            <span className="max-w-36 truncate">{post.challenge.title}</span>
+            <span className="max-w-24 sm:max-w-36 truncate">{post.challenge.title}</span>
           </button>
         )}
 
@@ -51,8 +51,9 @@ export function PostHeader({ post, isNew, onSelectChallenge, onDelete }: PostHea
           <button
             type="button"
             onClick={onDelete}
-            title="Excluir minha publicação (LGPD Art. 18)"
-            className="p-2 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+            title="Excluir minha publicação"
+            aria-label="Excluir minha publicação"
+            className="touch-target p-2 rounded-full text-sage-700 hover:text-rose-600 hover:bg-rose-50 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
         )}

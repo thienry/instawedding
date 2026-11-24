@@ -17,7 +17,7 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
           <h3 className="font-serif text-lg font-bold text-sage-900">
             Cerimonialistas Cadastrados ({ceremonialists.length})
           </h3>
-          <p className="text-xs text-sage-800/70">
+          <p className="text-xs text-sage-700">
             Usuários com acesso concedido entram no painel de moderação com papel de Cerimonial.
           </p>
         </div>
@@ -26,7 +26,7 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
       {ceremonialists.length === 0 ? (
         <div className="p-8 text-center border-2 border-dashed border-sage-200 rounded-2xl space-y-2">
           <Users className="w-8 h-8 text-sage-800/40 mx-auto" />
-          <p className="text-xs text-sage-800/70">
+          <p className="text-xs text-sage-700">
             Nenhum cerimonialista cadastrado ainda. Adicione o primeiro e-mail no formulário acima.
           </p>
         </div>
@@ -45,11 +45,11 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
                     <p className="text-sm font-bold text-sage-900 truncate">
                       {ceremonialist.name || ceremonialist.email}
                     </p>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sage-200 text-sage-800 shrink-0">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sage-200 text-sage-800 shrink-0">
                       🛡️ Cerimonial
                     </span>
                   </div>
-                  <p className="text-xs text-sage-800/65 truncate">{ceremonialist.email}</p>
+                  <p className="text-xs text-sage-700 truncate">{ceremonialist.email}</p>
                 </div>
               </div>
 

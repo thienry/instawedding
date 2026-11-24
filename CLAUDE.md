@@ -52,7 +52,7 @@ Realtime wedding photo wall PWA. React 19 + Vite + Tailwind v4, Supabase (Postgr
 - Mocks are on unless `VITE_USE_MOCKS=false`
 - `VITE_*` variables ship in the public bundle: never put secrets in them
 - There is no `media_type` column in the schema; media type comes from the URL (`src/utils/video.ts`)
-- Guests write posts and likes directly to Supabase under RLS (`client_session_id` = their auth user id); admin actions go through `adminRequest` to `api/admin/`. `/api/posts` does not exist
+- Guests write posts and likes directly to Supabase under RLS (`client_session_id` = their auth user id); admin actions go through `adminRequest` to `api/admin/`; guests delete their posts through `api/delete-post`, which also deletes the media. `/api/posts` does not exist
 - RLS blocks updates and deletes silently (zero rows, no error): check the affected rows
 - `/media/*` is a rewrite to R2, in `vercel.json` and in the `vite.config.ts` proxy
 - Do not commit, push or open PRs: the author reviews and commits

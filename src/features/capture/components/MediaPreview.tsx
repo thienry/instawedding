@@ -17,7 +17,7 @@ export function MediaPreview({ media, previewUrl, isSubmitting, onReset }: Media
   const { isVideo, isProcessing, filterId, frameId } = media
 
   return (
-    <div className="lg:col-span-6 lg:sticky lg:top-8">
+    <div className="min-w-0 lg:sticky lg:top-8">
       <div
         className={`relative rounded-3xl overflow-hidden transition-all shadow-sm ${
           !isVideo && frameId === 'polaroid'
@@ -50,7 +50,7 @@ export function MediaPreview({ media, previewUrl, isSubmitting, onReset }: Media
             type="button"
             onClick={onReset}
             disabled={isSubmitting}
-            className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold px-3.5 py-2 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm">
+            className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold min-h-11 px-4 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm">
             {isVideo ? 'Trocar Vídeo' : 'Trocar Foto'}
           </button>
 
@@ -73,14 +73,6 @@ export function MediaPreview({ media, previewUrl, isSubmitting, onReset }: Media
             </p>
           </div>
         )}
-      </div>
-
-      {/* Mobile quick guidance banner */}
-      <div className="lg:hidden mt-2.5 px-3 py-2 rounded-xl bg-sage-100/80 border border-sage-200/70 text-center">
-        <p className="text-xs font-medium text-sage-800/85">
-          👇 Role para adicionar legenda e telão ou clique em{' '}
-          <span className="font-bold text-sage-900">Postar</span> no topo.
-        </p>
       </div>
     </div>
   )

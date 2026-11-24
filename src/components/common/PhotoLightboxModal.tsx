@@ -46,16 +46,7 @@ export function PhotoLightboxModal({
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-        {isVideo ? (
-          <video
-            src={post.mediaUrl}
-            muted
-            loop
-            playsInline
-            autoPlay
-            className="w-full h-full object-cover scale-125 blur-3xl opacity-35 saturate-150"
-          />
-        ) : (
+        {!isVideo && (
           <img
             src={post.mediaUrl}
             alt=""
@@ -92,7 +83,7 @@ export function PhotoLightboxModal({
         <button
           type="button"
           onClick={onClose}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
           aria-label="Fechar visualização">
           <X className="w-5 h-5" />
         </button>
@@ -134,7 +125,7 @@ export function PhotoLightboxModal({
           <button
             type="button"
             onClick={() => onToggleLike(post.id)}
-            className="flex items-center gap-2 text-xs font-semibold text-white hover:opacity-80 active:scale-95 transition-all">
+            className="flex items-center gap-2 min-h-11 text-sm font-semibold text-white hover:opacity-80 active:scale-95 transition-all">
             <Heart
               className={`w-5 h-5 transition-colors ${
                 isLiked ? 'fill-rose-500 text-rose-500' : 'text-white stroke-[1.75]'
@@ -147,14 +138,15 @@ export function PhotoLightboxModal({
             <button
               type="button"
               onClick={() => onShare(post)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors">
+              aria-label="Compartilhar"
+              className="flex items-center gap-1.5 min-h-11 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors">
               <Share2 className="w-4 h-4" />
-              <span>Compartilhar</span>
+              <span className="hidden min-[400px]:inline">Compartilhar</span>
             </button>
             <button
               type="button"
               onClick={() => onDownload(post)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-xs font-semibold text-slate-950 transition-colors">
+              className="flex items-center gap-1.5 min-h-11 px-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-xs font-semibold text-slate-950 transition-colors">
               <Download className="w-4 h-4" />
               <span>Baixar</span>
             </button>

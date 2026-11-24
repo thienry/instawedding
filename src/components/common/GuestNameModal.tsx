@@ -76,7 +76,7 @@ export function GuestNameModal({
           type="button"
           onClick={onClose}
           aria-label="Fechar janela"
-          className="absolute top-4 right-4 p-2 rounded-full text-sage-800/60 hover:text-sage-900 hover:bg-sage-100 transition-colors">
+          className="absolute top-4 right-4 p-2 rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 transition-colors">
           <X className="w-5 h-5" />
         </button>
 
@@ -96,7 +96,7 @@ export function GuestNameModal({
                   className="font-serif text-xl font-bold text-sage-900">
                   {guestUser.name}
                 </h2>
-                <p className="text-xs sm:text-sm text-sage-800/70">{guestUser.email}</p>
+                <p className="text-xs sm:text-sm text-sage-700">{guestUser.email}</p>
               </div>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -104,7 +104,7 @@ export function GuestNameModal({
               </span>
             </div>
 
-            <p className="text-xs sm:text-sm text-sage-800/75 text-center leading-relaxed">
+            <p className="text-xs sm:text-sm text-sage-700 text-center leading-relaxed">
               Suas fotos e curtidas no mural aparecerão assinadas com seu nome e foto de perfil do
               Google.
             </p>
@@ -143,7 +143,7 @@ export function GuestNameModal({
                 className="font-serif text-2xl font-bold text-sage-900">
                 Entre com sua Conta Google
               </h2>
-              <p className="text-xs sm:text-sm text-sage-800/75 leading-relaxed">
+              <p className="text-xs sm:text-sm text-sage-700 leading-relaxed">
                 {reasonMessage ||
                   'Para dar like ou postar fotos no mural dos noivos, conecte sua conta Google. Seu nome e foto de perfil serão usados automaticamente.'}
               </p>

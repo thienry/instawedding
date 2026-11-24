@@ -63,7 +63,7 @@ export function PostMedia({
           onOpen()
         }}
         aria-label="Ver em tela cheia"
-        className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm z-10">
+        className="absolute top-2 right-2 w-11 h-11 flex items-center justify-center rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm z-10">
         <Maximize2 className="w-4 h-4" />
       </button>
 

@@ -13,7 +13,7 @@ export function ChallengeFilterPill({ challengeId, challenge, onClear }: Challen
   return (
     <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-gold-400/15 border border-gold-400/35 text-sm text-sage-900">
       <div className="flex items-center gap-2 font-semibold">
-        <Sparkles className="w-4 h-4 text-gold-500 shrink-0" />
+        <Sparkles className="w-4 h-4 text-gold-600 shrink-0" />
         <span>
           Filtrando por desafio:{' '}
           {challenge ? `${challenge.icon} ${challenge.title}` : `#${challengeId}`}
@@ -22,7 +22,8 @@ export function ChallengeFilterPill({ challengeId, challenge, onClear }: Challen
       <button
         type="button"
         onClick={onClear}
-        className="p-1.5 rounded-full hover:bg-gold-400/20 text-sage-800"
+        aria-label="Limpar filtro de desafio"
+        className="touch-target p-1.5 rounded-full hover:bg-gold-400/20 text-sage-800"
         title="Limpar filtro de desafio">
         <X className="w-4 h-4" />
       </button>

@@ -24,7 +24,6 @@ export interface MediaSelection {
   /** Takes a file from the camera or the gallery. */
   readonly selectFile: (file: File) => Promise<void>
   readonly selectRecording: (file: File, durationSeconds: number) => void
-  readonly selectCard: (file: File) => void
   /** File to upload with the effects applied, or `null` without media. */
   readonly prepareFile: () => Promise<File | null>
   /** Frees the preview without clearing the selection. */
@@ -65,6 +64,17 @@ export function useMediaSelection(onError: (message: string) => void): MediaSele
     setFrameId('none')
   }
 
+  const clear = () => {
+    startSelection()
+    releasePreview()
+    resetEffects()
+    setSelectedFile(null)
+    setCompressedFile(null)
+    setPreviewUrl(null)
+    setIsVideo(false)
+    setVideoDuration(0)
+  }
+
   const showVideo = (file: File, durationSeconds: number) => {
     const normalized = normalizeVideoFile(file)
     setIsVideo(true)
@@ -101,9 +111,15 @@ export function useMediaSelection(onError: (message: string) => void): MediaSele
         return
       }
       showPhoto(file)
-      // Falls back to the original when compression hits an edge case
-      const compressed = await compressPhoto(file).catch(() => file)
-      if (isCurrent()) setCompressedFile(compressed)
+      const compressed = await compressPhoto(file).catch(() => null)
+      if (!isCurrent()) return
+      // The original is never sent: it may hold the GPS position
+      if (compressed) {
+        setCompressedFile(compressed)
+      } else {
+        clear()
+        onError('Não foi possível ler esta foto. Tente outra ou tire uma nova.')
+      }
     } finally {
       if (isCurrent()) setIsProcessing(false)
     }
@@ -115,18 +131,10 @@ export function useMediaSelection(onError: (message: string) => void): MediaSele
     showVideo(file, durationSeconds)
   }
 
-  const selectCard = (file: File) => {
-    startSelection()
-    releasePreview()
-    resetEffects()
-    showPhoto(file)
-    setCompressedFile(file)
-  }
-
   const prepareFile = async () => {
     const hasEffects = filterId !== 'none' || frameId !== 'none'
     if (isVideo || !previewUrl || !hasEffects) {
-      return compressedFile ?? selectedFile
+      return isVideo ? selectedFile : compressedFile
     }
 
     setIsProcessing(true)
@@ -144,17 +152,6 @@ export function useMediaSelection(onError: (message: string) => void): MediaSele
     }
   }
 
-  const clear = () => {
-    startSelection()
-    releasePreview()
-    resetEffects()
-    setSelectedFile(null)
-    setCompressedFile(null)
-    setPreviewUrl(null)
-    setIsVideo(false)
-    setVideoDuration(0)
-  }
-
   return {
     previewUrl,
     isVideo,
@@ -166,7 +163,6 @@ export function useMediaSelection(onError: (message: string) => void): MediaSele
     setFrameId,
     selectFile,
     selectRecording,
-    selectCard,
     prepareFile,
     releasePreview,
     clear,

@@ -69,19 +69,11 @@ export function FeedVideoPlayer({
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-        {posterUrl ? (
+        {posterUrl && (
           <img
             src={posterUrl}
             alt=""
             className="w-full h-full object-cover scale-125 blur-2xl opacity-45 saturate-125"
-          />
-        ) : (
-          <video
-            src={src}
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover scale-125 blur-2xl opacity-40 saturate-125"
           />
         )}
         <div className="absolute inset-0 bg-black/40" />

@@ -28,7 +28,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
 
       <div className="space-y-1.5">
         <h2 className="font-serif text-2xl font-bold text-sage-900">Acesso Restrito</h2>
-        <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
+        <p className="text-xs text-sage-700 max-w-xs mx-auto">
           {step === 'email'
             ? 'Painel exclusivo para os Noivos (Administração) e Cerimonial (Moderação).'
             : `Digite o código de ${OTP_LENGTH} dígitos enviado para ${email}.`}
@@ -62,7 +62,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
             <button
               type="button"
               onClick={() => setCode(debugCode)}
-              className="px-2 py-0.5 rounded-md bg-amber-200 hover:bg-amber-300 text-[10px] font-bold text-amber-900 transition-colors">
+              className="px-2 py-0.5 rounded-md bg-amber-200 hover:bg-amber-300 text-[11px] font-bold text-amber-900 transition-colors">
               Preencher
             </button>
           </div>
@@ -76,7 +76,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
           <button
             type="button"
             onClick={() => void handleClearSessions()}
-            className="text-[11px] text-sage-800/60 hover:text-rose-600 transition-colors inline-flex items-center gap-1.5"
+            className="text-[11px] text-sage-700 hover:text-rose-600 transition-colors inline-flex items-center gap-1.5"
             title="Limpar qualquer resquício de sessão antiga do navegador">
             <RefreshCw className="w-3 h-3" />
             <span>Limpar sessões salvas / Deslogar tudo</span>

@@ -4,11 +4,19 @@
   --color-sage-50: #f2f7f3;
   --color-sage-100: #e5efe8;
   --color-sage-200: #d5e4d8;
+  --color-sage-300: #b9cfbf;
+  --color-sage-400: #8fae98;
+  --color-sage-500: #6b8c75;
+  --color-sage-600: #557560;
+  --color-sage-700: #43614d;
   --color-sage-800: #2f4f38;
   --color-sage-900: #233a2a;
+  --color-sage-950: #14231a;
 
+  --color-gold-200: #eadfce;
   --color-gold-400: #c5a880;
   --color-gold-500: #8c704b;
+  --color-gold-600: #6f5735;
 
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -16,6 +24,24 @@
 
 :root {
   font-family: var(--font-sans);
+}
+
+/* Hides the bar of horizontal lists that scroll by touch. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+}
+
+/* Comfortable touch area without changing how the control looks. */
+@utility touch-target {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
 }
 
 body {

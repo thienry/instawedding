@@ -202,7 +202,7 @@ instawedding/
 │   ├── _lib/               # Security utilities, JWT handlers, and crypto helpers
 │   └── admin/              # Administrative endpoints (Auth, OTP, Moderation)
 ├── docs/                   # Architecture specs and deployment documentation
-├── public/                 # Favicons, vector icons, PWA manifest, and sitemap
+├── public/                 # Favicons, vector icons and the share image
 ├── src/
 │   ├── components/
 │   │   ├── capture/        # Capture modal, camera view, photo filters, and guestbook

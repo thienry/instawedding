@@ -1,4 +1,4 @@
-import { ArrowLeft, LogOut, ShieldCheck, Tv } from 'lucide-react'
+import { ArrowLeft, LogOut, Tv } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
@@ -36,12 +36,12 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
               </h3>
               <span
                 className={`text-xs font-bold px-2.5 py-0.5 rounded-md shrink-0 ${
-                  isAdmin ? 'bg-gold-500/20 text-gold-500' : 'bg-sage-200 text-sage-800'
+                  isAdmin ? 'bg-gold-500/20 text-gold-600' : 'bg-sage-200 text-sage-800'
                 }`}>
-                {isAdmin ? '👑 Admin' : '🛡️ Moderador'}
+                {isAdmin ? 'Admin' : 'Moderador'}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-sage-800/65 leading-tight truncate mt-0.5">
+            <p className="text-xs sm:text-sm text-sage-700 leading-tight truncate mt-0.5">
               {currentUser.email}
             </p>
           </div>
@@ -62,7 +62,7 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs">
+            className="inline-flex items-center gap-2 min-h-11 px-3.5 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs">
             <ArrowLeft className="w-4 h-4" />
             <span>Voltar para o Feed</span>
           </button>
@@ -70,16 +70,11 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           <button
             type="button"
             onClick={() => navigate('/projector')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-sage-900 hover:bg-sage-800 text-sm text-white transition-colors font-semibold shadow-2xs">
+            className="inline-flex items-center gap-2 min-h-11 px-3.5 rounded-2xl bg-sage-900 hover:bg-sage-800 text-sm text-white transition-colors font-semibold shadow-2xs">
             <Tv className="w-4 h-4 text-gold-400" />
             <span>Abrir Modo Telão</span>
           </button>
         </div>
-
-        <span className="text-xs sm:text-sm text-sage-800/75 flex items-center gap-1.5 font-medium">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Sessão Administrativa Segura</span>
-        </span>
       </div>
     </>
   )

@@ -8,6 +8,12 @@ vi.mock('@/utils/blur-placeholder', () => ({
   getAdaptiveNetworkProfile: () => ({ maxWidthOrHeight: 1000, quality: 0.8 }),
 }))
 
+// The filter itself is covered by color-filter.test.ts
+vi.mock('@/utils/color-filter', () => ({
+  supportsCanvasFilter: () => true,
+  applyColorFilter: () => {},
+}))
+
 let log: string[] = []
 let photo = { naturalWidth: 2000, naturalHeight: 1000 }
 let canvas: Record<string, unknown> = {}

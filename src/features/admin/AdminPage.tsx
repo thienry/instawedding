@@ -43,7 +43,7 @@ export function AdminPage() {
     return (
       <div className="p-6 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-4">
         <div className="w-8 h-8 border-2 border-sage-800 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-sage-800/70">Verificando credenciais...</p>
+        <p className="text-xs text-sage-700">Verificando credenciais...</p>
       </div>
     )
   }

@@ -1,268 +1,168 @@
-export type GuestbookThemeId = 'emerald' | 'champagne' | 'midnight' | 'pearl'
+import { canvasToFile } from '@/utils/canvas-file'
+import { drawPaper } from '@/utils/guestbook-art'
+import { ellipsize, fitText } from '@/utils/guestbook-text'
+
+type GuestbookThemeId = 'ivory' | 'forest' | 'rose' | 'night'
 
 export interface GuestbookTheme {
   readonly id: GuestbookThemeId
   readonly label: string
-  readonly bgGradient: readonly [string, string]
-  readonly textColor: string
-  readonly accentColor: string
-  readonly quoteColor: string
-  readonly borderColor: string
+  /** Gradient of the paper. */
+  readonly paper: readonly [string, string]
+  readonly ink: string
+  readonly accent: string
+  readonly leaves: readonly string[]
+  /** Outer and inner petals. */
+  readonly flowers: readonly [string, string]
+}
+
+const IVORY: GuestbookTheme = {
+  id: 'ivory',
+  label: 'Marfim',
+  paper: ['#fdfaf3', '#f5eee0'],
+  ink: '#2b3a2f',
+  accent: '#9a733a',
+  leaves: ['#8ba58c', '#a9bda5', '#6f8d73'],
+  flowers: ['#f0d9cc', '#f8ebe1'],
 }
 
 export const GUESTBOOK_THEMES: readonly GuestbookTheme[] = [
+  IVORY,
   {
-    id: 'emerald',
-    label: 'Esmeralda Real',
-    bgGradient: ['#0A1C12', '#142E20'],
-    textColor: '#FAF8F5',
-    accentColor: '#D4AF37',
-    quoteColor: 'rgba(212, 175, 55, 0.28)',
-    borderColor: 'rgba(212, 175, 55, 0.55)',
+    id: 'forest',
+    label: 'Verde e ouro',
+    paper: ['#24422f', '#182d20'],
+    ink: '#fbf6ea',
+    accent: '#dcbf85',
+    leaves: ['#c9aa6b', '#8f9f6d', '#dcc48f'],
+    flowers: ['#dcbf85', '#f0dfb6'],
   },
   {
-    id: 'champagne',
-    label: 'Champagne & Rose',
-    bgGradient: ['#231715', '#3A2622'],
-    textColor: '#FFF6F2',
-    accentColor: '#E6C280',
-    quoteColor: 'rgba(230, 194, 128, 0.3)',
-    borderColor: 'rgba(230, 194, 128, 0.6)',
+    id: 'rose',
+    label: 'Rosé',
+    paper: ['#fffaf8', '#fcefeb'],
+    ink: '#573538',
+    accent: '#ab6460',
+    leaves: ['#b3b897', '#cbbf9f', '#d7a79b'],
+    flowers: ['#eab6ac', '#f7d9d0'],
   },
   {
-    id: 'midnight',
-    label: 'Azul Imperial',
-    bgGradient: ['#090E1E', '#131D3B'],
-    textColor: '#F5F7FA',
-    accentColor: '#F3D282',
-    quoteColor: 'rgba(243, 210, 130, 0.25)',
-    borderColor: 'rgba(243, 210, 130, 0.5)',
+    id: 'night',
+    label: 'Noite estrelada',
+    paper: ['#131a36', '#2d2b54'],
+    ink: '#f7f3ff',
+    accent: '#ecd294',
+    leaves: [],
+    flowers: ['#ecd294', '#ffffff'],
   },
-  {
-    id: 'pearl',
-    label: 'Marfim & Ouro',
-    bgGradient: ['#FAF8F5', '#EFE9DE'],
-    textColor: '#1A2E22',
-    accentColor: '#9C7A2E',
-    quoteColor: 'rgba(156, 122, 46, 0.18)',
-    borderColor: 'rgba(156, 122, 46, 0.45)',
-  },
-] as const
+]
 
-export interface GenerateGuestbookCardOptions {
-  readonly authorName: string
+export const CARD_WIDTH = 1080
+export const CARD_HEIGHT = 1350
+export const MESSAGE_MAX_LENGTH = 320
+
+const CENTER = CARD_WIDTH / 2
+const SERIF = '"Playfair Display", Georgia, serif'
+const SCRIPT = '"Great Vibes", "Snell Roundhand", cursive'
+const FONT_TIMEOUT_MS = 3000
+
+/** What is written on the card. */
+export interface GuestbookCard {
+  readonly theme: GuestbookTheme
   readonly message: string
-  readonly themeId?: GuestbookThemeId
-  readonly weddingTitle?: string
+  readonly authorName: string
 }
 
 /**
- * Helper to split text into wrapped lines for Canvas rendering
+ * Loads the fonts of the card, which the canvas does not wait for. Gives up
+ * after a while, since the card can still be drawn with other fonts.
  */
-function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.split(/\s+/)
-  const lines: string[] = []
-  let currentLine = ''
-
-  for (const word of words) {
-    const testLine = currentLine ? `${currentLine} ${word}` : word
-    const metrics = ctx.measureText(testLine)
-    if (metrics.width > maxWidth && currentLine) {
-      lines.push(currentLine)
-      currentLine = word
-    } else {
-      currentLine = testLine
-    }
-  }
-
-  if (currentLine) {
-    lines.push(currentLine)
-  }
-
-  return lines
+export async function loadCardFonts(): Promise<void> {
+  if (!document.fonts) return
+  const fonts = [`italic 40px ${SERIF}`, `500 40px ${SERIF}`, `40px ${SCRIPT}`]
+  await Promise.race([
+    Promise.allSettled(fonts.map((font) => document.fonts.load(font, 'Ação & você'))),
+    new Promise((resolve) => setTimeout(resolve, FONT_TIMEOUT_MS)),
+  ])
 }
 
-/**
- * Generates an ultra-luxurious 1080x1350 (4:5) guestbook wedding dedication card
- * and returns it as a compressed WebP/JPEG File for direct upload to R2.
- */
-export async function generateGuestbookCardFile(
-  options: GenerateGuestbookCardOptions
-): Promise<File> {
-  const { authorName, message, themeId = 'emerald', weddingTitle = 'Thiago & Priscila' } = options
+function drawHeader(ctx: CanvasRenderingContext2D, theme: GuestbookTheme): void {
+  ctx.fillStyle = theme.accent
+  ctx.font = `92px ${SCRIPT}`
+  ctx.fillText('Thiago & Priscila', CENTER, 238, 620)
 
-  const theme = GUESTBOOK_THEMES.find((t) => t.id === themeId) ?? GUESTBOOK_THEMES[0]
-
-  const width = 1080
-  const height = 1350
-
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-
-  const ctx = canvas.getContext('2d')
-  if (!ctx) {
-    throw new Error('Canvas 2D context is not available.')
-  }
-
-  // 1. Background Gradient
-  const grad = ctx.createLinearGradient(0, 0, width, height)
-  grad.addColorStop(0, theme.bgGradient[0])
-  grad.addColorStop(1, theme.bgGradient[1])
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, width, height)
-
-  // 2. Subtle Vignette Effect
-  const vignette = ctx.createRadialGradient(
-    width / 2,
-    height / 2,
-    width * 0.3,
-    width / 2,
-    height / 2,
-    width * 0.8
-  )
-  vignette.addColorStop(0, 'transparent')
-  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.45)')
-  ctx.fillStyle = vignette
-  ctx.fillRect(0, 0, width, height)
-
-  // 3. Luxury Golden Hairline Frames
-  const outerMargin = 40
-  const innerMargin = 55
-
-  // Outer border
-  ctx.strokeStyle = theme.borderColor
+  ctx.strokeStyle = theme.accent
   ctx.lineWidth = 2
-  ctx.strokeRect(outerMargin, outerMargin, width - outerMargin * 2, height - outerMargin * 2)
-
-  // Inner border
-  ctx.lineWidth = 1
-  ctx.strokeRect(innerMargin, innerMargin, width - innerMargin * 2, height - innerMargin * 2)
-
-  // Corner Diamond Accents
-  const diamondSize = 10
-  const corners = [
-    [innerMargin, innerMargin],
-    [width - innerMargin, innerMargin],
-    [innerMargin, height - innerMargin],
-    [width - innerMargin, height - innerMargin],
-  ]
-
-  ctx.fillStyle = theme.accentColor
-  for (const [cx, cy] of corners) {
+  for (const side of [-1, 1]) {
     ctx.beginPath()
-    ctx.moveTo(cx, cy - diamondSize)
-    ctx.lineTo(cx + diamondSize, cy)
-    ctx.lineTo(cx, cy + diamondSize)
-    ctx.lineTo(cx - diamondSize, cy)
-    ctx.closePath()
-    ctx.fill()
+    ctx.moveTo(CENTER + side * 26, 318)
+    ctx.lineTo(CENTER + side * 150, 318)
+    ctx.stroke()
   }
+  // Heart between the lines
+  ctx.beginPath()
+  ctx.moveTo(CENTER, 331)
+  ctx.bezierCurveTo(CENTER - 26, 314, CENTER - 12, 298, CENTER, 310)
+  ctx.bezierCurveTo(CENTER + 12, 298, CENTER + 26, 314, CENTER, 331)
+  ctx.fill()
+}
 
-  // 4. Header: Brand Monogram & Title
+function drawMessage(ctx: CanvasRenderingContext2D, { theme, message }: GuestbookCard): void {
+  const leading = 1.36
+  const { lines, size } = fitText(ctx, message, {
+    maxWidth: 760,
+    maxHeight: 610,
+    minSize: 34,
+    maxSize: 84,
+    leading,
+    toFont: (fontSize) => `italic ${fontSize}px ${SERIF}`,
+  })
+  const lineHeight = size * leading
+  const top = 680 - ((lines.length - 1) * lineHeight) / 2
+  ctx.fillStyle = theme.ink
+  lines.forEach((line, index) => ctx.fillText(line, CENTER, top + index * lineHeight))
+}
+
+function drawSignature(ctx: CanvasRenderingContext2D, { theme, authorName }: GuestbookCard): void {
+  ctx.fillStyle = theme.ink
+  ctx.font = `italic 34px ${SERIF}`
+  ctx.fillText('com carinho,', CENTER, 1050)
+
+  const name = authorName.trim() || 'Convidado especial'
+  ctx.fillStyle = theme.accent
+  const { lines, size } = fitText(ctx, name, {
+    maxWidth: 600,
+    maxHeight: 120,
+    minSize: 44,
+    maxSize: 82,
+    leading: 1.2,
+    toFont: (fontSize) => `${fontSize}px ${SCRIPT}`,
+  })
+  const [first = '', ...others] = lines
+  const shown = others.length > 0 ? [first, ellipsize(ctx, others.join(' '), 600)] : [first]
+  const top = 1142 - ((shown.length - 1) * size * 1.2) / 2
+  shown.forEach((line, index) => ctx.fillText(line, CENTER, top + index * size * 1.2))
+}
+
+/** Draws the card on a canvas of 1080 by 1350. */
+export function drawGuestbookCard(ctx: CanvasRenderingContext2D, card: GuestbookCard): void {
+  ctx.clearRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  drawPaper(ctx, CARD_WIDTH, CARD_HEIGHT, card.theme)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
+  drawHeader(ctx, card.theme)
+  drawMessage(ctx, card)
+  drawSignature(ctx, card)
+}
 
-  // Subtitle Pill
-  ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif'
-  ctx.fillStyle = theme.accentColor
-  ctx.letterSpacing = '5px'
-  ctx.fillText('LIVRO DE RECADOS OFICIAL', width / 2, 140)
-  ctx.letterSpacing = '0px'
-
-  // Wedding Title (Thiago & Priscila)
-  ctx.font = 'italic bold 58px "Playfair Display", serif'
-  ctx.fillStyle = theme.textColor
-  ctx.fillText(weddingTitle, width / 2, 210)
-
-  // Decorative Golden Line
-  ctx.strokeStyle = theme.borderColor
-  ctx.lineWidth = 1.5
-  ctx.beginPath()
-  ctx.moveTo(width / 2 - 180, 260)
-  ctx.lineTo(width / 2 + 180, 260)
-  ctx.stroke()
-
-  // Center Ornament
-  ctx.font = '24px serif'
-  ctx.fillStyle = theme.accentColor
-  ctx.fillText('💍', width / 2, 260)
-
-  // 5. Giant Watermark Quotes in Background
-  ctx.font = 'italic bold 280px "Playfair Display", serif'
-  ctx.fillStyle = theme.quoteColor
-  ctx.fillText('“', width / 2 - 280, 520)
-
-  // 6. Message Body Typography (Dynamic sizing based on length)
-  const maxContentWidth = width - 240
-  const cleanMessage = message.trim()
-
-  let fontSize = 38
-  let lineHeight = 58
-  if (cleanMessage.length > 220) {
-    fontSize = 32
-    lineHeight = 48
-  } else if (cleanMessage.length < 90) {
-    fontSize = 44
-    lineHeight = 68
-  }
-
-  ctx.font = `italic ${fontSize}px "Playfair Display", serif`
-  ctx.fillStyle = theme.textColor
-
-  const wrappedLines = wrapCanvasText(ctx, cleanMessage, maxContentWidth)
-  const totalTextHeight = wrappedLines.length * lineHeight
-  const startY = height / 2 - totalTextHeight / 2 + 40
-
-  wrappedLines.forEach((line, index) => {
-    ctx.fillText(line, width / 2, startY + index * lineHeight)
-  })
-
-  // 7. Footer: Dedication Signature & Date
-  const footerY = height - 180
-
-  // Divider
-  ctx.strokeStyle = theme.borderColor
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(width / 2 - 120, footerY - 45)
-  ctx.lineTo(width / 2 + 120, footerY - 45)
-  ctx.stroke()
-
-  ctx.font = '300 22px "Plus Jakarta Sans", sans-serif'
-  ctx.fillStyle = theme.accentColor
-  ctx.fillText('Com todo o carinho e felicitações,', width / 2, footerY)
-
-  ctx.font = 'bold 36px "Playfair Display", serif'
-  ctx.fillStyle = theme.textColor
-  ctx.fillText(authorName || 'Convidado Especial', width / 2, footerY + 45)
-
-  const currentDate = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
-  ctx.font = '16px "Plus Jakarta Sans", sans-serif'
-  ctx.fillStyle = theme.accentColor
-  ctx.fillText(currentDate, width / 2, footerY + 85)
-
-  // 8. Convert to File via Blob
-  return new Promise<File>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Failed to create Blob from guestbook canvas.'))
-          return
-        }
-        const file = new File(
-          [blob],
-          `votos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`,
-          { type: 'image/webp' }
-        )
-        resolve(file)
-      },
-      'image/webp',
-      0.92
-    )
-  })
+/** Generates the card as an image ready for upload. */
+export async function generateGuestbookCardFile(card: GuestbookCard): Promise<File> {
+  await loadCardFonts()
+  const canvas = document.createElement('canvas')
+  canvas.width = CARD_WIDTH
+  canvas.height = CARD_HEIGHT
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context is not available.')
+  drawGuestbookCard(ctx, card)
+  return canvasToFile(canvas, `recado-${Date.now()}`, 0.92)
 }

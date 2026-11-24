@@ -41,7 +41,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-sage-50 flex flex-col md:flex-row text-sage-900">
+    <div className="min-h-screen bg-sage-50 flex flex-col lg:flex-row text-sage-900">
       <Sidebar
         adminUser={currentUser}
         isCollapsed={isCollapsed}
@@ -51,12 +51,12 @@ export function AppLayout() {
       />
 
       <div
-        className={`flex-1 flex flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${
-          isCollapsed ? 'md:pl-20' : 'md:pl-64 lg:pl-72'
+        className={`flex-1 min-w-0 flex flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${
+          isCollapsed ? 'lg:pl-20' : 'lg:pl-72'
         }`}>
         <MobileHeader adminUser={currentUser} onSignOut={() => void handleSignOut()} />
         {!isOnline && <OfflineBanner />}
-        <main className="flex-1 w-full pb-24 md:pb-12">
+        <main className="flex-1 w-full pb-28 lg:pb-12 max-w-[90rem] mx-auto">
           <Outlet />
         </main>
         <BottomNavigation />

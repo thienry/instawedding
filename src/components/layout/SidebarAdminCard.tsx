@@ -18,12 +18,12 @@ export function SidebarAdminCard({ adminUser, onToggle, onSignOut }: SidebarAdmi
         className="flex items-center justify-between hover:opacity-85 transition-opacity">
         <div className="min-w-0">
           <p className="text-xs font-bold text-sage-900 truncate">{adminUser.name}</p>
-          <p className="text-[11px] text-sage-800/70 truncate">{adminUser.email}</p>
+          <p className="text-[11px] text-sage-700 truncate">{adminUser.email}</p>
         </div>
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded-md shrink-0 ${
             adminUser.role === 'admin'
-              ? 'bg-gold-500/20 text-gold-500'
+              ? 'bg-gold-500/20 text-gold-600'
               : 'bg-sage-200 text-sage-800'
           }`}>
           {adminUser.role === 'admin' ? '👑 Admin' : '🛡️ Mod'}

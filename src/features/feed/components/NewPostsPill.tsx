@@ -27,7 +27,7 @@ export function NewPostsPill({ notifications, onReveal, onDismiss }: NewPostsPil
   if (totalUnreadCount === 0) return null
 
   return (
-    <div className="sticky top-16 md:top-4 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-3 duration-200">
+    <div className="sticky top-18 lg:top-4 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-3 duration-200">
       <div className="pointer-events-auto inline-flex items-center gap-2 pl-3 pr-2 py-2 rounded-full bg-sage-900/95 text-white shadow-xl border border-gold-400/40 backdrop-blur-md">
         <button
           type="button"
@@ -50,7 +50,7 @@ export function NewPostsPill({ notifications, onReveal, onDismiss }: NewPostsPil
                   <AuthorAvatar
                     name={author.name}
                     avatarUrl={author.avatarUrl}
-                    sizeClassName="w-6 h-6 text-[10px]"
+                    sizeClassName="w-6 h-6 text-[11px]"
                     fallbackClassName="bg-gold-400 text-sage-900"
                   />
                 </div>
@@ -66,7 +66,7 @@ export function NewPostsPill({ notifications, onReveal, onDismiss }: NewPostsPil
           onClick={onDismiss}
           title="Marcar como vistas"
           aria-label="Marcar novas fotos como vistas"
-          className="p-1 rounded-full text-white/65 hover:text-white hover:bg-white/10 transition-colors">
+          className="touch-target p-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors">
           <X className="w-3.5 h-3.5" />
         </button>
       </div>

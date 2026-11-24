@@ -44,7 +44,7 @@ export function ChallengeCard({ challenge, isCompleted, communityCount }: Challe
             <button
               type="button"
               onClick={() => navigate(`/?challengeId=${challenge.id}`)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-500 hover:underline pt-1">
+              className="inline-flex items-center gap-1.5 min-h-11 text-sm font-bold text-gold-600 hover:underline">
               <Eye className="w-3.5 h-3.5" />
               <span>
                 Ver {communityCount} {communityCount === 1 ? 'foto postada' : 'fotos postadas'}
@@ -57,6 +57,7 @@ export function ChallengeCard({ challenge, isCompleted, communityCount }: Challe
       <button
         type="button"
         onClick={() => navigate(`/capture?challengeId=${challenge.id}`)}
+        aria-label="Cumprir Desafio"
         className={`p-3.5 rounded-2xl transition-all shrink-0 active:scale-95 shadow-2xs ${
           isCompleted
             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
