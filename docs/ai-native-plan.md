@@ -97,9 +97,10 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 **4.2 Feed** (1,469 lines)
 
-- [ ] hooks: `useFeedPosts`, `useLikes`, `usePullToRefresh`, `usePostActions` (download, share, delete), `useInfiniteScroll`
-- [ ] components: `PullIndicator`, `FeedToolbar`, `FilterTabs`, `UploadProgressCards`, `NewPostsPill`, `PostCard`, `PostGrid`, `FeedSidebar`, `DeletePostModal`
-- [ ] move `formatRelativeTime` to `utils/`
+- [x] hooks: `useFeedGuest`, `useFeedPosts`, `usePendingUploads`, `useFeedFilter`, `useLightbox`, `useLikes`, `usePullToRefresh`, `usePostSharing`, `usePostDeletion`, `useInfiniteScroll`
+- [x] components: `PullIndicator`, `FeedToolbar`, `FilterTabs`, `ChallengeFilterPill`, `UploadCard`, `NewPostsPill`, `PostGrid`, `PostCard` (`PostHeader`, `PostMedia`, `PostFooter`), `FeedSkeleton`, `EmptyFeed`, `FeedFooter`, `FeedSidebar`, `TopContributors`, `DeletePostModal`, `ShareToast`
+- [x] move `formatRelativeTime` to `utils/`
+- [ ] check on mobile and desktop (author)
 
 **4.3 Projector** (964 lines, used live: test in full screen)
 
@@ -113,9 +114,9 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 **4.5 Shared**
 
-- [ ] `topContributors` and `totalLikesCount` exist in Feed and Projector: compare and unify in `utils/post-stats.ts`
+- [ ] `topContributors` and `totalLikesCount`: Feed uses `utils/post-stats.ts`; switch Projector to it (same logic)
 - [ ] Guest login is repeated in Feed and Capture: consider `useGuestAuth`
-- [ ] Revisit the 6 oxlint warnings
+- [ ] Revisit the 4 remaining oxlint warnings
 
 **Done when:** baseline targets are met and no smoke test was changed just to pass.
 
@@ -142,3 +143,9 @@ Upload queue (`offline-queue.service.ts`), found while writing tests:
 - [x] A failed upload is saved without `showOnProjector`, so after a reload it falls back to `true` even if the guest opted out
 - [x] Cancelling a task mid-upload does not abort it: the post is still created
 - [x] `SupabasePostRepository.deletePost` ignores the returned `error`, so a failed deletion looks successful (same in `togglePostApproval` and `clearAllPosts`)
+
+Feed, found while splitting:
+
+- [x] A failed like restores the heart but not the count
+- [x] The notice of new posts says "novas fotos postada"
+- [x] The download name drops accents instead of converting them (the admin ZIP converts)

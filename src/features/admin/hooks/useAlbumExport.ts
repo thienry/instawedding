@@ -4,8 +4,8 @@ import {
   albumEntryName,
   buildPostsCsv,
   datedFileName,
-  downloadBlob,
 } from '@/features/admin/utils/album-export'
+import { downloadBlob } from '@/utils/download'
 import { buildZipArchive } from '@/utils/zip-exporter'
 
 import type { Dialog } from '@/hooks/useDialog'

@@ -1,3 +1,4 @@
+import { slugify } from '@/utils/slug'
 import { resolvePostMediaType } from '@/utils/video'
 
 import type { Post } from '@/types/domain'
@@ -26,16 +27,6 @@ function toCsvCell(text: string | null | undefined): string {
   const value = text ?? ''
   const safeValue = FORMULA_START.test(value) ? `'${value}` : value
   return `"${safeValue.replaceAll('"', '""')}"`
-}
-
-/** Turns a name into a lowercase ASCII slug; empty when nothing is left. */
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 /**
@@ -81,16 +72,4 @@ export function buildPostsCsv(posts: readonly Post[]): string {
 export function datedFileName(prefix: string, extension: string): string {
   const date = new Date().toISOString().slice(0, 10)
   return `${prefix}-thiago-e-priscila-${date}.${extension}`
-}
-
-/** Makes the browser download a blob as `fileName`. */
-export function downloadBlob(blob: Blob, fileName: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
 }
