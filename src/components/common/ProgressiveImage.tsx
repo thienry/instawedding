@@ -94,7 +94,11 @@ export function ProgressiveImage({
   }
 
   const handleImageError = () => {
-    if (retryCount < 1 && !src.startsWith('data:') && !src.startsWith('blob:')) {
+    if (
+      retryCount < 1 &&
+      !src.startsWith('data:') &&
+      !src.startsWith('blob:')
+    ) {
       // Automatic silent retry once after 1.2s on flaky mobile signal
       setTimeout(() => {
         setRetryCount((prev) => prev + 1)

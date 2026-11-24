@@ -109,7 +109,11 @@ export function CapturePage() {
   }, [challengeRepo])
 
   useEffect(() => {
-    if (previewUrl && typeof window !== 'undefined' && window.innerWidth < 1024) {
+    if (
+      previewUrl &&
+      typeof window !== 'undefined' &&
+      window.innerWidth < 1024
+    ) {
       const timer = setTimeout(() => {
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
@@ -496,8 +500,8 @@ export function CapturePage() {
                 Registre o Momento
               </h3>
               <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
-                Tire uma foto, grave um Boomerang (5s) ou escolha fotos e vídeos da
-                sua galeria (até 25MB)!
+                Tire uma foto, grave um Boomerang (5s) ou escolha fotos e vídeos
+                da sua galeria (até 25MB)!
               </p>
             </div>
 
@@ -557,7 +561,8 @@ export function CapturePage() {
                     </span>
                   </span>
                   <span className="text-xs text-gold-200/80">
-                    Envie seus votos e mensagem carinhosa para Thiago &amp; Priscila
+                    Envie seus votos e mensagem carinhosa para Thiago &amp;
+                    Priscila
                   </span>
                 </div>
               </button>
@@ -671,7 +676,8 @@ export function CapturePage() {
             {/* Mobile quick guidance banner */}
             <div className="lg:hidden mt-2.5 px-3 py-2 rounded-xl bg-sage-100/80 border border-sage-200/70 text-center">
               <p className="text-xs font-medium text-sage-800/85">
-                👇 Role para adicionar legenda e telão ou clique em <span className="font-bold text-sage-900">Postar</span> no topo.
+                👇 Role para adicionar legenda e telão ou clique em{' '}
+                <span className="font-bold text-sage-900">Postar</span> no topo.
               </p>
             </div>
           </div>
@@ -892,7 +898,8 @@ export function CapturePage() {
                       </span>
                     </div>
                     <p className="text-xs text-sage-800/75 mt-0.5">
-                      Transmitir automaticamente no telão do casamento após o envio.
+                      Transmitir automaticamente no telão do casamento após o
+                      envio.
                     </p>
                   </div>
                 </div>

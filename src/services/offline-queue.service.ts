@@ -386,6 +386,8 @@ export class OfflineQueueService {
           this.notifyChange()
         })
 
+        if (!this.activeTasks.has(id)) return false // Cancelled
+
         if (task.blurDataUrl) {
           cacheBlurPlaceholder(mediaUrl, task.blurDataUrl)
         }
@@ -410,6 +412,17 @@ export class OfflineQueueService {
           showOnProjector: task.showOnProjector ?? true,
         })
 
+        // Cancelled while the post was being created: take it down
+        if (!this.activeTasks.has(id)) {
+          try {
+            await postRepo.deletePost(createdPost.id)
+          } catch {
+            // Still published: show it so the guest can delete it
+            this.notifyPublished(createdPost, id)
+          }
+          return false
+        }
+
         if (task.blurDataUrl) {
           cacheBlurPlaceholder(createdPost.id, task.blurDataUrl)
         }
@@ -428,8 +441,10 @@ export class OfflineQueueService {
         return true
       } catch (err) {
         lastError = err
+        if (!this.activeTasks.has(id)) return false // Cancelled
         if (attempt < maxAttempts) {
           await new Promise((r) => setTimeout(r, 900 * attempt))
+          if (!this.activeTasks.has(id)) return false // Cancelled
         }
       }
     }
@@ -468,6 +483,7 @@ export class OfflineQueueService {
         blurDataUrl: latestTask.blurDataUrl,
         status: failedStatus,
         errorMessage,
+        showOnProjector: latestTask.showOnProjector,
         createdAt: latestTask.createdAt,
       })
       this.notifyChange()

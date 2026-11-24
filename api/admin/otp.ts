@@ -1,7 +1,9 @@
 import crypto from 'node:crypto'
 import process from 'node:process'
-import { createClient } from '@supabase/supabase-js'
 
+import { resolveUserRole } from '../_lib/auth.js'
+import { getClientIp } from '../_lib/http.js'
+import { withinRateLimit } from '../_lib/rate-limit.js'
 import {
   buildClearOtpCookieHeader,
   buildSetCookieHeader,
@@ -9,10 +11,9 @@ import {
   createAdminToken,
   createOtpChallengeToken,
   getOtpTokenFromRequest,
+  isDeployed,
   verifyOtpChallenge,
 } from '../_lib/security.js'
-
-import type { UserRole } from '../_lib/security.js'
 
 interface OtpRequestBody {
   action: 'request' | 'verify'
@@ -21,79 +22,13 @@ interface OtpRequestBody {
   challengeToken?: string
 }
 
-async function resolveUserRole(
-  email: string
-): Promise<{ role: UserRole; name: string } | null> {
-  const normalizedEmail = email.toLowerCase().trim()
-
-  const masterAdminEmail = (
-    process.env.ADMIN_EMAILS ||
-    process.env.VITE_ADMIN_EMAILS ||
-    'thmoura14@gmail.com'
-  )
-    .toLowerCase()
-    .split(',')[0]
-    .trim() || 'thmoura14@gmail.com'
-
-  if (normalizedEmail === masterAdminEmail) {
-    return { role: 'admin', name: 'Thiago (Admin Master)' }
-  }
-
-  // Check ceremonialists table in Supabase
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const serviceRoleKey =
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY
-
-  if (supabaseUrl && serviceRoleKey) {
-    try {
-      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-        auth: { persistSession: false },
-      })
-      const { data } = await supabaseAdmin
-        .from('ceremonialists')
-        .select('name')
-        .eq('email', normalizedEmail)
-        .maybeSingle()
-
-      if (data) {
-        return {
-          role: 'moderator',
-          name: data.name?.trim() ? `${data.name.trim()} (Cerimonial)` : 'Equipe Cerimonial',
-        }
-      }
-    } catch {
-      // Supabase query error fallback
-    }
-  }
-
-  const modEmails = (
-    process.env.MODERATOR_EMAILS ||
-    process.env.VITE_MODERATOR_EMAILS ||
-    ''
-  )
-    .toLowerCase()
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean)
-
-  if (modEmails.includes(normalizedEmail)) {
-    const username = normalizedEmail.split('@')[0]
-    const capitalized = username.charAt(0).toUpperCase() + username.slice(1)
-    return { role: 'moderator', name: `${capitalized} (Cerimonial)` }
-  }
-
-  return null
-}
-
 async function sendEmailViaResend(
   email: string,
   code: string
 ): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
+    if (isDeployed()) return { ok: false, error: 'Missing RESEND_API_KEY' }
     // Development or self-hosted fallback: log code to server stdout
     console.info(
       `[InstaWedding OTP Serverless] To: ${email} | Code: ${code} (RESEND_API_KEY not configured)`
@@ -157,6 +92,31 @@ async function sendEmailViaResend(
   }
 }
 
+const OTP_WINDOW_SECONDS = 600
+
+// Fails closed on deployments. Local development works without a database.
+async function checkLimit(
+  scope: string,
+  subject: string,
+  max: number
+): Promise<boolean> {
+  try {
+    return await withinRateLimit(scope, subject, max, OTP_WINDOW_SECONDS)
+  } catch (err) {
+    console.error('[otp]', err)
+    return !isDeployed()
+  }
+}
+
+function tooManyAttempts(): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Muitas tentativas. Aguarde 10 minutos e solicite um novo código.',
+    }),
+    { status: 429, headers: { 'Content-Type': 'application/json' } }
+  )
+}
+
 export async function POST(req: Request): Promise<Response> {
   let body: OtpRequestBody
   try {
@@ -183,6 +143,11 @@ export async function POST(req: Request): Promise<Response> {
 
   // 1. SOLICITAÇÃO DE OTP
   if (action === 'request') {
+    const allowed =
+      (await checkLimit('otp-ip', getClientIp(req), 10)) &&
+      (await checkLimit('otp-email', normalizedEmail, 5))
+    if (!allowed) return tooManyAttempts()
+
     const userRoleInfo = await resolveUserRole(normalizedEmail)
 
     if (!userRoleInfo) {
@@ -217,14 +182,13 @@ export async function POST(req: Request): Promise<Response> {
       )
     }
 
-    const isDev = process.env.NODE_ENV !== 'production'
     const cookieHeader = buildSetOtpCookieHeader(challengeToken, 600)
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Código de 6 dígitos enviado com sucesso para seu e-mail.',
-        debugCode: isDev || !process.env.RESEND_API_KEY ? code : undefined,
+        debugCode: isDeployed() ? undefined : code,
       }),
       {
         status: 200,
@@ -261,6 +225,13 @@ export async function POST(req: Request): Promise<Response> {
       )
     }
 
+    // The signature identifies the challenge; the code has 10 minutes to live
+    const challengeId = challengeToken.split('.')[1] ?? ''
+    const allowed =
+      (await checkLimit('otp-verify-ip', getClientIp(req), 30)) &&
+      (await checkLimit('otp-verify', challengeId, 5))
+    if (!allowed) return tooManyAttempts()
+
     const verification = verifyOtpChallenge(
       challengeToken,
       normalizedEmail,
@@ -274,6 +245,11 @@ export async function POST(req: Request): Promise<Response> {
         }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       )
+    }
+
+    // Each code works only once
+    if (!(await checkLimit('otp-used', challengeId, 1))) {
+      return tooManyAttempts()
     }
 
     // Create session token (valid for 24 hours)

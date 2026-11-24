@@ -1,6 +1,6 @@
 /**
  * Zero-dependency streaming ZIP file builder using Compression Method 0 (Store).
- * 
+ *
  * Pre-compressed media files (WebP images, MP4 videos) gain less than 0.1% from Deflate
  * compression while consuming massive client-side CPU/memory. Storing them in standard
  * uncompressed ZIP chunks enables ultra-fast packing without browser freezing.
@@ -72,7 +72,9 @@ export function buildZipArchive(entries: readonly ZipEntry[]): Blob {
     const fileData = entry.data
     const crc = computeCrc32(fileData)
     const size = fileData.length
-    const { time: dosTime, date: dosDate } = formatDosDateTime(entry.date ?? new Date())
+    const { time: dosTime, date: dosDate } = formatDosDateTime(
+      entry.date ?? new Date()
+    )
 
     // 1. Local File Header (30 bytes + filename)
     const localHeader = new Uint8Array(30 + filenameBytes.length)
@@ -135,7 +137,10 @@ export function buildZipArchive(entries: readonly ZipEntry[]): Blob {
   writeUint32LE(eocd, 16, centralOffset) // Offset of start of central directory
   writeUint16LE(eocd, 20, 0) // Comment length
 
-  return new Blob([...localParts, ...centralParts, eocd] as unknown as BlobPart[], {
-    type: 'application/zip',
-  })
+  return new Blob(
+    [...localParts, ...centralParts, eocd] as unknown as BlobPart[],
+    {
+      type: 'application/zip',
+    }
+  )
 }

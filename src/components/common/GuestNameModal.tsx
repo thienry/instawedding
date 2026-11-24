@@ -1,10 +1,4 @@
-import {
-  Loader2,
-  LogOut,
-  ShieldCheck,
-  Sparkles,
-  X,
-} from 'lucide-react'
+import { Loader2, LogOut, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
@@ -42,9 +36,7 @@ export function GuestNameModal({
     try {
       const result = await guestAuth.signInWithGoogle(redirectPath)
       if (!result.success) {
-        setError(
-          result.message || 'Não foi possível autenticar com o Google.'
-        )
+        setError(result.message || 'Não foi possível autenticar com o Google.')
         setIsLoading(false)
         return
       }
@@ -119,8 +111,8 @@ export function GuestNameModal({
             </div>
 
             <p className="text-xs sm:text-sm text-sage-800/75 text-center leading-relaxed">
-              Suas fotos e curtidas no mural aparecerão assinadas com seu nome
-              e foto de perfil do Google.
+              Suas fotos e curtidas no mural aparecerão assinadas com seu nome e
+              foto de perfil do Google.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-2.5 pt-1">

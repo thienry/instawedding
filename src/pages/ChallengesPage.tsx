@@ -159,7 +159,8 @@ export function ChallengesPage() {
         challengesDone: item.challengeSet.size,
       }))
       .sort((a, b) => {
-        if (b.photosCount !== a.photosCount) return b.photosCount - a.photosCount
+        if (b.photosCount !== a.photosCount)
+          return b.photosCount - a.photosCount
         return b.totalLikes - a.totalLikes
       })
       .slice(0, 3)

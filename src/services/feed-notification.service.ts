@@ -250,7 +250,10 @@ class FeedNotificationManager {
         if (this.isOwnPost(post)) continue
 
         const createdMs = Date.parse(post.createdAt)
-        if (!lastSeenMs || (!Number.isNaN(createdMs) && createdMs > lastSeenMs)) {
+        if (
+          !lastSeenMs ||
+          (!Number.isNaN(createdMs) && createdMs > lastSeenMs)
+        ) {
           if (!this.stagedPosts.some((p) => p.id === post.id)) {
             this.stagedPosts = [post, ...this.stagedPosts]
             hasChanges = true
@@ -335,7 +338,11 @@ class FeedNotificationManager {
     if (currentIso) {
       const currentMs = Date.parse(currentIso)
       const nextMs = Date.parse(isoTimestamp)
-      if (!Number.isNaN(currentMs) && !Number.isNaN(nextMs) && nextMs < currentMs) {
+      if (
+        !Number.isNaN(currentMs) &&
+        !Number.isNaN(nextMs) &&
+        nextMs < currentMs
+      ) {
         return
       }
     }

@@ -79,4 +79,3 @@ export interface CreateCeremonialistDTO {
   readonly email: string
   readonly name?: string
 }
-

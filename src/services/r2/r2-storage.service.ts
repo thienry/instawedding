@@ -1,4 +1,4 @@
-import { getOrCreateSessionId } from '@/utils/session'
+import { getAuthHeaders } from '@/services/api/api.client'
 
 import type { StorageService } from '@/services/contracts/storage.contract'
 import type {
@@ -28,15 +28,16 @@ export class R2StorageService implements StorageService {
     fileType: string,
     sizeBytes: number = 1024
   ): Promise<PresignedUploadResult> {
-    const sessionId = getOrCreateSessionId()
     const response = await fetch(`${this.apiBaseUrl}/upload-url`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeaders()),
+      },
       body: JSON.stringify({
         fileName,
         contentType: fileType,
         sizeBytes,
-        sessionId,
       }),
     })
 

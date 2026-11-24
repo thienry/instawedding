@@ -60,7 +60,9 @@ export function clearLastActivityTimestamp(): void {
  * Tracks user interactions and automatically logs out authenticated guests and admins
  * after a specified period of continuous inactivity.
  */
-export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}): void {
+export function useInactivityTimeout(
+  options: UseInactivityTimeoutOptions = {}
+): void {
   const {
     timeoutMs = resolveConfiguredTimeout(),
     enabled = true,
@@ -173,7 +175,9 @@ export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}):
     ]
 
     for (const eventName of interactionEvents) {
-      window.addEventListener(eventName, handleUserInteraction, { passive: true })
+      window.addEventListener(eventName, handleUserInteraction, {
+        passive: true,
+      })
     }
 
     // Sync across browser tabs

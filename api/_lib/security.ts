@@ -1,9 +1,22 @@
 import crypto from 'node:crypto'
 import process from 'node:process'
 
-const JWT_SECRET =
-  process.env.ADMIN_JWT_SECRET ||
-  'dev-fallback-secret-change-in-production-instawedding'
+/** True on Vercel production and preview deployments. */
+export function isDeployed(): boolean {
+  return (
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview'
+  )
+}
+
+function getJwtSecret(): string {
+  const secret = process.env.ADMIN_JWT_SECRET
+  if (secret) return secret
+  if (isDeployed()) throw new Error('ADMIN_JWT_SECRET is not configured')
+  return 'dev-only-secret'
+}
+
 const COOKIE_NAME = 'instawedding_admin_token'
 
 export type UserRole = 'admin' | 'moderator'
@@ -50,7 +63,7 @@ export function createAdminToken(
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
   const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(payloadB64)
     .digest('base64url')
 
@@ -67,7 +80,7 @@ export function verifyAdminToken(token: string): AdminTokenPayload | null {
   if (!payloadB64 || !signature) return null
 
   const expectedSignature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(payloadB64)
     .digest('base64url')
 
@@ -107,14 +120,14 @@ export function getAdminTokenFromRequest(req: Request): string | null {
 }
 
 export function buildSetCookieHeader(token: string, maxAge = 86400): string {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = isDeployed()
   return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${
     isProduction ? '; Secure' : ''
   }`
 }
 
 export function buildClearCookieHeader(): string {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = isDeployed()
   return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${
     isProduction ? '; Secure' : ''
   }`
@@ -142,7 +155,7 @@ export function createOtpChallengeToken(
 ): string {
   const now = Math.floor(Date.now() / 1000)
   const codeHash = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(`${code.trim()}:${email.toLowerCase().trim()}`)
     .digest('hex')
 
@@ -156,7 +169,7 @@ export function createOtpChallengeToken(
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
   const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(payloadB64)
     .digest('base64url')
 
@@ -181,7 +194,7 @@ export function verifyOtpChallenge(
   }
 
   const expectedSignature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(payloadB64)
     .digest('base64url')
 
@@ -207,7 +220,7 @@ export function verifyOtpChallenge(
     }
 
     const inputHash = crypto
-      .createHmac('sha256', JWT_SECRET)
+      .createHmac('sha256', getJwtSecret())
       .update(`${inputCode.trim()}:${email.toLowerCase().trim()}`)
       .digest('hex')
 
@@ -239,14 +252,14 @@ export function getOtpTokenFromRequest(req: Request): string | null {
 }
 
 export function buildSetOtpCookieHeader(token: string, maxAge = 600): string {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = isDeployed()
   return `${OTP_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${
     isProduction ? '; Secure' : ''
   }`
 }
 
 export function buildClearOtpCookieHeader(): string {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = isDeployed()
   return `${OTP_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${
     isProduction ? '; Secure' : ''
   }`

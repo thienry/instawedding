@@ -10,7 +10,9 @@ import type { User } from '@supabase/supabase-js'
 
 const GUEST_USER_CACHE_KEY = 'instawedding_guest_user_cache'
 
-function mapSupabaseUserToGuest(user: User | null | undefined): GuestUser | null {
+function mapSupabaseUserToGuest(
+  user: User | null | undefined
+): GuestUser | null {
   if (!user) return null
   const metadata = user.user_metadata ?? {}
   const rawName =

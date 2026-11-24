@@ -248,6 +248,10 @@ export class MockPostRepository implements PostRepository {
     }
   }
 
+  async deletePostAsAdmin(postId: string): Promise<void> {
+    await this.deletePost(postId)
+  }
+
   async clearAllPosts(): Promise<void> {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify([]))

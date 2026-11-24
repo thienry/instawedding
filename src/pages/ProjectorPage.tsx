@@ -252,7 +252,13 @@ export function ProjectorPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isAuthorized, handlePrevSlide, handleNextSlide, toggleFullscreen, isQrModalOpen])
+  }, [
+    isAuthorized,
+    handlePrevSlide,
+    handleNextSlide,
+    toggleFullscreen,
+    isQrModalOpen,
+  ])
 
   const totalLikesCount = useMemo(
     () => posts.reduce((acc, post) => acc + post.likesCount, 0),
@@ -281,7 +287,9 @@ export function ProjectorPage() {
       map.set(key, existing)
     }
     return Array.from(map.values())
-      .sort((a, b) => (b.count !== a.count ? b.count - a.count : b.likes - a.likes))
+      .sort((a, b) =>
+        b.count !== a.count ? b.count - a.count : b.likes - a.likes
+      )
       .slice(0, 3)
   }, [posts])
 
@@ -442,7 +450,8 @@ export function ProjectorPage() {
 
               <div className="flex items-center gap-3 min-w-0">
                 <h1 className="font-serif text-xl lg:text-2xl font-bold tracking-wide text-white truncate">
-                  Thiago <span className="text-gold-400 font-normal">&amp;</span>{' '}
+                  Thiago{' '}
+                  <span className="text-gold-400 font-normal">&amp;</span>{' '}
                   Priscila
                 </h1>
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[10px] font-bold uppercase tracking-widest text-emerald-300 shrink-0">
@@ -579,7 +588,9 @@ export function ProjectorPage() {
                 onClick={toggleFullscreen}
                 className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/15 cursor-pointer"
                 title={
-                  isFullscreen ? 'Sair da Tela Cheia (F)' : 'Modo Tela Cheia (F)'
+                  isFullscreen
+                    ? 'Sair da Tela Cheia (F)'
+                    : 'Modo Tela Cheia (F)'
                 }
               >
                 {isFullscreen ? (

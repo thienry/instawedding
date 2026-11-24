@@ -53,7 +53,9 @@ export class MockCeremonialistRepository implements CeremonialistRepository {
     const normalizedEmail = dto.email.trim().toLowerCase()
 
     if (list.some((c) => c.email.toLowerCase() === normalizedEmail)) {
-      throw new Error(`O e-mail "${normalizedEmail}" já está cadastrado como cerimonialista.`)
+      throw new Error(
+        `O e-mail "${normalizedEmail}" já está cadastrado como cerimonialista.`
+      )
     }
 
     const newItem: Ceremonialist = {
@@ -74,11 +76,5 @@ export class MockCeremonialistRepository implements CeremonialistRepository {
     const list = this.readStorage()
     const updated = list.filter((c) => c.id !== id)
     this.writeStorage(updated)
-  }
-
-  async isCeremonialistEmail(email: string): Promise<boolean> {
-    const list = this.readStorage()
-    const normalizedEmail = email.trim().toLowerCase()
-    return list.some((c) => c.email.toLowerCase() === normalizedEmail)
   }
 }

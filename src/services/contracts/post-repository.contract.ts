@@ -8,6 +8,8 @@ export interface PostRepository {
   hasUserLiked(postId: string, sessionId: string): Promise<boolean>
   getLikedPostIds(sessionId: string): Promise<Set<string>>
   togglePostApproval(postId: string): Promise<boolean>
+  /** Deletes a post of the current guest. */
   deletePost(postId: string): Promise<void>
+  deletePostAsAdmin(postId: string): Promise<void>
   clearAllPosts(): Promise<void>
 }

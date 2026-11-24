@@ -4,6 +4,10 @@ import process from 'node:process'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
+import { fail } from './_lib/http.js'
+import { withinRateLimit } from './_lib/rate-limit.js'
+import { getBearerUser } from './_lib/supabase.js'
+
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -26,18 +30,31 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
 
 export async function POST(req: Request): Promise<Response> {
   try {
+    const user = await getBearerUser(req)
+    if (!user) return fail(401, 'Entre com sua conta Google para enviar fotos.')
+
+    // Fails open: a limiter outage must not stop uploads during the party
+    const allowed = await withinRateLimit('upload', user.id, 60, 600).catch(
+      (err: unknown) => {
+        console.error('[upload-url]', err)
+        return true
+      }
+    )
+    if (!allowed) {
+      return fail(429, 'Muitos envios seguidos. Aguarde alguns minutos.')
+    }
+
     const body = (await req.json()) as {
       contentType?: string
       fileType?: string
       sizeBytes?: number
-      sessionId?: string
     }
 
     const rawContentType = body.contentType || body.fileType || ''
     const contentType = (rawContentType.split(';')[0] ?? '')
       .trim()
       .toLowerCase()
-    const { sizeBytes, sessionId } = body
+    const { sizeBytes } = body
 
     // Validate MIME whitelist
     if (!contentType || !ALLOWED_MIME_TYPES.has(contentType)) {
@@ -61,14 +78,6 @@ export async function POST(req: Request): Promise<Response> {
         JSON.stringify({
           error: `Tamanho excede o limite permitido (máximo ${maxAllowedBytes / (1024 * 1024)}MB).`,
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Validate session identifier
-    if (!sessionId || typeof sessionId !== 'string' || sessionId.length < 8) {
-      return new Response(
-        JSON.stringify({ error: 'Sessão do convidado inválida.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
     }
@@ -121,11 +130,7 @@ export async function POST(req: Request): Promise<Response> {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Upload URL Generation Error'
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    console.error('[upload-url]', error)
+    return fail(500, 'Falha ao preparar o envio. Tente novamente.')
   }
 }

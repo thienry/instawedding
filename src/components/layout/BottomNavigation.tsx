@@ -5,8 +5,7 @@ import { useFeedNotifications } from '@/hooks/useFeedNotifications'
 
 export function BottomNavigation() {
   const { totalUnreadCount } = useFeedNotifications()
-  const badgeLabel =
-    totalUnreadCount > 9 ? '9+' : String(totalUnreadCount)
+  const badgeLabel = totalUnreadCount > 9 ? '9+' : String(totalUnreadCount)
 
   const getNavClass = ({ isActive }: { isActive: boolean }): string =>
     `flex flex-col items-center justify-center py-2 text-xs font-semibold transition-colors ${
@@ -38,9 +37,7 @@ export function BottomNavigation() {
           <div className="w-15 h-15 rounded-full bg-gradient-to-tr from-sage-800 to-sage-900 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform border-4 border-white">
             <Camera className="w-7 h-7" />
           </div>
-          <span className="text-xs font-bold text-sage-900 mt-1">
-            Postar
-          </span>
+          <span className="text-xs font-bold text-sage-900 mt-1">Postar</span>
         </NavLink>
 
         <NavLink to="/challenges" className={getNavClass}>
