@@ -32,6 +32,8 @@ export interface Post {
 }
 
 export interface CreatePostDTO {
+  /** UUID chosen by the client, so a retry does not create another post. */
+  readonly id?: string
   readonly authorName: string
   readonly authorAvatarUrl?: string | null
   readonly mediaUrl: string

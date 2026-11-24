@@ -36,6 +36,8 @@ interface SupabasePostRow {
 const POST_SELECT_QUERY =
   '*, challenges(id, title, description, icon, is_active, created_at)'
 
+const UNIQUE_VIOLATION = '23505'
+
 export class SupabasePostRepository implements PostRepository {
   async getPosts(): Promise<Post[]> {
     const supabase = getSupabaseClient()
@@ -56,6 +58,7 @@ export class SupabasePostRepository implements PostRepository {
     const supabase = getSupabaseClient()
     const showOnProjector = dto.showOnProjector ?? true
     const basePayload = {
+      ...(dto.id && { id: dto.id }),
       author_name: dto.authorName.trim(),
       media_url: dto.mediaUrl,
       caption: dto.caption?.trim() || null,
@@ -72,6 +75,11 @@ export class SupabasePostRepository implements PostRepository {
       })
       .select(POST_SELECT_QUERY)
       .single()
+
+    if (error?.code === UNIQUE_VIOLATION && dto.id) {
+      const existing = await this.findOwnPost(dto.id, dto.clientSessionId)
+      if (existing) return existing
+    }
 
     // Older schemas may lack a column; any other error must not drop fields
     if (error && error.code !== 'PGRST204') {
@@ -227,6 +235,22 @@ export class SupabasePostRepository implements PostRepository {
 
   async clearAllPosts(): Promise<void> {
     await adminRequest('moderate', { action: 'clear_all' })
+  }
+
+  /** Finds a post of the guest, even if it was hidden by a moderator. */
+  private async findOwnPost(
+    postId: string,
+    clientSessionId = 'anonymous'
+  ): Promise<Post | null> {
+    const { data, error } = await getSupabaseClient()
+      .from('posts')
+      .select(POST_SELECT_QUERY)
+      .eq('id', postId)
+      .eq('client_session_id', clientSessionId)
+      .maybeSingle()
+
+    if (error || !data) return null
+    return this.mapRowToPost(data as unknown as SupabasePostRow)
   }
 
   private mapRowToPost(row: SupabasePostRow): Post {

@@ -18,6 +18,20 @@ Tokens estimated as bytes / 4.
 | Tests                  | 0                         | critical modules covered |
 | `CLAUDE.md`            | missing                   | up to 60 lines           |
 
+### Remeasured (2026-11-24, after PR #9, before splitting `AppLayout.tsx` and `offline-queue.service.ts`)
+
+| Metric                 | Now                                                   | Target met |
+| ---------------------- | ----------------------------------------------------- | ---------- |
+| Versioned text         | 817 KB (637 KB on `be2341b`, remeasured the same way) | track only |
+| Largest file in `src/` | 17.9 KB (`AppLayout.tsx`)                             | no         |
+| Largest page           | 6.9 KB (`CapturePage.tsx`)                            | yes        |
+| Files failing Prettier | 0                                                     | yes        |
+| oxlint warnings        | 0 `set-state-in-effect`, 1 justified                  | yes        |
+| Tests                  | 199 in 20 files                                       | yes        |
+| `CLAUDE.md`            | 58 lines                                              | yes        |
+
+Above 15 KB: `AppLayout.tsx` and `offline-queue.service.ts` (16.2 KB).
+
 ## Rules
 
 - Do not mix formatting, file moves and logic changes in the same commit.
@@ -127,12 +141,15 @@ Redesigned at the author's request, so the layout differs from the original page
 
 ## Phase 5: Measure and maintain (~1 h)
 
-- [ ] Remeasure the baseline
+- [x] Remeasure the baseline
 - [ ] Run 3 fixed tasks in clean sessions, on `be2341b` and now, comparing with `/context` and `/cost`:
   1. "Add a 'videos' filter to the feed" (discard the diff)
   2. "Explain the offline upload flow"
   3. "Add a column to the admin CSV" (discard the diff)
-- [ ] File size limit as a lint warning (`max-lines`, 300)
+- [x] File size limit as a lint warning (`max-lines`, 300); `check` tolerates the 4 files already over it
+- [x] Split `AppLayout.tsx` into `Sidebar` (`SidebarNav`, `SidebarAccount`, `SidebarAdminCard`, `SidebarAdminIcons`), `MobileHeader`, `OfflineBanner`, `usePageTitle` and `useSidebarCollapsed`
+- [x] Split `offline-queue.service.ts`: `upload-task.ts`, `upload-store.ts` and `legacy-queue.ts` in `src/services/offline-queue/`; the unused `enqueue` was removed
+- [ ] Split those 4: `VideoRecorderModal.tsx`, `QrCodeSvg.tsx`, `feed-notification.service.ts`, `photo-filters.ts`
 - [ ] Update `CLAUDE.md` only when the agent fails for lack of context
 
 ## Out-of-scope findings
@@ -160,6 +177,12 @@ Capture, found while splitting:
 - [x] Choosing another photo while the first is still being compressed can post the first one (the late result overwrites the new file)
 - [x] The caption of a guestbook card stays when the media is changed
 - [x] Signing out with a photo selected leaves "Postar" in the header, doing nothing
+
+Upload queue, found while splitting:
+
+- [x] Opening the app on the feed does not resume the uploads left by the previous visit: `flush` runs while they are still being restored and finds none (reproduced)
+- [x] When storing an upload aborts the transaction without a request error (as a full device may do), `submitInBackground` never resolves and the form stays on "Postando..." (reproduced by forcing the abort)
+- [x] Retrying after a post creation whose answer was lost can publish it twice (not reproduced)
 
 Boomerang recorder, found while reviewing its lint warning:
 

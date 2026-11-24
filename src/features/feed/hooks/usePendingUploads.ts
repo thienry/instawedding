@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { OfflineQueueService } from '@/services/offline-queue.service'
 
-import type { BackgroundUploadTask } from '@/services/offline-queue.service'
+import type { BackgroundUploadTask } from '@/services/offline-queue/upload-task'
 
 /** Uploads still in the background queue, newest first. */
 export function usePendingUploads(): readonly BackgroundUploadTask[] {

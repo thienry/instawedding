@@ -23,9 +23,11 @@ interface AdminSession {
  * and logouts made elsewhere are reflected too.
  */
 export function useAdminSession(): AdminSession {
-  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null)
   const [isVerifying, setIsVerifying] = useState(true)
   const authService = getAdminAuthService()
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(() =>
+    authService.getCurrentUser()
+  )
 
   useEffect(() => {
     let isMounted = true

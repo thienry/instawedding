@@ -2,7 +2,7 @@ import { CloudUpload, Loader2, WifiOff, X } from 'lucide-react'
 
 import { OfflineQueueService } from '@/services/offline-queue.service'
 
-import type { BackgroundUploadTask } from '@/services/offline-queue.service'
+import type { BackgroundUploadTask } from '@/services/offline-queue/upload-task'
 
 interface UploadCardProps {
   readonly task: BackgroundUploadTask
