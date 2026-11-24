@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
-import { getGuestAuthService } from '@/services/guest-auth.factory'
+import { useGuestAuth } from '@/hooks/useGuestAuth'
 import { getGuestSession } from '@/utils/session'
 
 import type { GuestUser } from '@/types/domain'
@@ -29,28 +29,9 @@ export interface FeedGuest {
 
 /** Tracks the signed-in guest and the login prompt. */
 export function useFeedGuest(): FeedGuest {
-  const guestAuthService = getGuestAuthService()
-  const [guestUser, setGuestUser] = useState(() =>
-    guestAuthService.getCurrentGuest()
-  )
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const { guestUser, setGuestUser, isSigningIn, signIn } = useGuestAuth()
   const [authPrompt, setAuthPrompt] = useState<AuthPrompt | null>(null)
   const { sessionId } = getGuestSession()
-
-  useEffect(
-    () => guestAuthService.onAuthStateChange(setGuestUser),
-    [guestAuthService]
-  )
-
-  const signIn = async () => {
-    setIsSigningIn(true)
-    try {
-      const result = await guestAuthService.signInWithGoogle('/')
-      if (result.user) setGuestUser(result.user)
-    } finally {
-      setIsSigningIn(false)
-    }
-  }
 
   const openAuthPrompt = useCallback(
     (reason?: string) => setAuthPrompt({ reason }),
@@ -63,7 +44,9 @@ export function useFeedGuest(): FeedGuest {
     sessionId,
     likerId: guestUser?.id ?? sessionId,
     isSigningIn,
-    signIn,
+    signIn: async () => {
+      await signIn('/')
+    },
     authPrompt,
     openAuthPrompt,
     closeAuthPrompt: () => setAuthPrompt(null),
