@@ -23,9 +23,7 @@ export function FeedVideoPlayer({
   const [isLoaded, setIsLoaded] = useState(false)
 
   const posterUrl =
-    getCachedBlurPlaceholder(cacheKey ?? '') ??
-    getCachedBlurPlaceholder(src) ??
-    undefined
+    getCachedBlurPlaceholder(cacheKey ?? '') ?? getCachedBlurPlaceholder(src) ?? undefined
 
   useEffect(() => {
     const videoEl = videoRef.current
@@ -66,13 +64,11 @@ export function FeedVideoPlayer({
 
   return (
     <div
-      className={`relative overflow-hidden bg-slate-950 flex items-center justify-center ${containerClassName}`}
-    >
+      className={`relative overflow-hidden bg-slate-950 flex items-center justify-center ${containerClassName}`}>
       {/* Ambient Blurred Video/Poster Backdrop: Eliminates black bars on mismatched aspect ratios / desktop web */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
-      >
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
         {posterUrl ? (
           <img
             src={posterUrl}
@@ -126,8 +122,7 @@ export function FeedVideoPlayer({
             onClick={handleToggleMute}
             aria-label={isMuted ? 'Ativar som do vídeo' : 'Silenciar vídeo'}
             title={isMuted ? 'Ativar som' : 'Silenciar'}
-            className="absolute bottom-3 right-3 z-10 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xs transition-colors border border-white/15 shadow-sm"
-          >
+            className="absolute bottom-3 right-3 z-10 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xs transition-colors border border-white/15 shadow-sm">
             {isMuted ? (
               <VolumeX className="w-4 h-4" />
             ) : (

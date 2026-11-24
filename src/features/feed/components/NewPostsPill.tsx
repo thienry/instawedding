@@ -2,7 +2,7 @@ import { ArrowUp, Sparkles, X } from 'lucide-react'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 
-import type { FeedNotificationState } from '@/services/feed-notification.service'
+import type { FeedNotificationState } from '@/services/feed-notification/notification-state'
 
 function describeUnread(count: number, isLive: boolean): string {
   if (isLive) {
@@ -20,11 +20,7 @@ interface NewPostsPillProps {
 }
 
 /** Floating notice of posts that arrived live or since the last visit. */
-export function NewPostsPill({
-  notifications,
-  onReveal,
-  onDismiss,
-}: NewPostsPillProps) {
+export function NewPostsPill({ notifications, onReveal, onDismiss }: NewPostsPillProps) {
   const { stagedPosts, totalUnreadCount, latestAuthors } = notifications
   const hasStagedPosts = stagedPosts.length > 0
 
@@ -36,8 +32,7 @@ export function NewPostsPill({
         <button
           type="button"
           onClick={onReveal}
-          className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-semibold hover:text-gold-400 transition-colors cursor-pointer"
-        >
+          className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-semibold hover:text-gold-400 transition-colors cursor-pointer">
           {hasStagedPosts ? (
             <span className="w-6 h-6 rounded-full bg-gold-400 text-sage-900 flex items-center justify-center shrink-0">
               <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -51,10 +46,7 @@ export function NewPostsPill({
           {latestAuthors.length > 0 && (
             <div className="flex items-center -space-x-2 shrink-0">
               {latestAuthors.map((author) => (
-                <div
-                  key={author.name}
-                  className="ring-2 ring-sage-900 rounded-full"
-                >
+                <div key={author.name} className="ring-2 ring-sage-900 rounded-full">
                   <AuthorAvatar
                     name={author.name}
                     avatarUrl={author.avatarUrl}
@@ -74,8 +66,7 @@ export function NewPostsPill({
           onClick={onDismiss}
           title="Marcar como vistas"
           aria-label="Marcar novas fotos como vistas"
-          className="p-1 rounded-full text-white/65 hover:text-white hover:bg-white/10 transition-colors"
-        >
+          className="p-1 rounded-full text-white/65 hover:text-white hover:bg-white/10 transition-colors">
           <X className="w-3.5 h-3.5" />
         </button>
       </div>

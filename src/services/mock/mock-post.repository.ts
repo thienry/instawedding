@@ -46,10 +46,7 @@ export class MockPostRepository implements PostRepository {
   private readonly challengeRepo: ChallengeRepository
   private readonly realtimeService: RealtimeService
 
-  constructor(
-    challengeRepo: ChallengeRepository,
-    realtimeService: RealtimeService
-  ) {
+  constructor(challengeRepo: ChallengeRepository, realtimeService: RealtimeService) {
     this.challengeRepo = challengeRepo
     this.realtimeService = realtimeService
     this.ensureInitialData()
@@ -76,22 +73,16 @@ export class MockPostRepository implements PostRepository {
       .map((post) => ({
         ...post,
         mediaType: resolvePostMediaType(post),
-        challenge: post.challengeId
-          ? challengeMap.get(post.challengeId)
-          : undefined,
+        challenge: post.challengeId ? challengeMap.get(post.challengeId) : undefined,
       }))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     return enriched
   }
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const rawPosts: Post[] =
-      typeof localStorage !== 'undefined' &&
-      localStorage.getItem(POSTS_STORAGE_KEY)
+      typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 
@@ -107,8 +98,7 @@ export class MockPostRepository implements PostRepository {
       authorName: dto.authorName.trim(),
       authorAvatarUrl: dto.authorAvatarUrl ?? null,
       mediaUrl: dto.mediaUrl,
-      mediaType:
-        dto.mediaType ?? (isVideoUrl(dto.mediaUrl) ? 'video' : 'image'),
+      mediaType: dto.mediaType ?? (isVideoUrl(dto.mediaUrl) ? 'video' : 'image'),
       caption: dto.caption?.trim() || null,
       challengeId: dto.challengeId ?? null,
       clientSessionId: dto.clientSessionId,
@@ -129,17 +119,13 @@ export class MockPostRepository implements PostRepository {
     return newPost
   }
 
-  async toggleLike(
-    postId: string,
-    sessionId: string
-  ): Promise<ToggleLikeResult> {
+  async toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult> {
     const likesSet = this.getLikesSet()
     const likeKey = `${postId}:${sessionId}`
     const wasLiked = likesSet.has(likeKey)
 
     const posts: Post[] =
-      typeof localStorage !== 'undefined' &&
-      localStorage.getItem(POSTS_STORAGE_KEY)
+      typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 
@@ -164,10 +150,7 @@ export class MockPostRepository implements PostRepository {
 
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updatedPosts))
-      localStorage.setItem(
-        LIKES_STORAGE_KEY,
-        JSON.stringify(Array.from(likesSet))
-      )
+      localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(Array.from(likesSet)))
     }
 
     return {
@@ -205,20 +188,14 @@ export class MockPostRepository implements PostRepository {
       .map((post) => ({
         ...post,
         mediaType: resolvePostMediaType(post),
-        challenge: post.challengeId
-          ? challengeMap.get(post.challengeId)
-          : undefined,
+        challenge: post.challengeId ? challengeMap.get(post.challengeId) : undefined,
       }))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
   async togglePostApproval(postId: string): Promise<boolean> {
     const posts: Post[] =
-      typeof localStorage !== 'undefined' &&
-      localStorage.getItem(POSTS_STORAGE_KEY)
+      typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 
@@ -240,8 +217,7 @@ export class MockPostRepository implements PostRepository {
 
   async deletePost(postId: string): Promise<void> {
     const posts: Post[] =
-      typeof localStorage !== 'undefined' &&
-      localStorage.getItem(POSTS_STORAGE_KEY)
+      typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 

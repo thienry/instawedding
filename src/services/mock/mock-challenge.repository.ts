@@ -57,10 +57,7 @@ export class MockChallengeRepository implements ChallengeRepository {
   private ensureInitialData(): void {
     if (typeof localStorage === 'undefined') return
     if (!localStorage.getItem(CHALLENGES_STORAGE_KEY)) {
-      localStorage.setItem(
-        CHALLENGES_STORAGE_KEY,
-        JSON.stringify(this.fallbackChallenges)
-      )
+      localStorage.setItem(CHALLENGES_STORAGE_KEY, JSON.stringify(this.fallbackChallenges))
     }
   }
 

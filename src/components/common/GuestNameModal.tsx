@@ -68,18 +68,15 @@ export function GuestNameModal({
       aria-modal="true"
       aria-labelledby="guest-auth-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+      onClick={onClose}>
       <div
         className="bg-white w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-sage-200 space-y-5 relative"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={onClose}
           aria-label="Fechar janela"
-          className="absolute top-4 right-4 p-2 rounded-full text-sage-800/60 hover:text-sage-900 hover:bg-sage-100 transition-colors"
-        >
+          className="absolute top-4 right-4 p-2 rounded-full text-sage-800/60 hover:text-sage-900 hover:bg-sage-100 transition-colors">
           <X className="w-5 h-5" />
         </button>
 
@@ -96,13 +93,10 @@ export function GuestNameModal({
               <div>
                 <h2
                   id="guest-auth-modal-title"
-                  className="font-serif text-xl font-bold text-sage-900"
-                >
+                  className="font-serif text-xl font-bold text-sage-900">
                   {guestUser.name}
                 </h2>
-                <p className="text-xs sm:text-sm text-sage-800/70">
-                  {guestUser.email}
-                </p>
+                <p className="text-xs sm:text-sm text-sage-800/70">{guestUser.email}</p>
               </div>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -111,24 +105,22 @@ export function GuestNameModal({
             </div>
 
             <p className="text-xs sm:text-sm text-sage-800/75 text-center leading-relaxed">
-              Suas fotos e curtidas no mural aparecerão assinadas com seu nome e
-              foto de perfil do Google.
+              Suas fotos e curtidas no mural aparecerão assinadas com seu nome e foto de perfil do
+              Google.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-2xl bg-sage-100 hover:bg-sage-200 text-sage-900 font-semibold text-sm transition-colors"
-              >
+                className="flex-1 py-3 px-4 rounded-2xl bg-sage-100 hover:bg-sage-200 text-sage-900 font-semibold text-sm transition-colors">
                 Continuar no Mural
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoading}
-                className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-sm transition-colors"
-              >
+                className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-sm transition-colors">
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
@@ -148,8 +140,7 @@ export function GuestNameModal({
               />
               <h2
                 id="guest-auth-modal-title"
-                className="font-serif text-2xl font-bold text-sage-900"
-              >
+                className="font-serif text-2xl font-bold text-sage-900">
                 Entre com sua Conta Google
               </h2>
               <p className="text-xs sm:text-sm text-sage-800/75 leading-relaxed">
@@ -169,16 +160,11 @@ export function GuestNameModal({
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full py-3.5 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.99]"
-            >
+              className="w-full py-3.5 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.99]">
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <svg
-                  className="w-5 h-5 shrink-0"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="#EA4335"
                     d="M12 10.2v3.9h5.4c-.2 1.2-.9 2.3-2 3l3.2 2.5c1.9-1.7 3-4.3 3-7.3 0-.7-.1-1.4-.2-2.1H12z"

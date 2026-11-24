@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import {
-  CLEAR_FEED_CONFIRMATION,
-  DESTRUCTIVE_DIALOG,
-} from '@/features/admin/constants'
+import { CLEAR_FEED_CONFIRMATION, DESTRUCTIVE_DIALOG } from '@/features/admin/constants'
 import { getPostRepository } from '@/services/repositories.factory'
 
 import type { AdminData } from '@/features/admin/hooks/useAdminData'
@@ -40,11 +37,7 @@ export function usePostModeration(
   const toggleApproval = async (postId: string) => {
     try {
       const isApproved = await postRepository.togglePostApproval(postId)
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, isApproved } : post
-        )
-      )
+      setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, isApproved } : post)))
     } catch {
       void notify('Não foi possível alterar a visibilidade da foto.')
     }

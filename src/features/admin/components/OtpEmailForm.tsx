@@ -18,8 +18,7 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
         event.preventDefault()
         void requestCode(email)
       }}
-      className="space-y-3"
-    >
+      className="space-y-3">
       <div className="relative">
         <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-800/50" />
         <input
@@ -36,8 +35,7 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]"
-      >
+        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]">
         {isSubmitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />

@@ -70,9 +70,7 @@ export interface VideoValidationResult {
 /**
  * Validates that a video file respects maximum file size (25 MB).
  */
-export async function validateVideoFile(
-  file: File
-): Promise<VideoValidationResult> {
+export async function validateVideoFile(file: File): Promise<VideoValidationResult> {
   if (file.size > MAX_VIDEO_SIZE_BYTES) {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
     return {
@@ -128,9 +126,7 @@ export function getVideoDuration(file: Blob): Promise<number> {
         video.ontimeupdate = () => {
           video.ontimeupdate = null
           window.clearTimeout(timeoutId)
-          const resolvedDuration = Number.isFinite(video.duration)
-            ? video.duration
-            : 0
+          const resolvedDuration = Number.isFinite(video.duration) ? video.duration : 0
           cleanup()
           resolve(resolvedDuration)
         }
@@ -156,10 +152,7 @@ export function getVideoDuration(file: Blob): Promise<number> {
 /**
  * Extracts a compact WebP thumbnail/poster Data URL from the first available video frame.
  */
-export function extractVideoPoster(
-  file: Blob,
-  maxWidth: number = 360
-): Promise<string> {
+export function extractVideoPoster(file: Blob, maxWidth: number = 360): Promise<string> {
   return new Promise((resolve) => {
     if (typeof document === 'undefined') {
       resolve('')

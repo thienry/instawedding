@@ -13,17 +13,12 @@ export interface AdminIdentity {
 
 const normalize = (email: string) => email.toLowerCase().trim()
 
-export async function resolveUserRole(
-  email: string
-): Promise<AdminIdentity | null> {
+export async function resolveUserRole(email: string): Promise<AdminIdentity | null> {
   const normalized = normalize(email)
   const fallback = 'thmoura14@gmail.com'
   const master = normalize(
-    (
-      process.env.ADMIN_EMAILS ||
-      process.env.VITE_ADMIN_EMAILS ||
+    (process.env.ADMIN_EMAILS || process.env.VITE_ADMIN_EMAILS || fallback).split(',')[0] ||
       fallback
-    ).split(',')[0] || fallback
   )
 
   if (normalized === master) {
@@ -48,11 +43,7 @@ export async function resolveUserRole(
     // Not configured: fall through to the static list
   }
 
-  const moderators = (
-    process.env.MODERATOR_EMAILS ||
-    process.env.VITE_MODERATOR_EMAILS ||
-    ''
-  )
+  const moderators = (process.env.MODERATOR_EMAILS || process.env.VITE_MODERATOR_EMAILS || '')
     .split(',')
     .map(normalize)
     .filter(Boolean)
@@ -83,9 +74,5 @@ export async function authorize(req: Request): Promise<AdminIdentity | null> {
   if (payload) candidates.push(payload.email)
 
   const identities = await Promise.all(candidates.map(resolveUserRole))
-  return (
-    identities.find((i) => i?.role === 'admin') ??
-    identities.find((i) => i !== null) ??
-    null
-  )
+  return identities.find((i) => i?.role === 'admin') ?? identities.find((i) => i !== null) ?? null
 }

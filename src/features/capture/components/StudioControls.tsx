@@ -31,8 +31,7 @@ export function StudioControls({ media, previewUrl }: StudioControlsProps) {
               studioTab === 'filters'
                 ? 'bg-white text-sage-900 shadow-xs font-bold'
                 : 'text-sage-700 hover:text-sage-900'
-            }`}
-          >
+            }`}>
             Filtros
           </button>
           <button
@@ -42,8 +41,7 @@ export function StudioControls({ media, previewUrl }: StudioControlsProps) {
               studioTab === 'frames'
                 ? 'bg-white text-sage-900 shadow-xs font-bold'
                 : 'text-sage-700 hover:text-sage-900'
-            }`}
-          >
+            }`}>
             Molduras
           </button>
         </div>

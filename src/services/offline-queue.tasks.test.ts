@@ -28,8 +28,7 @@ let stored: Record<string, string> = {}
 // A fresh module simulates reloading the app with the same IndexedDB.
 async function loadApp() {
   vi.resetModules()
-  const { OfflineQueueService } =
-    await import('@/services/offline-queue.service')
+  const { OfflineQueueService } = await import('@/services/offline-queue.service')
   return OfflineQueueService
 }
 
@@ -85,9 +84,7 @@ beforeEach(() => {
   })
   cacheBlurPlaceholder.mockReset()
   uploadFile.mockReset().mockResolvedValue('https://x.test/a.webp')
-  createPost
-    .mockReset()
-    .mockImplementation(async (dto: CreatePostDTO) => ({ id: 'p1', ...dto }))
+  createPost.mockReset().mockImplementation(async (dto: CreatePostDTO) => ({ id: 'p1', ...dto }))
 })
 
 it('sends every detail of the post', async () => {
@@ -112,12 +109,10 @@ it('sends every detail of the post', async () => {
 })
 
 it('reports progress from 8 to 96', async () => {
-  uploadFile.mockImplementation(
-    async (_file: File, onProgress: (pct: number) => void) => {
-      for (const pct of [0, 50, 100]) onProgress(pct)
-      return 'https://x.test/a.webp'
-    }
-  )
+  uploadFile.mockImplementation(async (_file: File, onProgress: (pct: number) => void) => {
+    for (const pct of [0, 50, 100]) onProgress(pct)
+    return 'https://x.test/a.webp'
+  })
   const queue = await loadApp()
   const progress: (number | undefined)[] = []
   queue.subscribe((tasks) => progress.push(tasks[0]?.progress))
@@ -228,16 +223,11 @@ it('does not send the same task twice at once', async () => {
 
 it('sends the queue of the first version and keeps what failed', async () => {
   const item = (id: string) => ({ id, dto: { authorName: id }, queuedAt: '' })
-  stored.instawedding_offline_post_queue = JSON.stringify([
-    item('a'),
-    item('b'),
-  ])
+  stored.instawedding_offline_post_queue = JSON.stringify([item('a'), item('b')])
   createPost.mockRejectedValueOnce(new Error('boom'))
   const queue = await loadApp()
   expect(await queue.flush()).toBe(1)
-  expect(JSON.parse(stored.instawedding_offline_post_queue)).toEqual([
-    item('a'),
-  ])
+  expect(JSON.parse(stored.instawedding_offline_post_queue)).toEqual([item('a')])
   stored.instawedding_offline_post_queue = 'broken'
   expect(await queue.flush()).toBe(0)
 })

@@ -18,8 +18,7 @@ export function OtpCodeForm({ login }: OtpCodeFormProps) {
         event.preventDefault()
         void verifyCode()
       }}
-      className="space-y-3"
-    >
+      className="space-y-3">
       <div className="space-y-1">
         <input
           type="text"
@@ -41,8 +40,7 @@ export function OtpCodeForm({ login }: OtpCodeFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || code.length !== OTP_LENGTH}
-        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]"
-      >
+        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]">
         {isSubmitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -60,8 +58,7 @@ export function OtpCodeForm({ login }: OtpCodeFormProps) {
         <button
           type="button"
           onClick={restart}
-          className="text-xs text-sage-800/70 hover:text-sage-900 font-medium transition-colors"
-        >
+          className="text-xs text-sage-800/70 hover:text-sage-900 font-medium transition-colors">
           ← Trocar e-mail ou reenviar código
         </button>
       </div>

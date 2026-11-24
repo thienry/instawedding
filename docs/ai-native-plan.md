@@ -107,14 +107,14 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 - [x] hooks: `useAdminData` (joint load), `useAdminSession`, `useOtpLogin`, `usePostModeration`, `useAlbumExport` (ZIP and CSV), `useChallenges`, `useCeremonialists`
 - [x] components: `AdminLogin` (`OtpEmailForm`, `OtpCodeForm`, `MockLoginShortcuts`), `AdminTopBar`, `AdminTabs`, `MetricsCards`, `AlbumToolbar`, `ModerationGrid`, `ModerationCard`, `ChallengeForm`, `ChallengeList`, `ChallengeCard`, `CeremonialistForm`, `CeremonialistList`
-- [ ] check on mobile and desktop (author)
+- [x] check on mobile and desktop (author)
 
 **4.2 Feed** (1,469 lines)
 
 - [x] hooks: `useFeedGuest`, `useFeedPosts`, `usePendingUploads`, `useFeedFilter`, `useLightbox`, `useLikes`, `usePullToRefresh`, `usePostSharing`, `usePostDeletion`, `useInfiniteScroll`
 - [x] components: `PullIndicator`, `FeedToolbar`, `FilterTabs`, `ChallengeFilterPill`, `UploadCard`, `NewPostsPill`, `PostGrid`, `PostCard` (`PostHeader`, `PostMedia`, `PostFooter`), `FeedSkeleton`, `EmptyFeed`, `FeedFooter`, `FeedSidebar`, `TopContributors`, `DeletePostModal`, `ShareToast`
 - [x] move `formatRelativeTime` to `utils/`
-- [ ] check on mobile and desktop (author)
+- [x] check on mobile and desktop (author)
 
 **4.3 Projector** (964 lines, used live: test in full screen)
 
@@ -122,7 +122,7 @@ Redesigned at the author's request, so the layout differs from the original page
 
 - [x] hooks: `useSlideshow`, `useReadySlide`, `useCrossfade`, `useProjectorFeed`, `useFullscreen`, `useAutoHideControls`, `useProjectorShortcuts`; `useAdminSession` moved to `src/hooks/`
 - [x] components: `ProjectorLoading`, `ProjectorLocked`, `ProjectorShow`, `ProjectorHeader`, `OperatorControls`, `Backdrop`, `GoldDust`, `MainStage` (`StageSlide`), `Spotlight`, `Filmstrip`, `Podium`, `NewPostBanner`, `QrInvite`, `QrModal`, `EmptyStage`
-- [ ] check in full screen on the party computer (author)
+- [x] check in full screen on the party computer (author)
 
 **4.4 Capture** (993 lines, critical: test photo, video and offline on a real device)
 
@@ -146,10 +146,10 @@ Redesigned at the author's request, so the layout differs from the original page
   1. "Add a 'videos' filter to the feed" (discard the diff)
   2. "Explain the offline upload flow"
   3. "Add a column to the admin CSV" (discard the diff)
-- [x] File size limit as a lint warning (`max-lines`, 300); `check` tolerates the 4 files already over it
+- [x] File size limit as a lint warning (`max-lines`, 300); no file is over it and `check` tolerates no warning
 - [x] Split `AppLayout.tsx` into `Sidebar` (`SidebarNav`, `SidebarAccount`, `SidebarAdminCard`, `SidebarAdminIcons`), `MobileHeader`, `OfflineBanner`, `usePageTitle` and `useSidebarCollapsed`
 - [x] Split `offline-queue.service.ts`: `upload-task.ts`, `upload-store.ts` and `legacy-queue.ts` in `src/services/offline-queue/`; the unused `enqueue` was removed
-- [ ] Split those 4: `VideoRecorderModal.tsx`, `QrCodeSvg.tsx`, `feed-notification.service.ts`, `photo-filters.ts`
+- [x] Split the other 4: `VideoRecorderModal.tsx`, `QrCodeSvg.tsx`, `feed-notification.service.ts`, `photo-filters.ts`
 - [ ] Update `CLAUDE.md` only when the agent fails for lack of context
 
 ## Out-of-scope findings

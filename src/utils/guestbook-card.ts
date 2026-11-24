@@ -59,11 +59,7 @@ export interface GenerateGuestbookCardOptions {
 /**
  * Helper to split text into wrapped lines for Canvas rendering
  */
-function wrapCanvasText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number
-): string[] {
+function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(/\s+/)
   const lines: string[] = []
   let currentLine = ''
@@ -93,15 +89,9 @@ function wrapCanvasText(
 export async function generateGuestbookCardFile(
   options: GenerateGuestbookCardOptions
 ): Promise<File> {
-  const {
-    authorName,
-    message,
-    themeId = 'emerald',
-    weddingTitle = 'Thiago & Priscila',
-  } = options
+  const { authorName, message, themeId = 'emerald', weddingTitle = 'Thiago & Priscila' } = options
 
-  const theme =
-    GUESTBOOK_THEMES.find((t) => t.id === themeId) ?? GUESTBOOK_THEMES[0]
+  const theme = GUESTBOOK_THEMES.find((t) => t.id === themeId) ?? GUESTBOOK_THEMES[0]
 
   const width = 1080
   const height = 1350
@@ -143,21 +133,11 @@ export async function generateGuestbookCardFile(
   // Outer border
   ctx.strokeStyle = theme.borderColor
   ctx.lineWidth = 2
-  ctx.strokeRect(
-    outerMargin,
-    outerMargin,
-    width - outerMargin * 2,
-    height - outerMargin * 2
-  )
+  ctx.strokeRect(outerMargin, outerMargin, width - outerMargin * 2, height - outerMargin * 2)
 
   // Inner border
   ctx.lineWidth = 1
-  ctx.strokeRect(
-    innerMargin,
-    innerMargin,
-    width - innerMargin * 2,
-    height - innerMargin * 2
-  )
+  ctx.strokeRect(innerMargin, innerMargin, width - innerMargin * 2, height - innerMargin * 2)
 
   // Corner Diamond Accents
   const diamondSize = 10

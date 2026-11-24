@@ -15,10 +15,7 @@ interface TopContributorsProps {
 
 /** Podium of the guests who posted the most. */
 export function TopContributors({ posts }: TopContributorsProps) {
-  const contributors = useMemo(
-    () => rankContributors(posts, MEDALS.length),
-    [posts]
-  )
+  const contributors = useMemo(() => rankContributors(posts, MEDALS.length), [posts])
 
   if (contributors.length === 0) return null
 
@@ -27,14 +24,9 @@ export function TopContributors({ posts }: TopContributorsProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5 text-gold-500" />
-          <h3 className="font-serif text-base font-bold text-sage-900">
-            Top Fotógrafos da Noite
-          </h3>
+          <h3 className="font-serif text-base font-bold text-sage-900">Top Fotógrafos da Noite</h3>
         </div>
-        <Link
-          to="/challenges"
-          className="text-xs font-semibold text-gold-500 hover:underline"
-        >
+        <Link to="/challenges" className="text-xs font-semibold text-gold-500 hover:underline">
           Ver todos
         </Link>
       </div>
@@ -43,20 +35,11 @@ export function TopContributors({ posts }: TopContributorsProps) {
         {contributors.map((person, index) => (
           <div
             key={person.name}
-            className="flex items-center justify-between p-3 rounded-2xl bg-sage-50/80 border border-sage-200/60"
-          >
+            className="flex items-center justify-between p-3 rounded-2xl bg-sage-50/80 border border-sage-200/60">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-lg leading-none shrink-0">
-                {MEDALS[index]}
-              </span>
-              <AuthorAvatar
-                name={person.name}
-                avatarUrl={person.avatarUrl}
-                size="sm"
-              />
-              <span className="text-sm font-bold text-sage-900 truncate">
-                {person.name}
-              </span>
+              <span className="text-lg leading-none shrink-0">{MEDALS[index]}</span>
+              <AuthorAvatar name={person.name} avatarUrl={person.avatarUrl} size="sm" />
+              <span className="text-sm font-bold text-sage-900 truncate">{person.name}</span>
             </div>
             <div className="flex items-center gap-3 text-xs font-semibold text-sage-800 shrink-0">
               <span>📷 {person.postCount}</span>

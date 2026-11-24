@@ -11,21 +11,11 @@ interface MetricCardProps {
   readonly children: ReactNode
 }
 
-function MetricCard({
-  title,
-  titleClass,
-  icon,
-  iconClass,
-  children,
-}: MetricCardProps) {
+function MetricCard({ title, titleClass, icon, iconClass, children }: MetricCardProps) {
   return (
     <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
       <div className="flex items-center justify-between">
-        <span
-          className={`text-xs font-bold uppercase tracking-wider ${titleClass}`}
-        >
-          {title}
-        </span>
+        <span className={`text-xs font-bold uppercase tracking-wider ${titleClass}`}>{title}</span>
         <span className={`p-2 rounded-xl ${iconClass}`}>{icon}</span>
       </div>
       <div className="mt-3">{children}</div>
@@ -41,10 +31,7 @@ interface MetricValueProps {
 function MetricValue({ value, unit }: MetricValueProps) {
   return (
     <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
-      {value}{' '}
-      <span className="text-sm font-sans font-semibold text-sage-800">
-        {unit}
-      </span>
+      {value} <span className="text-sm font-sans font-semibold text-sage-800">{unit}</span>
     </h4>
   )
 }
@@ -63,14 +50,12 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
         title="Mídias do Evento"
         titleClass="text-sage-800"
         icon={<Camera className="w-4 h-4" />}
-        iconClass="bg-sage-100 text-sage-800"
-      >
+        iconClass="bg-sage-100 text-sage-800">
         <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
           {stats.totalPosts}
         </h4>
         <p className="text-xs text-sage-800/80 font-medium mt-1.5">
-          {stats.totalPhotos} fotos • {stats.totalVideos} vídeos (
-          {stats.approvedPosts} aprovadas)
+          {stats.totalPhotos} fotos • {stats.totalVideos} vídeos ({stats.approvedPosts} aprovadas)
         </p>
       </MetricCard>
 
@@ -78,8 +63,7 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
         title="Mais Curtida"
         titleClass="text-rose-600"
         icon={<Heart className="w-4 h-4 fill-rose-500 text-rose-500" />}
-        iconClass="bg-rose-50 text-rose-600"
-      >
+        iconClass="bg-rose-50 text-rose-600">
         <MetricValue value={topLikedPost?.likesCount ?? 0} unit="likes" />
         <p className="text-xs text-sage-800/80 font-medium mt-1.5 truncate">
           Por {topLikedPost?.authorName ?? 'Nenhum voto ainda'}
@@ -90,8 +74,7 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
         title="Fotógrafo da Noite"
         titleClass="text-gold-500"
         icon={<Trophy className="w-4 h-4 text-gold-500" />}
-        iconClass="bg-gold-400/20 text-gold-500"
-      >
+        iconClass="bg-gold-400/20 text-gold-500">
         <h4 className="font-serif text-xl sm:text-2xl font-bold text-sage-900 leading-tight truncate">
           {topAuthor?.name ?? 'Nenhum ainda'}
         </h4>
@@ -104,8 +87,7 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
         title="Gincana da Festa"
         titleClass="text-emerald-600"
         icon={<Sparkles className="w-4 h-4 text-emerald-600" />}
-        iconClass="bg-emerald-50 text-emerald-700"
-      >
+        iconClass="bg-emerald-50 text-emerald-700">
         <MetricValue value={stats.challengePosts} unit="desafios" />
         <p className="text-xs text-sage-800/80 font-medium mt-1.5">
           {stats.challengeRate}% de participação dos convidados

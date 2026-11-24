@@ -12,11 +12,7 @@ interface ChallengeCardProps {
 }
 
 /** A challenge, with shortcuts to take part and to see its photos. */
-export function ChallengeCard({
-  challenge,
-  isCompleted,
-  communityCount,
-}: ChallengeCardProps) {
+export function ChallengeCard({ challenge, isCompleted, communityCount }: ChallengeCardProps) {
   const navigate = useNavigate()
 
   return (
@@ -25,8 +21,7 @@ export function ChallengeCard({
         isCompleted
           ? 'border-emerald-300/90 bg-emerald-50/25'
           : 'border-sage-200/80 hover:border-sage-300 hover:shadow-md'
-      }`}
-    >
+      }`}>
       <div className="flex items-start gap-4 min-w-0">
         <div className="w-14 h-14 rounded-2xl bg-sage-50 border border-sage-200/90 flex items-center justify-center text-3xl shrink-0 shadow-2xs">
           {challenge.icon}
@@ -43,20 +38,16 @@ export function ChallengeCard({
               </span>
             )}
           </div>
-          <p className="text-sm text-sage-800/80 leading-relaxed">
-            {challenge.description}
-          </p>
+          <p className="text-sm text-sage-800/80 leading-relaxed">{challenge.description}</p>
 
           {communityCount > 0 && (
             <button
               type="button"
               onClick={() => navigate(`/?challengeId=${challenge.id}`)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-500 hover:underline pt-1"
-            >
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-500 hover:underline pt-1">
               <Eye className="w-3.5 h-3.5" />
               <span>
-                Ver {communityCount}{' '}
-                {communityCount === 1 ? 'foto postada' : 'fotos postadas'}
+                Ver {communityCount} {communityCount === 1 ? 'foto postada' : 'fotos postadas'}
               </span>
             </button>
           )}
@@ -71,8 +62,7 @@ export function ChallengeCard({
             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
             : 'bg-sage-900 hover:bg-sage-800 text-white'
         }`}
-        title="Cumprir Desafio"
-      >
+        title="Cumprir Desafio">
         <Camera className="w-5 h-5" />
       </button>
     </div>

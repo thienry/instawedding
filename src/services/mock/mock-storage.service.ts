@@ -1,16 +1,10 @@
 import { generateUUID } from '@/utils/uuid'
 
 import type { StorageService } from '@/services/contracts/storage.contract'
-import type {
-  PresignedUploadResult,
-  UploadProgressCallback,
-} from '@/types/domain'
+import type { PresignedUploadResult, UploadProgressCallback } from '@/types/domain'
 
 export class MockStorageService implements StorageService {
-  async getPresignedUploadUrl(
-    fileName: string,
-    _fileType: string
-  ): Promise<PresignedUploadResult> {
+  async getPresignedUploadUrl(fileName: string, _fileType: string): Promise<PresignedUploadResult> {
     const mockId = generateUUID()
     const sanitizedName = fileName.replace(/\s+/g, '-')
     const mockKey = `${mockId}-${sanitizedName}`
@@ -21,10 +15,7 @@ export class MockStorageService implements StorageService {
     }
   }
 
-  async uploadFile(
-    file: File,
-    onProgress?: UploadProgressCallback
-  ): Promise<string> {
+  async uploadFile(file: File, onProgress?: UploadProgressCallback): Promise<string> {
     const steps = [20, 50, 80, 100]
 
     for (const step of steps) {

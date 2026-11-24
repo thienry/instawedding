@@ -115,7 +115,7 @@ flowchart TD
 
 ### Prerequisites
 
-- **Node.js** 20+ (recommended: Node 22 or 26 LTS)
+- **Node.js** 24 LTS (`.nvmrc`)
 - **npm**
 - Linux/WSL or macOS/Windows terminal
 

@@ -33,10 +33,7 @@ export function useFeedGuest(): FeedGuest {
   const [authPrompt, setAuthPrompt] = useState<AuthPrompt | null>(null)
   const { sessionId } = getGuestSession()
 
-  const openAuthPrompt = useCallback(
-    (reason?: string) => setAuthPrompt({ reason }),
-    []
-  )
+  const openAuthPrompt = useCallback((reason?: string) => setAuthPrompt({ reason }), [])
 
   return {
     guestUser,

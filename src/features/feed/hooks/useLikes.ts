@@ -45,9 +45,7 @@ export function useLikes(
   }, [heartBurstPostId])
 
   const setLikesCount = (postId: string, likesCount: number) =>
-    setPosts((prev) =>
-      prev.map((post) => (post.id === postId ? { ...post, likesCount } : post))
-    )
+    setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, likesCount } : post)))
 
   const toggleLike = async (postId: string) => {
     if (!guestUser) {

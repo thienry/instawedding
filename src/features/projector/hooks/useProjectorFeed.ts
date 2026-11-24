@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { isShownOnProjector } from '@/features/projector/utils/projector-posts'
-import {
-  getPostRepository,
-  getRealtimeService,
-} from '@/services/repositories.factory'
+import { getPostRepository, getRealtimeService } from '@/services/repositories.factory'
 
 import type { Post } from '@/types/domain'
 
@@ -40,10 +37,7 @@ export function useProjectorFeed(): ProjectorFeed {
     }
 
     void refresh()
-    const intervalId = window.setInterval(
-      () => void refresh(),
-      POLL_INTERVAL_MS
-    )
+    const intervalId = window.setInterval(() => void refresh(), POLL_INTERVAL_MS)
     return () => {
       isMounted = false
       window.clearInterval(intervalId)
@@ -53,9 +47,7 @@ export function useProjectorFeed(): ProjectorFeed {
   useEffect(() => {
     return realtimeService.subscribeToNewPosts((post) => {
       if (!isShownOnProjector(post)) return
-      setPosts((prev) =>
-        prev.some(({ id }) => id === post.id) ? prev : [post, ...prev]
-      )
+      setPosts((prev) => (prev.some(({ id }) => id === post.id) ? prev : [post, ...prev]))
       setNewPost(post)
     })
   }, [realtimeService])

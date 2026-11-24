@@ -19,11 +19,8 @@ export function FilterCarousel({ media, previewUrl }: FilterCarouselProps) {
             type="button"
             onClick={() => media.setFilterId(f.id)}
             className={`shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all ${
-              isSelected
-                ? 'ring-2 ring-sage-900 bg-sage-50'
-                : 'hover:bg-sage-50/60'
-            }`}
-          >
+              isSelected ? 'ring-2 ring-sage-900 bg-sage-50' : 'hover:bg-sage-50/60'
+            }`}>
             <div className="w-16 h-16 rounded-xl overflow-hidden border border-sage-200 relative shadow-2xs">
               <img
                 src={previewUrl}

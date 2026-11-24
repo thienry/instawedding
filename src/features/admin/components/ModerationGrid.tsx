@@ -9,18 +9,12 @@ interface ModerationGridProps {
 }
 
 /** Posts of the selected filter, ready to be moderated. */
-export function ModerationGrid({
-  moderation,
-  isLoading,
-  isAdmin,
-}: ModerationGridProps) {
+export function ModerationGrid({ moderation, isLoading, isAdmin }: ModerationGridProps) {
   const { filteredPosts, toggleApproval, deletePost } = moderation
 
   if (isLoading) {
     return (
-      <p className="text-sm text-center text-sage-800/60 py-8">
-        Carregando fila de postagens...
-      </p>
+      <p className="text-sm text-center text-sage-800/60 py-8">Carregando fila de postagens...</p>
     )
   }
 

@@ -46,8 +46,7 @@ export function ProjectorShow() {
       onPointerDown={controls.reveal}
       className={`projector-ground h-dvh w-full overflow-hidden relative select-none ${
         controls.isVisible ? '' : 'cursor-none'
-      }`}
-    >
+      }`}>
       {slide && <Backdrop slide={slide} />}
       <GoldDust />
 

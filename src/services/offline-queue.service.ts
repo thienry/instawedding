@@ -1,9 +1,5 @@
 import { flushLegacyQueue } from '@/services/offline-queue/legacy-queue'
-import {
-  deleteUpload,
-  loadUploads,
-  saveUpload,
-} from '@/services/offline-queue/upload-store'
+import { deleteUpload, loadUploads, saveUpload } from '@/services/offline-queue/upload-store'
 import {
   createUploadTask,
   fromStoredUpload,
@@ -13,10 +9,7 @@ import { getPostRepository } from '@/services/repositories.factory'
 import { getStorageService } from '@/services/storage.factory'
 import { cacheBlurPlaceholder } from '@/utils/blur-placeholder'
 
-import type {
-  BackgroundUploadTask,
-  UploadRequest,
-} from '@/services/offline-queue/upload-task'
+import type { BackgroundUploadTask, UploadRequest } from '@/services/offline-queue/upload-task'
 import type { Post } from '@/types/domain'
 
 const MAX_ATTEMPTS = 2
@@ -63,8 +56,7 @@ export class OfflineQueueService {
   /** Tasks in the queue, newest first. */
   static getTasksSnapshot(): BackgroundUploadTask[] {
     return Array.from(this.tasks.values()).sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
   }
 
@@ -176,10 +168,7 @@ export class OfflineQueueService {
   }
 
   /** Uploads the file and creates the post. False means it was cancelled. */
-  private static async publish(
-    task: BackgroundUploadTask,
-    file: File
-  ): Promise<boolean> {
+  private static async publish(task: BackgroundUploadTask, file: File): Promise<boolean> {
     const { id } = task
     const postRepo = getPostRepository()
 
@@ -226,11 +215,7 @@ export class OfflineQueueService {
   }
 
   /** Keeps a task that could not be uploaded, so it can be retried. */
-  private static async failTask(
-    id: string,
-    file: File,
-    error: unknown
-  ): Promise<void> {
+  private static async failTask(id: string, file: File, error: unknown): Promise<void> {
     this.inFlightIds.delete(id)
     const isQueued = isOffline()
     const failureMessage =

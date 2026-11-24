@@ -10,11 +10,7 @@ interface SidebarNavProps {
 }
 
 /** Links to the screens of the app. */
-export function SidebarNav({
-  isCollapsed,
-  unreadCount,
-  canAccessProjector,
-}: SidebarNavProps) {
+export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: SidebarNavProps) {
   const labelTransitionClass = sidebarLabelClass(isCollapsed)
 
   const getSidebarLinkClass = ({ isActive }: { isActive: boolean }): string =>
@@ -45,20 +41,12 @@ export function SidebarNav({
         )}
       </NavLink>
 
-      <NavLink
-        to="/challenges"
-        title="Desafios da Festa"
-        className={getSidebarLinkClass}
-      >
+      <NavLink to="/challenges" title="Desafios da Festa" className={getSidebarLinkClass}>
         <Sparkles className="w-5 h-5 shrink-0" />
         <span className={labelTransitionClass}>Desafios da Festa</span>
       </NavLink>
 
-      <NavLink
-        to="/capture"
-        title="Estúdio Fotográfico"
-        className={getSidebarLinkClass}
-      >
+      <NavLink to="/capture" title="Estúdio Fotográfico" className={getSidebarLinkClass}>
         <Camera className="w-5 h-5 shrink-0" />
         <span className={labelTransitionClass}>Estúdio Fotográfico</span>
       </NavLink>
@@ -69,8 +57,7 @@ export function SidebarNav({
           title="Modo Telão"
           className={`flex items-center rounded-2xl text-sm font-semibold text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-all duration-300 ease-in-out ${
             isCollapsed ? 'justify-center px-3 py-3' : 'gap-3.5 px-4 py-3'
-          }`}
-        >
+          }`}>
           <Tv className="w-5 h-5 shrink-0 text-gold-500" />
           <span className={labelTransitionClass}>Modo Telão</span>
         </Link>

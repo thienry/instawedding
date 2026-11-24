@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import {
-  getChallengeRepository,
-  getPostRepository,
-} from '@/services/repositories.factory'
+import { getChallengeRepository, getPostRepository } from '@/services/repositories.factory'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 import type { Challenge, Post } from '@/types/domain'
@@ -36,10 +33,7 @@ export function useAdminData(currentUser: AdminUser | null): AdminData {
     if (!currentUser) return
     let isMounted = true
 
-    Promise.all([
-      postRepository.getAllPostsForModeration(),
-      challengeRepository.getAllChallenges(),
-    ])
+    Promise.all([postRepository.getAllPostsForModeration(), challengeRepository.getAllChallenges()])
       .then(([allPosts, allChallenges]) => {
         if (!isMounted) return
         setPosts(allPosts)

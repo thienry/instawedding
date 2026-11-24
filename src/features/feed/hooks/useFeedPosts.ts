@@ -34,12 +34,8 @@ export function useFeedPosts({
   likerId,
 }: Pick<FeedGuest, 'guestUser' | 'likerId'>): FeedPosts {
   const [posts, setPosts] = useState<readonly Post[]>([])
-  const [likedPostIds, setLikedPostIds] = useState<ReadonlySet<string>>(
-    new Set()
-  )
-  const [revealedPostIds, setRevealedPostIds] = useState<ReadonlySet<string>>(
-    new Set()
-  )
+  const [likedPostIds, setLikedPostIds] = useState<ReadonlySet<string>>(new Set())
+  const [revealedPostIds, setRevealedPostIds] = useState<ReadonlySet<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const postRepository = getPostRepository()
@@ -48,9 +44,7 @@ export function useFeedPosts({
     () =>
       Promise.all([
         postRepository.getPosts(),
-        guestUser
-          ? postRepository.getLikedPostIds(likerId)
-          : Promise.resolve(new Set<string>()),
+        guestUser ? postRepository.getLikedPostIds(likerId) : Promise.resolve(new Set<string>()),
       ]),
     [guestUser, likerId, postRepository]
   )
@@ -90,8 +84,7 @@ export function useFeedPosts({
     setIsRefreshing(true)
     try {
       const [fetchedPosts, likedIds] = await fetchFeed()
-      const revealed =
-        FeedNotificationService.consumeStagedAndMarkSeen(fetchedPosts)
+      const revealed = FeedNotificationService.consumeStagedAndMarkSeen(fetchedPosts)
       addRevealedIds(revealed.revealedPostIds)
       setPosts(fetchedPosts)
       setLikedPostIds(likedIds)

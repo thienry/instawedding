@@ -66,9 +66,7 @@ export async function createUploadTask(
   const mediaType = getMediaType(file)
   const previewUrl = URL.createObjectURL(file)
   const blurDataUrl =
-    mediaType === 'video'
-      ? await extractVideoPoster(file)
-      : await generateBlurPlaceholder(file)
+    mediaType === 'video' ? await extractVideoPoster(file) : await generateBlurPlaceholder(file)
   const isQueued = isOffline()
 
   return {
@@ -86,11 +84,7 @@ export async function createUploadTask(
 }
 
 export function toStoredUpload(
-  {
-    previewUrl: _previewUrl,
-    progress: _progress,
-    ...details
-  }: BackgroundUploadTask,
+  { previewUrl: _previewUrl, progress: _progress, ...details }: BackgroundUploadTask,
   file: File
 ): StoredUpload {
   return {

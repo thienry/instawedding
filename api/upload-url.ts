@@ -34,12 +34,10 @@ export async function POST(req: Request): Promise<Response> {
     if (!user) return fail(401, 'Entre com sua conta Google para enviar fotos.')
 
     // Fails open: a limiter outage must not stop uploads during the party
-    const allowed = await withinRateLimit('upload', user.id, 60, 600).catch(
-      (err: unknown) => {
-        console.error('[upload-url]', err)
-        return true
-      }
-    )
+    const allowed = await withinRateLimit('upload', user.id, 60, 600).catch((err: unknown) => {
+      console.error('[upload-url]', err)
+      return true
+    })
     if (!allowed) {
       return fail(429, 'Muitos envios seguidos. Aguarde alguns minutos.')
     }
@@ -51,9 +49,7 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     const rawContentType = body.contentType || body.fileType || ''
-    const contentType = (rawContentType.split(';')[0] ?? '')
-      .trim()
-      .toLowerCase()
+    const contentType = (rawContentType.split(';')[0] ?? '').trim().toLowerCase()
     const { sizeBytes } = body
 
     // Validate MIME whitelist
@@ -68,9 +64,7 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     const isVideo = contentType.startsWith('video/')
-    const maxAllowedBytes = isVideo
-      ? MAX_VIDEO_SIZE_BYTES
-      : MAX_IMAGE_SIZE_BYTES
+    const maxAllowedBytes = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES
 
     // Validate size limit
     if (
@@ -94,10 +88,10 @@ export async function POST(req: Request): Promise<Response> {
     const publicDomain = process.env.R2_PUBLIC_DOMAIN || '/media'
 
     if (!accountId || !accessKeyId || !secretAccessKey) {
-      return new Response(
-        JSON.stringify({ error: 'Storage S3/R2 não configurado no servidor.' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: 'Storage S3/R2 não configurado no servidor.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     const s3Client = new S3Client({

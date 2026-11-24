@@ -66,8 +66,7 @@ export class MockAdminAuthService implements AdminAuthService {
       )
 
       const modEmails = (
-        import.meta.env.VITE_MODERATOR_EMAILS ||
-        'cerimonial@gmail.com,assessoria@gmail.com'
+        import.meta.env.VITE_MODERATOR_EMAILS || 'cerimonial@gmail.com,assessoria@gmail.com'
       )
         .split(',')
         .map((e: string) => e.trim().toLowerCase())
@@ -102,10 +101,7 @@ export class MockAdminAuthService implements AdminAuthService {
     }
   }
 
-  async verifyOtp(
-    emailInput: string,
-    codeInput: string
-  ): Promise<AdminAuthResult> {
+  async verifyOtp(emailInput: string, codeInput: string): Promise<AdminAuthResult> {
     await new Promise((resolve) => setTimeout(resolve, 250))
     const email = emailInput.trim().toLowerCase()
     const code = codeInput.trim()
@@ -113,8 +109,7 @@ export class MockAdminAuthService implements AdminAuthService {
     if (!this.pendingOtp || this.pendingOtp.email !== email) {
       return {
         success: false,
-        message:
-          'Nenhum código solicitado para este e-mail ou código expirado.',
+        message: 'Nenhum código solicitado para este e-mail ou código expirado.',
       }
     }
 

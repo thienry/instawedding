@@ -21,10 +21,7 @@ interface InfiniteScroll<T> {
  * @param items - Whole list.
  * @param resetKey - Starts over whenever it changes.
  */
-export function useInfiniteScroll<T>(
-  items: readonly T[],
-  resetKey: string
-): InfiniteScroll<T> {
+export function useInfiniteScroll<T>(items: readonly T[], resetKey: string): InfiniteScroll<T> {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
   const [currentKey, setCurrentKey] = useState(resetKey)
   const sentinelRef = useRef<HTMLDivElement>(null)

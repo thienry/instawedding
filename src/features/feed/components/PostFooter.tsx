@@ -28,13 +28,10 @@ export function PostFooter({
             type="button"
             onClick={onToggleLike}
             title={isSignedIn ? 'Curtir foto' : 'Entre com Google para curtir'}
-            className="inline-flex items-center gap-2 px-3 py-1.5 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all"
-          >
+            className="inline-flex items-center gap-2 px-3 py-1.5 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all">
             <Heart
               className={`w-6 h-6 transition-colors ${
-                isLiked
-                  ? 'fill-rose-500 text-rose-500'
-                  : 'text-sage-800/80 stroke-[1.85]'
+                isLiked ? 'fill-rose-500 text-rose-500' : 'text-sage-800/80 stroke-[1.85]'
               }`}
             />
             <span>{post.likesCount}</span>
@@ -44,8 +41,7 @@ export function PostFooter({
             type="button"
             onClick={onShare}
             title="Compartilhar foto"
-            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
-          >
+            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all">
             <Share2 className="w-5 h-5" />
           </button>
 
@@ -53,8 +49,7 @@ export function PostFooter({
             type="button"
             onClick={onDownload}
             title="Baixar foto"
-            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all"
-          >
+            className="p-2 rounded-full text-sage-800/75 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all">
             <Download className="w-5 h-5" />
           </button>
         </div>
@@ -69,9 +64,7 @@ export function PostFooter({
 
       {post.caption && (
         <p className="text-sm sm:text-base text-sage-800/95 leading-relaxed pt-0.5">
-          <span className="font-bold text-sage-900 mr-2">
-            {post.authorName}
-          </span>
+          <span className="font-bold text-sage-900 mr-2">{post.authorName}</span>
           {post.caption}
         </p>
       )}

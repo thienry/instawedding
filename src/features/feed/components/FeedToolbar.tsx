@@ -1,11 +1,4 @@
-import {
-  LayoutGrid,
-  LayoutList,
-  Loader2,
-  LogOut,
-  RefreshCw,
-  User,
-} from 'lucide-react'
+import { LayoutGrid, LayoutList, Loader2, LogOut, RefreshCw, User } from 'lucide-react'
 
 import { AuthorAvatar } from '@/components/common/AuthorAvatar'
 
@@ -62,18 +55,11 @@ export function FeedToolbar({
           if (guestUser) openAuthPrompt()
           else void signIn()
         }}
-        className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm text-sage-900 hover:bg-sage-100 disabled:opacity-60 font-semibold transition-colors shadow-2xs"
-      >
+        className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm text-sage-900 hover:bg-sage-100 disabled:opacity-60 font-semibold transition-colors shadow-2xs">
         {guestUser ? (
           <>
-            <AuthorAvatar
-              name={guestUser.name}
-              avatarUrl={guestUser.avatarUrl}
-              size="sm"
-            />
-            <span className="truncate max-w-44">
-              Olá, {guestUser.name.split(' ')[0]}
-            </span>
+            <AuthorAvatar name={guestUser.name} avatarUrl={guestUser.avatarUrl} size="sm" />
+            <span className="truncate max-w-44">Olá, {guestUser.name.split(' ')[0]}</span>
             <LogOut className="w-3.5 h-3.5 text-sage-800/50 ml-0.5" />
           </>
         ) : (
@@ -100,8 +86,7 @@ export function FeedToolbar({
                 viewMode === id
                   ? 'bg-sage-900 text-white shadow-2xs'
                   : 'text-sage-800 hover:bg-sage-100'
-              }`}
-            >
+              }`}>
               <Icon className="w-4 h-4" />
               <span>{label}</span>
             </button>
@@ -112,11 +97,8 @@ export function FeedToolbar({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
-          />
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-sage-200/90 text-sm font-semibold text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors shadow-2xs">
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span>Atualizar</span>
         </button>
       </div>

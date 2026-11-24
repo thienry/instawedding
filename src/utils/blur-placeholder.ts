@@ -45,11 +45,7 @@ export function getAdaptiveNetworkProfile(): AdaptiveNetworkProfile {
     }
   }
 
-  if (
-    conn.saveData ||
-    conn.effectiveType === 'slow-2g' ||
-    conn.effectiveType === '2g'
-  ) {
+  if (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') {
     return {
       tier: 'low',
       maxSizeMB: 0.28,
@@ -60,9 +56,7 @@ export function getAdaptiveNetworkProfile(): AdaptiveNetworkProfile {
 
   if (
     conn.effectiveType === '3g' ||
-    (typeof conn.downlink === 'number' &&
-      conn.downlink > 0 &&
-      conn.downlink < 1.5)
+    (typeof conn.downlink === 'number' && conn.downlink > 0 && conn.downlink < 1.5)
   ) {
     return {
       tier: 'medium',
@@ -97,10 +91,7 @@ function loadSessionLqipMap(): Record<string, string> {
  * Caches a tiny Blur-Up placeholder data URL in memory and sessionStorage
  * keyed by media URL or post ID for instant 0ms rendering on mobile networks.
  */
-export function cacheBlurPlaceholder(
-  mediaKey: string,
-  blurDataUrl: string
-): void {
+export function cacheBlurPlaceholder(mediaKey: string, blurDataUrl: string): void {
   if (!mediaKey || !blurDataUrl) return
   memoryLqipCache.set(mediaKey, blurDataUrl)
   if (typeof sessionStorage === 'undefined') return
@@ -138,9 +129,7 @@ export function getCachedBlurPlaceholder(mediaKey: string): string | null {
  * Generates an ultra-small (~250-350 bytes) 24px WebP data URL for Instagram-style
  * Blur-Up placeholders in ~3ms using Canvas.
  */
-export async function generateBlurPlaceholder(
-  fileOrBlob: Blob
-): Promise<string> {
+export async function generateBlurPlaceholder(fileOrBlob: Blob): Promise<string> {
   if (typeof document === 'undefined') return ''
   const objectUrl = URL.createObjectURL(fileOrBlob)
   try {
@@ -155,10 +144,8 @@ export async function generateBlurPlaceholder(
     const naturalW = img.naturalWidth || img.width || 24
     const naturalH = img.naturalHeight || img.height || 24
     const ratio = naturalW / naturalH
-    const targetW =
-      ratio >= 1 ? maxTiny : Math.max(8, Math.round(maxTiny * ratio))
-    const targetH =
-      ratio >= 1 ? Math.max(8, Math.round(maxTiny / ratio)) : maxTiny
+    const targetW = ratio >= 1 ? maxTiny : Math.max(8, Math.round(maxTiny * ratio))
+    const targetH = ratio >= 1 ? Math.max(8, Math.round(maxTiny / ratio)) : maxTiny
 
     const canvas = document.createElement('canvas')
     canvas.width = targetW

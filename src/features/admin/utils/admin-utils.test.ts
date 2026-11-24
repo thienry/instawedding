@@ -1,10 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { computeAdminStats } from '@/features/admin/utils/admin-stats'
-import {
-  albumEntryName,
-  buildPostsCsv,
-} from '@/features/admin/utils/album-export'
+import { albumEntryName, buildPostsCsv } from '@/features/admin/utils/album-export'
 
 import type { Post } from '@/types/domain'
 
@@ -23,9 +20,9 @@ const post = (values: Partial<Post> = {}): Post => ({
 
 it('names album entries by position, author and media type', () => {
   expect(albumEntryName(post(), 0)).toBe('foto-001-ze-da-silva.webp')
-  expect(
-    albumEntryName(post({ authorName: '???', mediaUrl: '/media/a.mp4' }), 11)
-  ).toBe('foto-012-convidado.mp4')
+  expect(albumEntryName(post({ authorName: '???', mediaUrl: '/media/a.mp4' }), 11)).toBe(
+    'foto-012-convidado.mp4'
+  )
 })
 
 it('escapes quotes and separators in the CSV', () => {
@@ -40,9 +37,7 @@ it('escapes quotes and separators in the CSV', () => {
 it.each(['=1+1', '+1', '-1', '@SUM(A1)', ' =1+1', '\t=1+1', '\r=1+1'])(
   'keeps %j as plain text in the CSV',
   (text) => {
-    const csv = buildPostsCsv([
-      post({ authorName: text, caption: text, mediaUrl: text }),
-    ])
+    const csv = buildPostsCsv([post({ authorName: text, caption: text, mediaUrl: text })])
     expect(csv.split(`"'${text}"`)).toHaveLength(4)
   }
 )

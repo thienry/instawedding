@@ -1,10 +1,7 @@
 import { Heart, Loader2, PenTool, Sparkles, X } from 'lucide-react'
 import { useState } from 'react'
 
-import {
-  generateGuestbookCardFile,
-  GUESTBOOK_THEMES,
-} from '@/utils/guestbook-card'
+import { generateGuestbookCardFile, GUESTBOOK_THEMES } from '@/utils/guestbook-card'
 
 import type { GuestbookThemeId } from '@/utils/guestbook-card'
 
@@ -28,8 +25,7 @@ export function GuestbookModal({
   authorName,
   onCardGenerated,
 }: GuestbookModalProps) {
-  const [selectedTheme, setSelectedTheme] =
-    useState<GuestbookThemeId>('emerald')
+  const [selectedTheme, setSelectedTheme] = useState<GuestbookThemeId>('emerald')
   const [message, setMessage] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
@@ -94,8 +90,7 @@ export function GuestbookModal({
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl bg-sage-100 hover:bg-sage-200 text-sage-700 transition-colors"
-            title="Fechar"
-          >
+            title="Fechar">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -120,16 +115,14 @@ export function GuestbookModal({
                     isSelected
                       ? 'ring-2 ring-gold-500 scale-102 shadow-md'
                       : 'opacity-85 hover:opacity-100'
-                  }`}
-                >
+                  }`}>
                   <div
                     className="w-4 h-4 rounded-full border border-white/40"
                     style={{ backgroundColor: theme.accentColor }}
                   />
                   <span
                     className="text-[11px] font-bold truncate max-w-full"
-                    style={{ color: theme.textColor }}
-                  >
+                    style={{ color: theme.textColor }}>
                     {theme.label}
                   </span>
                 </button>
@@ -143,17 +136,13 @@ export function GuestbookModal({
           <div className="flex items-center justify-between">
             <label
               htmlFor="guestbook-message"
-              className="text-xs font-bold text-sage-800 uppercase tracking-wider"
-            >
+              className="text-xs font-bold text-sage-800 uppercase tracking-wider">
               Sua Mensagem para Thiago &amp; Priscila:
             </label>
             <span
               className={`text-xs font-mono ${
-                message.length > 300
-                  ? 'text-rose-600 font-bold'
-                  : 'text-sage-500'
-              }`}
-            >
+                message.length > 300 ? 'text-rose-600 font-bold' : 'text-sage-500'
+              }`}>
               {message.length}/320
             </span>
           </div>
@@ -184,8 +173,7 @@ export function GuestbookModal({
                 key={index}
                 type="button"
                 onClick={() => handleApplyQuickWish(wish)}
-                className="text-left text-xs p-2.5 rounded-xl bg-sage-100/80 hover:bg-sage-200/80 text-sage-800 transition-colors border border-sage-200/70 line-clamp-1"
-              >
+                className="text-left text-xs p-2.5 rounded-xl bg-sage-100/80 hover:bg-sage-200/80 text-sage-800 transition-colors border border-sage-200/70 line-clamp-1">
                 &ldquo;{wish}&rdquo;
               </button>
             ))}
@@ -204,16 +192,14 @@ export function GuestbookModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-1/3 py-3 px-4 rounded-xl bg-sage-200 hover:bg-sage-300 text-sage-800 text-sm font-semibold transition-colors"
-          >
+            className="w-1/3 py-3 px-4 rounded-xl bg-sage-200 hover:bg-sage-300 text-sage-800 text-sm font-semibold transition-colors">
             Cancelar
           </button>
           <button
             type="button"
             disabled={isGenerating || !message.trim()}
             onClick={() => void handleGenerate()}
-            className="w-2/3 py-3 px-4 rounded-xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-700 disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] border border-gold-400/40"
-          >
+            className="w-2/3 py-3 px-4 rounded-xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-700 disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] border border-gold-400/40">
             {isGenerating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />

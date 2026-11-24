@@ -34,13 +34,11 @@ export async function POST(req: Request): Promise<Response> {
         return json({ ceremonialists: data })
       }
       case 'add': {
-        const email =
-          typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+        const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
         if (!/^[^\s@]+@[^\s@]+$/.test(email) || email.length > 254) {
           return fail(400, 'Por favor, informe um endereço de e-mail válido.')
         }
-        const name =
-          typeof body.name === 'string' ? body.name.trim().slice(0, 120) : ''
+        const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : ''
         const { data, error } = await ceremonialists()
           .insert({ email, name: name || null, created_by: user.email })
           .select(COLUMNS)

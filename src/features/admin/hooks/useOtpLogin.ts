@@ -46,8 +46,7 @@ export function useOtpLogin(): OtpLogin {
 
     if (!result.success) {
       setError(
-        result.message ||
-          'Falha ao solicitar código. Verifique se o e-mail está cadastrado.'
+        result.message || 'Falha ao solicitar código. Verifique se o e-mail está cadastrado.'
       )
       return
     }
@@ -66,9 +65,7 @@ export function useOtpLogin(): OtpLogin {
     setIsSubmitting(false)
 
     if (!result.success) {
-      setError(
-        result.message || 'Código incorreto ou expirado. Tente novamente.'
-      )
+      setError(result.message || 'Código incorreto ou expirado. Tente novamente.')
     }
   }
 

@@ -46,18 +46,13 @@ interface FilterTabsProps {
 }
 
 /** Feed filters. */
-export function FilterTabs({
-  activeTab,
-  onChange,
-  postCount,
-}: FilterTabsProps) {
+export function FilterTabs({ activeTab, onChange, postCount }: FilterTabsProps) {
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
       <button
         type="button"
         onClick={() => onChange('all')}
-        className={`shrink-0 ${tabClass(activeTab === 'all')}`}
-      >
+        className={`shrink-0 ${tabClass(activeTab === 'all')}`}>
         Todas ({postCount})
       </button>
       {ICON_TABS.map(({ id, label, Icon, iconClass }) => (
@@ -65,8 +60,7 @@ export function FilterTabs({
           key={id}
           type="button"
           onClick={() => onChange(id)}
-          className={`shrink-0 inline-flex items-center gap-1.5 ${tabClass(activeTab === id)}`}
-        >
+          className={`shrink-0 inline-flex items-center gap-1.5 ${tabClass(activeTab === id)}`}>
           <Icon className={`w-4 h-4 ${iconClass}`} />
           <span>{label}</span>
         </button>

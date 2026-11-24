@@ -1,13 +1,8 @@
-export function json(
-  body: unknown,
-  status = 200,
-  headers?: HeadersInit
-): Response {
+export function json(body: unknown, status = 200, headers?: HeadersInit): Response {
   return Response.json(body, { status, headers })
 }
 
-export const fail = (status: number, error: string): Response =>
-  json({ error }, status)
+export const fail = (status: number, error: string): Response => json({ error }, status)
 
 export async function readJson<T>(req: Request): Promise<Partial<T> | null> {
   try {

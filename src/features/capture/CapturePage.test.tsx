@@ -8,12 +8,11 @@ import { getGuestAuthService } from '@/services/guest-auth.factory'
 import { OfflineQueueService } from '@/services/offline-queue.service'
 import { setupBrowser } from '@/test/browser'
 import { compressPhoto } from '@/utils/compressor'
-import { renderFilteredAndFramedPhoto } from '@/utils/photo-filters'
+import { renderFilteredAndFramedPhoto } from '@/utils/photo-renderer'
 import { validateVideoFile } from '@/utils/video'
 
 vi.mock('@/utils/compressor', () => ({ compressPhoto: vi.fn() }))
-vi.mock('@/utils/photo-filters', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/utils/photo-filters')>()),
+vi.mock('@/utils/photo-renderer', () => ({
   renderFilteredAndFramedPhoto: vi.fn(),
 }))
 vi.mock('@/utils/video', async (importOriginal) => ({
@@ -25,9 +24,7 @@ vi.mock('@/components/capture/GuestbookModal', () => ({
     onCardGenerated,
   }: {
     onCardGenerated: (file: File, message: string) => void
-  }) => (
-    <button onClick={() => onCardGenerated(card, 'Felicidades')}>card</button>
-  ),
+  }) => <button onClick={() => onCardGenerated(card, 'Felicidades')}>card</button>,
 }))
 
 setupBrowser()
@@ -46,9 +43,7 @@ beforeEach(() => {
     valid: true,
     durationSeconds: 4,
   })
-  submit = vi
-    .spyOn(OfflineQueueService, 'submitInBackground')
-    .mockResolvedValue('task')
+  submit = vi.spyOn(OfflineQueueService, 'submitInBackground').mockResolvedValue('task')
 })
 
 function open(path = '/capture', signedIn = true) {
@@ -95,9 +90,7 @@ it('posts the compressed photo with its details', async () => {
   screen.getByText(/Você iniciou um desafio especial/)
   select(photo)
   await screen.findByAltText('Prévia da foto')
-  await waitFor(() =>
-    expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe('1')
-  )
+  await waitFor(() => expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe('1'))
   fireEvent.change(screen.getByPlaceholderText(/recado carinhoso/), {
     target: { value: '  Oi  ' },
   })
@@ -140,9 +133,7 @@ it('renders the chosen filter and frame into the photo', async () => {
     'a.jpg',
     expect.objectContaining({ filterId: 'bw', frameId: 'polaroid' })
   )
-  expect(submit).toHaveBeenCalledWith(
-    expect.objectContaining({ file: rendered })
-  )
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ file: rendered }))
 })
 
 it('posts a video untouched, without photo effects', async () => {
@@ -243,9 +234,7 @@ it('ignores the compression of a photo that was replaced', async () => {
 
 it('ignores the compression of a photo replaced by a card', async () => {
   let finish = (_file: File) => {}
-  vi.mocked(compressPhoto).mockReturnValueOnce(
-    new Promise((resolve) => (finish = resolve))
-  )
+  vi.mocked(compressPhoto).mockReturnValueOnce(new Promise((resolve) => (finish = resolve)))
   open()
   select(photo)
   fireEvent.click(await screen.findByText('Trocar mídia'))
@@ -257,8 +246,7 @@ it('ignores the compression of a photo replaced by a card', async () => {
 })
 
 it('drops the caption of a card, but keeps a typed one', async () => {
-  const caption = () =>
-    screen.getByPlaceholderText<HTMLTextAreaElement>(/recado carinhoso/)
+  const caption = () => screen.getByPlaceholderText<HTMLTextAreaElement>(/recado carinhoso/)
   open()
   fireEvent.click(screen.getByText('card'))
   expect(caption().value).toBe('Felicidades')

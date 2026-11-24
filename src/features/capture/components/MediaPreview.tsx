@@ -13,12 +13,7 @@ interface MediaPreviewProps {
 }
 
 /** Selected media as it will be posted. */
-export function MediaPreview({
-  media,
-  previewUrl,
-  isSubmitting,
-  onReset,
-}: MediaPreviewProps) {
+export function MediaPreview({ media, previewUrl, isSubmitting, onReset }: MediaPreviewProps) {
   const { isVideo, isProcessing, filterId, frameId } = media
 
   return (
@@ -28,8 +23,7 @@ export function MediaPreview({
           !isVideo && frameId === 'polaroid'
             ? 'bg-white p-4 pb-8 border border-sage-200'
             : 'border border-sage-200 bg-black/5'
-        }`}
-      >
+        }`}>
         <div className="relative rounded-2xl overflow-hidden bg-slate-950/95 flex items-center justify-center max-h-[38vh] sm:max-h-[48vh] lg:max-h-[62vh]">
           {isVideo ? (
             <video
@@ -56,8 +50,7 @@ export function MediaPreview({
             type="button"
             onClick={onReset}
             disabled={isSubmitting}
-            className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold px-3.5 py-2 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm"
-          >
+            className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold px-3.5 py-2 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm">
             {isVideo ? 'Trocar Vídeo' : 'Trocar Foto'}
           </button>
 

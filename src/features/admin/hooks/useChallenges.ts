@@ -63,9 +63,7 @@ export function useChallenges(
     try {
       const isActive = await challengeRepository.toggleChallengeActive(id)
       setChallenges((prev) =>
-        prev.map((challenge) =>
-          challenge.id === id ? { ...challenge, isActive } : challenge
-        )
+        prev.map((challenge) => (challenge.id === id ? { ...challenge, isActive } : challenge))
       )
     } catch {
       void notify('Não foi possível alterar o status do desafio.')

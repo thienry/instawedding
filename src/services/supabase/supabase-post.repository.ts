@@ -3,12 +3,7 @@ import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { isVideoUrl } from '@/utils/video'
 
 import type { PostRepository } from '@/services/contracts/post-repository.contract'
-import type {
-  CreatePostDTO,
-  Post,
-  PostMediaType,
-  ToggleLikeResult,
-} from '@/types/domain'
+import type { CreatePostDTO, Post, PostMediaType, ToggleLikeResult } from '@/types/domain'
 
 interface SupabasePostRow {
   id: string
@@ -33,8 +28,7 @@ interface SupabasePostRow {
   } | null
 }
 
-const POST_SELECT_QUERY =
-  '*, challenges(id, title, description, icon, is_active, created_at)'
+const POST_SELECT_QUERY = '*, challenges(id, title, description, icon, is_active, created_at)'
 
 const UNIQUE_VIOLATION = '23505'
 
@@ -97,9 +91,7 @@ export class SupabasePostRepository implements PostRepository {
         .single()
 
       if (!fallbackWithAvatar.error && fallbackWithAvatar.data) {
-        return this.mapRowToPost(
-          fallbackWithAvatar.data as unknown as SupabasePostRow
-        )
+        return this.mapRowToPost(fallbackWithAvatar.data as unknown as SupabasePostRow)
       }
 
       const fallbackResult = await supabase
@@ -110,24 +102,17 @@ export class SupabasePostRepository implements PostRepository {
 
       if (fallbackResult.error || !fallbackResult.data) {
         throw new Error(
-          `Failed to create post in Supabase: ${
-            fallbackResult.error?.message ?? error.message
-          }`
+          `Failed to create post in Supabase: ${fallbackResult.error?.message ?? error.message}`
         )
       }
 
-      return this.mapRowToPost(
-        fallbackResult.data as unknown as SupabasePostRow
-      )
+      return this.mapRowToPost(fallbackResult.data as unknown as SupabasePostRow)
     }
 
     return this.mapRowToPost(data as unknown as SupabasePostRow)
   }
 
-  async toggleLike(
-    postId: string,
-    sessionId: string
-  ): Promise<ToggleLikeResult> {
+  async toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult> {
     const supabase = getSupabaseClient()
 
     // Check existing like
@@ -150,9 +135,7 @@ export class SupabasePostRepository implements PostRepository {
       }
     } else {
       // Add like
-      await supabase
-        .from('likes')
-        .insert({ post_id: postId, client_session_id: sessionId })
+      await supabase.from('likes').insert({ post_id: postId, client_session_id: sessionId })
       const { data: post } = await supabase.rpc('increment_likes', {
         target_post_id: postId,
       })
@@ -189,18 +172,17 @@ export class SupabasePostRepository implements PostRepository {
   }
 
   async getAllPostsForModeration(): Promise<Post[]> {
-    const { posts } = await adminRequest<{ posts: SupabasePostRow[] }>(
-      'moderate',
-      { action: 'list_posts' }
-    )
+    const { posts } = await adminRequest<{ posts: SupabasePostRow[] }>('moderate', {
+      action: 'list_posts',
+    })
     return posts.map(this.mapRowToPost)
   }
 
   async togglePostApproval(postId: string): Promise<boolean> {
-    const { isApproved } = await adminRequest<{ isApproved: boolean }>(
-      'moderate',
-      { action: 'toggle_approval', postId }
-    )
+    const { isApproved } = await adminRequest<{ isApproved: boolean }>('moderate', {
+      action: 'toggle_approval',
+      postId,
+    })
     return isApproved
   }
 
@@ -238,10 +220,7 @@ export class SupabasePostRepository implements PostRepository {
   }
 
   /** Finds a post of the guest, even if it was hidden by a moderator. */
-  private async findOwnPost(
-    postId: string,
-    clientSessionId = 'anonymous'
-  ): Promise<Post | null> {
+  private async findOwnPost(postId: string, clientSessionId = 'anonymous'): Promise<Post | null> {
     const { data, error } = await getSupabaseClient()
       .from('posts')
       .select(POST_SELECT_QUERY)
@@ -255,9 +234,7 @@ export class SupabasePostRepository implements PostRepository {
 
   private mapRowToPost(row: SupabasePostRow): Post {
     const mediaType: PostMediaType =
-      row.media_type === 'video' || isVideoUrl(row.media_url)
-        ? 'video'
-        : 'image'
+      row.media_type === 'video' || isVideoUrl(row.media_url) ? 'video' : 'image'
 
     return {
       id: row.id,

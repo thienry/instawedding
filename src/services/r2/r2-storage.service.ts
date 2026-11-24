@@ -1,10 +1,7 @@
 import { getAuthHeaders } from '@/services/api/api.client'
 
 import type { StorageService } from '@/services/contracts/storage.contract'
-import type {
-  PresignedUploadResult,
-  UploadProgressCallback,
-} from '@/types/domain'
+import type { PresignedUploadResult, UploadProgressCallback } from '@/types/domain'
 
 export class StorageUploadError extends Error {
   readonly statusCode?: number
@@ -46,8 +43,7 @@ export class R2StorageService implements StorageService {
         error?: string
       }
       throw new StorageUploadError(
-        errorData.error ||
-          `Failed to request presigned upload URL: ${response.statusText}`,
+        errorData.error || `Failed to request presigned upload URL: ${response.statusText}`,
         response.status
       )
     }
@@ -55,13 +51,9 @@ export class R2StorageService implements StorageService {
     return (await response.json()) as PresignedUploadResult
   }
 
-  async uploadFile(
-    file: File,
-    onProgress?: UploadProgressCallback
-  ): Promise<string> {
+  async uploadFile(file: File, onProgress?: UploadProgressCallback): Promise<string> {
     const cleanContentType =
-      (file.type.split(';')[0] ?? '').trim().toLowerCase() ||
-      'application/octet-stream'
+      (file.type.split(';')[0] ?? '').trim().toLowerCase() || 'application/octet-stream'
     const { uploadUrl, publicUrl } = await this.getPresignedUploadUrl(
       file.name,
       cleanContentType,

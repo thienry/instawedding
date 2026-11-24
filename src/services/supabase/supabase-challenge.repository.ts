@@ -23,9 +23,7 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
       .order('id', { ascending: true })
 
     if (error) {
-      throw new Error(
-        `Failed to fetch challenges from Supabase: ${error.message}`
-      )
+      throw new Error(`Failed to fetch challenges from Supabase: ${error.message}`)
     }
 
     return (data as SupabaseChallengeRow[]).map(this.mapRowToChallenge)
@@ -39,9 +37,7 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
       .order('id', { ascending: true })
 
     if (error) {
-      throw new Error(
-        `Failed to fetch all challenges from Supabase: ${error.message}`
-      )
+      throw new Error(`Failed to fetch all challenges from Supabase: ${error.message}`)
     }
 
     return (data as SupabaseChallengeRow[]).map(this.mapRowToChallenge)
@@ -73,10 +69,10 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
   }
 
   async toggleChallengeActive(id: number): Promise<boolean> {
-    const { isActive } = await adminRequest<{ isActive: boolean }>(
-      'challenges',
-      { action: 'toggle', id }
-    )
+    const { isActive } = await adminRequest<{ isActive: boolean }>('challenges', {
+      action: 'toggle',
+      id,
+    })
     return isActive
   }
 

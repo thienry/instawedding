@@ -1,10 +1,4 @@
-import {
-  CheckCircle2,
-  Lock,
-  RefreshCw,
-  ShieldAlert,
-  Sparkles,
-} from 'lucide-react'
+import { CheckCircle2, Lock, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react'
 
 import { OtpCodeForm } from '@/features/admin/components/OtpCodeForm'
 import { OtpEmailForm } from '@/features/admin/components/OtpEmailForm'
@@ -33,9 +27,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
       </div>
 
       <div className="space-y-1.5">
-        <h2 className="font-serif text-2xl font-bold text-sage-900">
-          Acesso Restrito
-        </h2>
+        <h2 className="font-serif text-2xl font-bold text-sage-900">Acesso Restrito</h2>
         <p className="text-xs text-sage-800/70 max-w-xs mx-auto">
           {step === 'email'
             ? 'Painel exclusivo para os Noivos (Administração) e Cerimonial (Moderação).'
@@ -70,8 +62,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
             <button
               type="button"
               onClick={() => setCode(debugCode)}
-              className="px-2 py-0.5 rounded-md bg-amber-200 hover:bg-amber-300 text-[10px] font-bold text-amber-900 transition-colors"
-            >
+              className="px-2 py-0.5 rounded-md bg-amber-200 hover:bg-amber-300 text-[10px] font-bold text-amber-900 transition-colors">
               Preencher
             </button>
           </div>
@@ -79,19 +70,14 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
       )}
 
       <div className="w-full max-w-xs space-y-4">
-        {step === 'email' ? (
-          <OtpEmailForm login={login} />
-        ) : (
-          <OtpCodeForm login={login} />
-        )}
+        {step === 'email' ? <OtpEmailForm login={login} /> : <OtpCodeForm login={login} />}
 
         <div className="pt-3 border-t border-sage-200/80">
           <button
             type="button"
             onClick={() => void handleClearSessions()}
             className="text-[11px] text-sage-800/60 hover:text-rose-600 transition-colors inline-flex items-center gap-1.5"
-            title="Limpar qualquer resquício de sessão antiga do navegador"
-          >
+            title="Limpar qualquer resquício de sessão antiga do navegador">
             <RefreshCw className="w-3 h-3" />
             <span>Limpar sessões salvas / Deslogar tudo</span>
           </button>

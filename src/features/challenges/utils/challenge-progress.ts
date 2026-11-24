@@ -17,19 +17,15 @@ export function findCompletedChallenges(
     if (!post.challengeId) continue
     const isMineById =
       Boolean(post.clientSessionId) &&
-      (post.clientSessionId === guestUser?.id ||
-        post.clientSessionId === session.sessionId)
-    const isMineByName =
-      Boolean(guestName) && post.authorName.trim().toLowerCase() === guestName
+      (post.clientSessionId === guestUser?.id || post.clientSessionId === session.sessionId)
+    const isMineByName = Boolean(guestName) && post.authorName.trim().toLowerCase() === guestName
     if (isMineById || isMineByName) completed.add(post.challengeId)
   }
   return completed
 }
 
 /** Counts the posts of each challenge, by challenge id. */
-export function countPostsByChallenge(
-  posts: readonly Post[]
-): ReadonlyMap<number, number> {
+export function countPostsByChallenge(posts: readonly Post[]): ReadonlyMap<number, number> {
   const counts = new Map<number, number>()
   for (const { challengeId } of posts) {
     if (challengeId) counts.set(challengeId, (counts.get(challengeId) ?? 0) + 1)

@@ -7,10 +7,7 @@ import {
   getCachedBlurPlaceholder,
 } from '@/utils/blur-placeholder'
 
-import type {
-  AdaptiveNetworkProfile,
-  NetworkTier,
-} from '@/utils/blur-placeholder'
+import type { AdaptiveNetworkProfile, NetworkTier } from '@/utils/blur-placeholder'
 
 export {
   cacheBlurPlaceholder,
@@ -47,10 +44,7 @@ export interface CompressionOptions {
  * @returns The compressed image File ready for upload.
  * @throws {ImageCompressionError} When compression fails.
  */
-export async function compressPhoto(
-  file: File,
-  customOptions?: CompressionOptions
-): Promise<File> {
+export async function compressPhoto(file: File, customOptions?: CompressionOptions): Promise<File> {
   const profile = getAdaptiveNetworkProfile()
 
   // Fast-path: if file is already WebP and smaller than target budget, skip recompression

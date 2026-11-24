@@ -42,8 +42,7 @@ export function AuthorAvatar({
 
   return (
     <div
-      className={`${resolvedSizeClass} ${fallbackClassName} rounded-full font-serif font-bold flex items-center justify-center shrink-0 shadow-2xs`}
-    >
+      className={`${resolvedSizeClass} ${fallbackClassName} rounded-full font-serif font-bold flex items-center justify-center shrink-0 shadow-2xs`}>
       {initial}
     </div>
   )

@@ -2,8 +2,7 @@
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 
-// Files already over the max-lines limit. Lower this as they get split.
-const MAX_LINT_WARNINGS = 4
+const MAX_LINT_WARNINGS = 0
 
 const steps = [
   ['typecheck', 'tsc -b --pretty false'],

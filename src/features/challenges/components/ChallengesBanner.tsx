@@ -6,14 +6,8 @@ interface ChallengesBannerProps {
 }
 
 /** Page title with the progress of the guest. */
-export function ChallengesBanner({
-  completedCount,
-  totalChallenges,
-}: ChallengesBannerProps) {
-  const progressPct =
-    totalChallenges > 0
-      ? Math.round((completedCount / totalChallenges) * 100)
-      : 0
+export function ChallengesBanner({ completedCount, totalChallenges }: ChallengesBannerProps) {
+  const progressPct = totalChallenges > 0 ? Math.round((completedCount / totalChallenges) * 100) : 0
 
   return (
     <div className="bg-gradient-to-br from-sage-900 to-sage-800 text-white rounded-3xl p-6 sm:p-8 shadow-md space-y-4 relative overflow-hidden">
@@ -29,8 +23,8 @@ export function ChallengesBanner({
           Desafios da Festa
         </h2>
         <p className="text-sm sm:text-base text-white/85 leading-relaxed">
-          Encontre e registre cada momento especial abaixo para animar o telão
-          de Thiago &amp; Priscila!
+          Encontre e registre cada momento especial abaixo para animar o telão de Thiago &amp;
+          Priscila!
         </p>
       </div>
 
@@ -38,9 +32,7 @@ export function ChallengesBanner({
       {totalChallenges > 0 && (
         <div className="pt-3 space-y-2 border-t border-white/15 max-w-xl">
           <div className="flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-semibold text-white/90">
-              Seu Progresso na Festa
-            </span>
+            <span className="font-semibold text-white/90">Seu Progresso na Festa</span>
             <span className="font-bold text-gold-400">
               {completedCount} de {totalChallenges} concluídos ({progressPct}
               %)

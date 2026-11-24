@@ -45,12 +45,8 @@ export function AppLayout() {
       <div
         className={`flex-1 flex flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${
           isCollapsed ? 'md:pl-20' : 'md:pl-64 lg:pl-72'
-        }`}
-      >
-        <MobileHeader
-          adminUser={currentUser}
-          onSignOut={() => void handleSignOut()}
-        />
+        }`}>
+        <MobileHeader adminUser={currentUser} onSignOut={() => void handleSignOut()} />
         {!isOnline && <OfflineBanner />}
         <main className="flex-1 w-full pb-24 md:pb-12">
           <Outlet />

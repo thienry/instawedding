@@ -1,10 +1,6 @@
 import { useState } from 'react'
 
-import {
-  albumEntryName,
-  buildPostsCsv,
-  datedFileName,
-} from '@/features/admin/utils/album-export'
+import { albumEntryName, buildPostsCsv, datedFileName } from '@/features/admin/utils/album-export'
 import { downloadBlob } from '@/utils/download'
 import { buildZipArchive } from '@/utils/zip-exporter'
 
@@ -31,10 +27,7 @@ export interface AlbumExport {
 /** Byte order mark that makes Excel read the CSV as UTF-8. */
 const UTF8_BOM = '﻿'
 
-async function fetchZipEntry(
-  post: Post,
-  index: number
-): Promise<ZipEntry | null> {
+async function fetchZipEntry(post: Post, index: number): Promise<ZipEntry | null> {
   try {
     const response = await fetch(post.mediaUrl)
     if (!response.ok) return null
@@ -54,10 +47,7 @@ async function fetchZipEntry(
  * @param posts - Every post of the event.
  * @param dialog - Dialogs used to report failures.
  */
-export function useAlbumExport(
-  posts: readonly Post[],
-  { notify }: Dialog
-): AlbumExport {
+export function useAlbumExport(posts: readonly Post[], { notify }: Dialog): AlbumExport {
   const [progress, setProgress] = useState<ExportProgress | null>(null)
 
   const downloadAlbum = async () => {
@@ -78,16 +68,11 @@ export function useAlbumExport(
       }
 
       if (entries.length === 0) {
-        void notify(
-          'Não foi possível carregar as mídias para gerar o arquivo ZIP.'
-        )
+        void notify('Não foi possível carregar as mídias para gerar o arquivo ZIP.')
         return
       }
 
-      downloadBlob(
-        buildZipArchive(entries),
-        datedFileName('album-casamento', 'zip')
-      )
+      downloadBlob(buildZipArchive(entries), datedFileName('album-casamento', 'zip'))
     } catch {
       void notify('Ocorreu um erro ao empacotar o álbum em ZIP.')
     } finally {

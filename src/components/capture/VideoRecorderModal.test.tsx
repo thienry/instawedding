@@ -43,11 +43,7 @@ beforeEach(() => {
 })
 
 const modal = (isOpen = true) => (
-  <VideoRecorderModal
-    isOpen={isOpen}
-    onClose={onClose}
-    onVideoRecorded={onVideoRecorded}
-  />
+  <VideoRecorderModal isOpen={isOpen} onClose={onClose} onVideoRecorded={onVideoRecorded} />
 )
 
 async function open() {
@@ -59,9 +55,7 @@ async function open() {
 it('delivers the clip when the guest stops recording', async () => {
   await open()
   fireEvent.click(screen.getByLabelText('Iniciar gravação'))
-  await act(async () =>
-    fireEvent.click(screen.getByLabelText('Parar gravação'))
-  )
+  await act(async () => fireEvent.click(screen.getByLabelText('Parar gravação')))
   expect(onVideoRecorded).toHaveBeenCalledOnce()
   expect(onClose).toHaveBeenCalledOnce()
   expect(stopTrack).toHaveBeenCalled()
@@ -89,9 +83,7 @@ it('turns off a camera that is ready only after closing', async () => {
 it('keeps only the camera of the last request', async () => {
   let readyFirst = (_stream: unknown) => {}
   const stopFirst = vi.fn()
-  getUserMedia.mockReturnValueOnce(
-    new Promise((resolve) => (readyFirst = resolve))
-  )
+  getUserMedia.mockReturnValueOnce(new Promise((resolve) => (readyFirst = resolve)))
   const { rerender } = await open()
   rerender(modal(false))
   rerender(modal())

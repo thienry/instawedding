@@ -22,9 +22,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
           <h1 className="font-serif text-xl font-bold tracking-tight text-sage-900 leading-none">
             Thiago &amp; Priscila
           </h1>
-          <span className="text-[11px] text-sage-800/70 font-medium">
-            Mural do Casamento
-          </span>
+          <span className="text-[11px] text-sage-800/70 font-medium">Mural do Casamento</span>
         </div>
       </Link>
 
@@ -34,8 +32,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
             <Link
               to="/admin"
               className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-              title={`Conectado como ${adminUser.name}`}
-            >
+              title={`Conectado como ${adminUser.name}`}>
               <span className="text-xs font-bold px-1.5 py-0.5 rounded-sm bg-gold-500/20 text-gold-500">
                 {adminUser.role === 'admin' ? '👑 Admin' : '🛡️ Mod'}
               </span>
@@ -45,8 +42,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
               type="button"
               onClick={onSignOut}
               title="Encerrar sessão administrativa"
-              className="flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-full transition-colors"
-            >
+              className="flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-full transition-colors">
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -54,8 +50,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
           <Link
             to="/admin"
             title="Painel de Moderação"
-            className="p-2.5 rounded-full text-sage-800/70 hover:text-sage-900 hover:bg-sage-100 transition-colors"
-          >
+            className="p-2.5 rounded-full text-sage-800/70 hover:text-sage-900 hover:bg-sage-100 transition-colors">
             <Shield className="w-5 h-5" />
           </Link>
         )}
@@ -64,8 +59,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
           <Link
             to="/projector"
             title="Abrir Modo Telão"
-            className="p-2.5 rounded-full text-sage-800/80 hover:text-sage-900 hover:bg-sage-100 transition-colors"
-          >
+            className="p-2.5 rounded-full text-sage-800/80 hover:text-sage-900 hover:bg-sage-100 transition-colors">
             <Tv className="w-5 h-5" />
           </Link>
         )}

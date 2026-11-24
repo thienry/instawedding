@@ -1,10 +1,6 @@
 import { expect, it } from 'vitest'
 
-import {
-  filterFeedPosts,
-  isOwnPost,
-  mergeNewPosts,
-} from '@/features/feed/utils/feed-posts'
+import { filterFeedPosts, isOwnPost, mergeNewPosts } from '@/features/feed/utils/feed-posts'
 import { countLikes, rankContributors } from '@/utils/post-stats'
 
 import type { FeedFilter } from '@/features/feed/utils/feed-posts'
@@ -54,10 +50,7 @@ it('filters by tab and challenge', () => {
 })
 
 it('sorts by likes without changing the input', () => {
-  expect(filteredIds({ tab: 'most-liked' }).slice(0, 2)).toEqual([
-    'challenge',
-    'liked',
-  ])
+  expect(filteredIds({ tab: 'most-liked' }).slice(0, 2)).toEqual(['challenge', 'liked'])
   expect(posts[0]?.id).toBe('liked')
 })
 

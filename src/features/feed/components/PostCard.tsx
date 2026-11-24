@@ -45,11 +45,8 @@ export function PostCard({
   return (
     <article
       className={`bg-white rounded-3xl overflow-hidden border shadow-xs hover:shadow-md transition-all flex flex-col justify-between [content-visibility:auto] [contain-intrinsic-size:550px] ${
-        isNew
-          ? 'border-gold-400/70 ring-1 ring-gold-400/25'
-          : 'border-sage-200/80'
-      }`}
-    >
+        isNew ? 'border-gold-400/70 ring-1 ring-gold-400/25' : 'border-sage-200/80'
+      }`}>
       <div>
         <PostHeader
           post={post}

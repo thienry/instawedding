@@ -20,10 +20,7 @@ interface ReadySlide {
  * @param post - Post to show.
  * @param nextPost - Post loaded in advance.
  */
-export function useReadySlide(
-  post: Post | undefined,
-  nextPost: Post | undefined
-): ReadySlide {
+export function useReadySlide(post: Post | undefined, nextPost: Post | undefined): ReadySlide {
   const [loaded, setLoaded] = useState<Slide | null>(null)
 
   useEffect(() => {

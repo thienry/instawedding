@@ -46,9 +46,7 @@ it('reveals more posts on scroll and starts over on another tab', async () => {
   vi.stubGlobal(
     'IntersectionObserver',
     class {
-      private readonly callback: (
-        entries: { isIntersecting: boolean }[]
-      ) => void
+      private readonly callback: (entries: { isIntersecting: boolean }[]) => void
       constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
         this.callback = callback
       }
@@ -77,9 +75,7 @@ it('likes on double tap', async () => {
   fireEvent.click(media)
   expect(screen.getByTitle('Curtir foto').textContent).toBe('0')
   fireEvent.click(media)
-  await waitFor(() =>
-    expect(screen.getByTitle('Curtir foto').textContent).toBe('1')
-  )
+  await waitFor(() => expect(screen.getByTitle('Curtir foto').textContent).toBe('1'))
 })
 
 it('refreshes only when pulled past the threshold', async () => {
@@ -124,7 +120,5 @@ it('downloads with an ASCII name', async () => {
     fileName = this.download
   })
   fireEvent.click(await screen.findByTitle('Baixar foto'))
-  await waitFor(() =>
-    expect(fileName).toBe('casamento-thiago-e-priscila-jose-avila-p0.webp')
-  )
+  await waitFor(() => expect(fileName).toBe('casamento-thiago-e-priscila-jose-avila-p0.webp'))
 })

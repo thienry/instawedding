@@ -14,11 +14,8 @@ export function ChallengeSelect({ draft }: ChallengeSelectProps) {
       </label>
       <select
         value={draft.challengeId ?? ''}
-        onChange={(e) =>
-          draft.setChallengeId(e.target.value ? Number(e.target.value) : null)
-        }
-        className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20"
-      >
+        onChange={(e) => draft.setChallengeId(e.target.value ? Number(e.target.value) : null)}
+        className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20">
         <option value="">Nenhum desafio (Publicação livre)</option>
         {draft.challenges.map((c) => (
           <option key={c.id} value={c.id}>

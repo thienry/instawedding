@@ -36,11 +36,8 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
               </h3>
               <span
                 className={`text-xs font-bold px-2.5 py-0.5 rounded-md shrink-0 ${
-                  isAdmin
-                    ? 'bg-gold-500/20 text-gold-500'
-                    : 'bg-sage-200 text-sage-800'
-                }`}
-              >
+                  isAdmin ? 'bg-gold-500/20 text-gold-500' : 'bg-sage-200 text-sage-800'
+                }`}>
                 {isAdmin ? '👑 Admin' : '🛡️ Moderador'}
               </span>
             </div>
@@ -54,8 +51,7 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           type="button"
           onClick={() => void onSignOut()}
           title="Encerrar sessão e deslogar"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition-colors shadow-2xs shrink-0"
-        >
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition-colors shadow-2xs shrink-0">
           <LogOut className="w-4 h-4" />
           <span>Sair da Conta</span>
         </button>
@@ -66,8 +62,7 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs"
-          >
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-sage-200 text-sm text-sage-800 hover:text-sage-900 hover:bg-sage-100 transition-colors font-semibold shadow-2xs">
             <ArrowLeft className="w-4 h-4" />
             <span>Voltar para o Feed</span>
           </button>
@@ -75,8 +70,7 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           <button
             type="button"
             onClick={() => navigate('/projector')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-sage-900 hover:bg-sage-800 text-sm text-white transition-colors font-semibold shadow-2xs"
-          >
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-sage-900 hover:bg-sage-800 text-sm text-white transition-colors font-semibold shadow-2xs">
             <Tv className="w-4 h-4 text-gold-400" />
             <span>Abrir Modo Telão</span>
           </button>

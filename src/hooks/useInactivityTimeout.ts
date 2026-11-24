@@ -60,14 +60,8 @@ export function clearLastActivityTimestamp(): void {
  * Tracks user interactions and automatically logs out authenticated guests and admins
  * after a specified period of continuous inactivity.
  */
-export function useInactivityTimeout(
-  options: UseInactivityTimeoutOptions = {}
-): void {
-  const {
-    timeoutMs = resolveConfiguredTimeout(),
-    enabled = true,
-    onTimeout,
-  } = options
+export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}): void {
+  const { timeoutMs = resolveConfiguredTimeout(), enabled = true, onTimeout } = options
 
   const lastWriteRef = useRef<number>(0)
   const isLoggingOutRef = useRef<boolean>(false)

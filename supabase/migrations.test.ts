@@ -13,15 +13,10 @@ const HIDDEN = '44444444-4444-4444-4444-444444444444'
 
 let db: PGlite
 
-const apply = (file: string) =>
-  db.exec(readFileSync(path.join(DIR, file), 'utf8'))
+const apply = (file: string) => db.exec(readFileSync(path.join(DIR, file), 'utf8'))
 
 // Runs SQL as a Supabase role, the way PostgREST does.
-async function as(
-  role: 'anon' | 'authenticated' | 'service_role',
-  sql: string,
-  uid = ''
-) {
+async function as(role: 'anon' | 'authenticated' | 'service_role', sql: string, uid = '') {
   return db.transaction(async (tx) => {
     await tx.exec(`SET LOCAL ROLE ${role}`)
     await tx.query(`SELECT set_config('test.uid', $1, true)`, [uid])
@@ -100,14 +95,11 @@ describe('posts', () => {
     ['author_name', `repeat('a', 121)`],
     ['caption', `repeat('a', 2001)`],
   ])('rejects a forged %s', async (column, value) => {
-    await expect(ana(insertPost(ANA, { [column]: value }))).rejects.toThrow(
-      'row-level security'
-    )
+    await expect(ana(insertPost(ANA, { [column]: value }))).rejects.toThrow('row-level security')
   })
 
   it('lets guests delete only their own posts, even hidden ones', async () => {
-    const del = (id: string) =>
-      `DELETE FROM posts WHERE id='${id}' RETURNING id`
+    const del = (id: string) => `DELETE FROM posts WHERE id='${id}' RETURNING id`
     expect(await anon(del(POST))).toEqual([])
     expect(await bob(del(POST))).toEqual([])
     expect(await ana(del(POST))).toHaveLength(1)
@@ -124,9 +116,7 @@ describe('posts', () => {
 it('keeps challenges read-only', async () => {
   expect((await anon('SELECT id FROM challenges')).length).toBe(5)
   expect(await ana('DELETE FROM challenges RETURNING id')).toEqual([])
-  expect(await ana(`UPDATE challenges SET title = 'x' RETURNING id`)).toEqual(
-    []
-  )
+  expect(await ana(`UPDATE challenges SET title = 'x' RETURNING id`)).toEqual([])
   await expect(
     ana(`INSERT INTO challenges (title, description) VALUES ('a', 'b')`)
   ).rejects.toThrow('row-level security')
@@ -145,9 +135,9 @@ it('hides ceremonialists and blocks self-promotion', async () => {
   for (const run of [anon, ana]) {
     expect(await run('SELECT * FROM ceremonialists')).toEqual([])
     expect(await run('DELETE FROM ceremonialists RETURNING id')).toEqual([])
-    await expect(
-      run(`INSERT INTO ceremonialists (email) VALUES ('evil@x.test')`)
-    ).rejects.toThrow('row-level security')
+    await expect(run(`INSERT INTO ceremonialists (email) VALUES ('evil@x.test')`)).rejects.toThrow(
+      'row-level security'
+    )
   }
 })
 
@@ -172,9 +162,7 @@ describe('likes', () => {
     }
     await bob('DELETE FROM likes')
     expect(await bob(count('decrement_likes'))).toEqual([{ likes_count: 1 }])
-    await expect(anon(count('increment_likes'))).rejects.toThrow(
-      'permission denied'
-    )
+    await expect(anon(count('increment_likes'))).rejects.toThrow('permission denied')
   })
 })
 
@@ -194,25 +182,19 @@ describe('rate limits', () => {
   it('are out of reach for clients', async () => {
     for (const run of [anon, ana]) {
       await expect(run(hit)).rejects.toThrow('permission denied')
-      await expect(run('SELECT * FROM rate_limits')).rejects.toThrow(
-        'permission denied'
-      )
+      await expect(run('SELECT * FROM rate_limits')).rejects.toThrow('permission denied')
     }
   })
 })
 
 it('gives the server full access', async () => {
   expect(await as('service_role', 'SELECT id FROM posts')).toHaveLength(2)
-  expect(
-    await as('service_role', 'SELECT id FROM ceremonialists')
-  ).toHaveLength(1)
+  expect(await as('service_role', 'SELECT id FROM ceremonialists')).toHaveLength(1)
 })
 
 it('can be rolled back by the baseline and applied again', async () => {
   await apply(FILES[0]!)
-  expect(await anon(`UPDATE posts SET caption='x' RETURNING id`)).not.toEqual(
-    []
-  )
+  expect(await anon(`UPDATE posts SET caption='x' RETURNING id`)).not.toEqual([])
   await apply(FILES[2]!)
   expect(await anon(`UPDATE posts SET caption='x' RETURNING id`)).toEqual([])
 })

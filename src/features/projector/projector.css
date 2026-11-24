@@ -7,11 +7,7 @@
 
 .projector-ground {
   color: #faf8f5;
-  background: radial-gradient(
-    120% 90% at 30% 20%,
-    #1d3526,
-    var(--projector-ground) 70%
-  );
+  background: radial-gradient(120% 90% at 30% 20%, #1d3526, var(--projector-ground) 70%);
 }
 
 /* Backdrop: blurred while tiny and then scaled up, which is far cheaper than
@@ -397,8 +393,7 @@
   }
   to {
     opacity: 0;
-    transform: rotate(var(--angle)) translateY(calc(var(--distance) * -1))
-      scale(0.3);
+    transform: rotate(var(--angle)) translateY(calc(var(--distance) * -1)) scale(0.3);
   }
 }
 

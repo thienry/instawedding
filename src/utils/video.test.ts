@@ -15,9 +15,7 @@ it('normalizes MIME types', () => {
 it('detects video files by MIME type or extension', () => {
   expect(isVideoFile(new Blob([], { type: 'video/mp4' }))).toBe(true)
   expect(isVideoFile(new File([], 'CLIP.MOV'))).toBe(true)
-  expect(isVideoFile(new File([], 'a.webp', { type: 'image/webp' }))).toBe(
-    false
-  )
+  expect(isVideoFile(new File([], 'a.webp', { type: 'image/webp' }))).toBe(false)
 })
 
 it.each([
@@ -30,9 +28,7 @@ it.each([
 })
 
 it('prefers the explicit media type over the URL', () => {
-  expect(resolvePostMediaType({ mediaUrl: 'a.mp4', mediaType: 'image' })).toBe(
-    'image'
-  )
+  expect(resolvePostMediaType({ mediaUrl: 'a.mp4', mediaType: 'image' })).toBe('image')
   expect(resolvePostMediaType({ mediaUrl: 'a.mp4' })).toBe('video')
 })
 

@@ -16,8 +16,7 @@ beforeEach(() => {
   })
 })
 
-const create = () =>
-  repo.createPost({ authorName: ' Ana ', mediaUrl: 'a.webp', challengeId: 1 })
+const create = () => repo.createPost({ authorName: ' Ana ', mediaUrl: 'a.webp', challengeId: 1 })
 
 describe('MockPostRepository', () => {
   it('creates, links the challenge and broadcasts', async () => {

@@ -34,8 +34,7 @@ export function PostDetailsForm({
 
       <div className="space-y-1.5">
         <label className="text-sm font-bold text-sage-900 block">
-          Legenda{' '}
-          <span className="text-sage-800/50 font-normal">(opcional)</span>
+          Legenda <span className="text-sage-800/50 font-normal">(opcional)</span>
         </label>
         <textarea
           rows={2}
@@ -52,13 +51,11 @@ export function PostDetailsForm({
 
       {/* Implicit Terms & LGPD Consent Notice */}
       <p className="pt-1 text-xs text-sage-800/75 leading-relaxed">
-        Ao utilizar o aplicativo e publicar fotos ou vídeos, você concorda com
-        os{' '}
+        Ao utilizar o aplicativo e publicar fotos ou vídeos, você concorda com os{' '}
         <button
           type="button"
           onClick={onOpenTerms}
-          className="font-bold text-sage-900 underline hover:text-gold-500 inline-flex items-center gap-1"
-        >
+          className="font-bold text-sage-900 underline hover:text-gold-500 inline-flex items-center gap-1">
           <span>Termos de Uso &amp; Privacidade</span>
           <ExternalLink className="w-3 h-3" />
         </button>{' '}
@@ -75,8 +72,7 @@ export function PostDetailsForm({
       <button
         type="submit"
         disabled={isSubmitting || media.isProcessing}
-        className="w-full py-4 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2"
-      >
+        className="w-full py-4 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm tracking-wide uppercase transition-all shadow-md flex items-center justify-center space-x-2">
         {isSubmitting ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />

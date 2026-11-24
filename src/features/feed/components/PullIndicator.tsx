@@ -20,14 +20,11 @@ export function PullIndicator({ pull, isRefreshing }: PullIndicatorProps) {
       }}
       className={`md:hidden flex items-center justify-center overflow-hidden ${
         isPulling ? '' : 'transition-all duration-300 ease-out'
-      }`}
-    >
+      }`}>
       <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-sage-200 shadow-sm text-xs font-semibold text-sage-900">
         <RefreshCw
           style={
-            !isRefreshing
-              ? { transform: `rotate(${Math.round(progress * 360)}deg)` }
-              : undefined
+            !isRefreshing ? { transform: `rotate(${Math.round(progress * 360)}deg)` } : undefined
           }
           className={`w-4 h-4 text-gold-500 ${
             isRefreshing ? 'animate-spin' : 'transition-transform duration-75'

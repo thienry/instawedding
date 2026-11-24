@@ -37,13 +37,8 @@ function toErrorFeedback(error: unknown, fallback: string): Feedback {
  * @param isEnabled - Whether the user may manage them; loads nothing otherwise.
  * @param dialog - Dialogs used to confirm revocations.
  */
-export function useCeremonialists(
-  isEnabled: boolean,
-  { confirm }: Dialog
-): CeremonialistAdmin {
-  const [ceremonialists, setCeremonialists] = useState<
-    readonly Ceremonialist[]
-  >([])
+export function useCeremonialists(isEnabled: boolean, { confirm }: Dialog): CeremonialistAdmin {
+  const [ceremonialists, setCeremonialists] = useState<readonly Ceremonialist[]>([])
   const [draft, setDraft] = useState(EMPTY_DRAFT)
   const [isAdding, setIsAdding] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
@@ -79,9 +74,7 @@ export function useCeremonialists(
       })
       setCeremonialists((prev) => [
         created,
-        ...prev.filter(
-          (item) => item.email.toLowerCase() !== created.email.toLowerCase()
-        ),
+        ...prev.filter((item) => item.email.toLowerCase() !== created.email.toLowerCase()),
       ])
       setDraft(EMPTY_DRAFT)
       setFeedback({
@@ -89,9 +82,7 @@ export function useCeremonialists(
         message: `Acesso concedido com sucesso para ${email}!`,
       })
     } catch (error) {
-      setFeedback(
-        toErrorFeedback(error, 'Falha ao conceder acesso de cerimonial.')
-      )
+      setFeedback(toErrorFeedback(error, 'Falha ao conceder acesso de cerimonial.'))
     } finally {
       setIsAdding(false)
     }

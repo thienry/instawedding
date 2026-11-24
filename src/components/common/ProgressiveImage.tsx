@@ -34,8 +34,7 @@ export function ProgressiveImage({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const blurPlaceholder =
-    (cacheKey ? getCachedBlurPlaceholder(cacheKey) : null) ??
-    getCachedBlurPlaceholder(src)
+    (cacheKey ? getCachedBlurPlaceholder(cacheKey) : null) ?? getCachedBlurPlaceholder(src)
 
   // Predictive viewport preloader: starts fetching 650px before user scrolls to the photo
   useEffect(() => {
@@ -91,11 +90,7 @@ export function ProgressiveImage({
   }
 
   const handleImageError = () => {
-    if (
-      retryCount < 1 &&
-      !src.startsWith('data:') &&
-      !src.startsWith('blob:')
-    ) {
+    if (retryCount < 1 && !src.startsWith('data:') && !src.startsWith('blob:')) {
       // Automatic silent retry once after 1.2s on flaky mobile signal
       setTimeout(() => {
         setRetryCount((prev) => prev + 1)
@@ -108,14 +103,12 @@ export function ProgressiveImage({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-full flex items-center justify-center overflow-hidden bg-slate-950 ${containerClassName}`}
-    >
+      className={`relative w-full h-full flex items-center justify-center overflow-hidden bg-slate-950 ${containerClassName}`}>
       {/* Ambient Blurred Backdrop: Eliminates black bars on mismatched aspect ratios / desktop web */}
       {shouldLoad && !hasError && (
         <div
           aria-hidden="true"
-          className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
-        >
+          className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
           <img
             src={effectiveSrc}
             alt=""
@@ -131,8 +124,7 @@ export function ProgressiveImage({
       {!isLoaded && !hasError && (
         <div
           aria-hidden="true"
-          className="absolute inset-0 overflow-hidden pointer-events-none z-[1]"
-        >
+          className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
           {blurPlaceholder ? (
             <img
               src={blurPlaceholder}
@@ -158,8 +150,7 @@ export function ProgressiveImage({
               setHasError(false)
               setRetryCount((prev) => prev + 1)
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-colors"
-          >
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-colors">
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Tentar novamente</span>
           </button>

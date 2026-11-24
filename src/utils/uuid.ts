@@ -4,18 +4,12 @@
  */
 export function generateUUID(): string {
   // 1. Native crypto.randomUUID (available in Secure Contexts: HTTPS or localhost)
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
   }
 
   // 2. Web Crypto API getRandomValues (widely supported even in insecure mobile contexts)
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.getRandomValues === 'function'
-  ) {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const bytes = new Uint8Array(16)
     crypto.getRandomValues(bytes)
     // Set version 4 and variant bits

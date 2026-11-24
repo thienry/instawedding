@@ -29,8 +29,7 @@ export function Sidebar({
     <aside
       className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 bg-white border-r border-sage-200/80 z-30 justify-between shadow-2xs transition-[width,padding] duration-300 ease-in-out ${
         isCollapsed ? 'md:w-20 p-3' : 'md:w-64 lg:w-72 p-5'
-      }`}
-    >
+      }`}>
       <div className="space-y-6">
         {/* Brand Logo & Title */}
         <Link
@@ -38,8 +37,7 @@ export function Sidebar({
           title="Thiago & Priscila — Álbum & Mural"
           className={`flex items-center py-1 group rounded-2xl transition-all duration-300 ease-in-out ${
             isCollapsed ? 'justify-center px-0' : 'gap-3.5 px-2'
-          }`}
-        >
+          }`}>
           <img
             src="/favicon.svg"
             alt="Logo Thiago & Priscila"
@@ -49,9 +47,7 @@ export function Sidebar({
             <h1 className="font-serif text-xl font-bold tracking-tight text-sage-900 leading-tight truncate">
               Thiago &amp; Priscila
             </h1>
-            <p className="text-xs font-medium text-sage-800/65 truncate">
-              Álbum &amp; Mural
-            </p>
+            <p className="text-xs font-medium text-sage-800/65 truncate">Álbum &amp; Mural</p>
           </div>
         </Link>
 
@@ -61,8 +57,7 @@ export function Sidebar({
           title="Postar Nova Foto"
           className={`flex items-center justify-center w-full rounded-2xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-900 text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all duration-300 ease-in-out ${
             isCollapsed ? 'py-3.5 px-0' : 'gap-2.5 py-3.5 px-4'
-          }`}
-        >
+          }`}>
           <Camera className="w-5 h-5 text-gold-400 shrink-0" />
           <span className={labelTransitionClass}>Postar Nova Foto</span>
         </Link>

@@ -33,19 +33,14 @@ export function PostMedia({
   return (
     <div
       onClick={onTap}
-      className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group"
-    >
+      className="relative bg-slate-950/95 flex items-center justify-center overflow-hidden select-none cursor-pointer group">
       {isVideo ? (
         <FeedVideoPlayer
           src={post.mediaUrl}
           cacheKey={post.id}
-          containerClassName={
-            isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'
-          }
+          containerClassName={isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'}
           className={
-            isGrid
-              ? 'w-full aspect-4/3 object-contain'
-              : 'w-full max-h-[75vh] object-contain'
+            isGrid ? 'w-full aspect-4/3 object-contain' : 'w-full max-h-[75vh] object-contain'
           }
         />
       ) : (
@@ -54,13 +49,9 @@ export function PostMedia({
           alt={post.caption || `Foto por ${post.authorName}`}
           cacheKey={post.id}
           priority={isPriority}
-          containerClassName={
-            isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'
-          }
+          containerClassName={isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'}
           className={
-            isGrid
-              ? 'w-full aspect-4/3 object-contain'
-              : 'w-full max-h-[75vh] object-contain'
+            isGrid ? 'w-full aspect-4/3 object-contain' : 'w-full max-h-[75vh] object-contain'
           }
         />
       )}
@@ -72,8 +63,7 @@ export function PostMedia({
           onOpen()
         }}
         aria-label="Ver em tela cheia"
-        className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm z-10"
-      >
+        className="absolute top-3 right-3 p-2.5 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-xs transition-opacity opacity-85 group-hover:opacity-100 shadow-sm z-10">
         <Maximize2 className="w-4 h-4" />
       </button>
 
