@@ -13,7 +13,7 @@ const ChallengesPage = lazy(() =>
   import('@/pages/ChallengesPage').then((m) => ({ default: m.ChallengesPage }))
 )
 const AdminPage = lazy(() =>
-  import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage }))
+  import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage }))
 )
 const ProjectorPage = lazy(() =>
   import('@/pages/ProjectorPage').then((m) => ({ default: m.ProjectorPage }))

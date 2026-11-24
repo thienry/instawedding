@@ -11,14 +11,14 @@ const INITIAL_MOCK_CEREMONIALISTS: Ceremonialist[] = [
     email: 'cerimonial@gmail.com',
     name: 'Equipe de Cerimonial',
     createdAt: new Date().toISOString(),
-    createdBy: 'thmoura14@gmail.com',
+    createdBy: 'admin@example.com',
   },
   {
     id: 'mock-ceremonial-2',
     email: 'assessoria@gmail.com',
     name: 'Assessoria do Evento',
     createdAt: new Date().toISOString(),
-    createdBy: 'thmoura14@gmail.com',
+    createdBy: 'admin@example.com',
   },
 ]
 
@@ -63,7 +63,7 @@ export class MockCeremonialistRepository implements CeremonialistRepository {
       email: normalizedEmail,
       name: dto.name?.trim() || null,
       createdAt: new Date().toISOString(),
-      createdBy: 'thmoura14@gmail.com',
+      createdBy: 'admin@example.com',
     }
 
     const updated = [newItem, ...list]

@@ -9,7 +9,7 @@ import {
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { expect, it, vi } from 'vitest'
 
-import { AdminPage } from '@/pages/AdminPage'
+import { AdminPage } from '@/features/admin/AdminPage'
 import { CapturePage } from '@/pages/CapturePage'
 import { ChallengesPage } from '@/pages/ChallengesPage'
 import { FeedPage } from '@/pages/FeedPage'
