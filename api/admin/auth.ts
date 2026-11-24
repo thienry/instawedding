@@ -1,44 +1,11 @@
-import { getAdminTokenFromRequest, verifyAdminToken } from '../_lib/security.js'
-
-export async function POST(): Promise<Response> {
-  return new Response(
-    JSON.stringify({
-      error:
-        'A autenticação via PIN foi descontinuada e desativada por segurança. Utilize o login seguro via Google OAuth.',
-    }),
-    {
-      status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        Allow: 'GET',
-      },
-    }
-  )
-}
+import { authorize } from '../_lib/auth.js'
+import { json } from '../_lib/http.js'
 
 export async function GET(req: Request): Promise<Response> {
-  const token = getAdminTokenFromRequest(req)
-  const payload = token ? verifyAdminToken(token) : null
-
-  if (!payload) {
-    return new Response(JSON.stringify({ authenticated: false }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  return new Response(
-    JSON.stringify({
-      authenticated: true,
-      user: {
-        email: payload.email,
-        name: payload.name,
-        role: payload.role,
-      },
-    }),
-    {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }
+  const user = await authorize(req)
+  return json(
+    user ? { authenticated: true, user } : { authenticated: false },
+    200,
+    { 'Cache-Control': 'no-store' }
   )
 }

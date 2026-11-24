@@ -35,11 +35,12 @@ import {
   getChallengeRepository,
   getPostRepository,
 } from '@/services/repositories.factory'
-import { buildZipArchive, type ZipEntry } from '@/utils/zip-exporter'
 import { resolvePostMediaType } from '@/utils/video'
+import { buildZipArchive } from '@/utils/zip-exporter'
 
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 import type { Ceremonialist, Challenge, Post } from '@/types/domain'
+import type { ZipEntry } from '@/utils/zip-exporter'
 
 type AdminTab = 'photos' | 'challenges' | 'ceremonial'
 type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
@@ -293,9 +294,7 @@ export function AdminPage() {
       (p) => p.challengeId != null
     ).length
     const challengeRate =
-      totalPosts > 0
-        ? Math.round((challengePostsCount / totalPosts) * 100)
-        : 0
+      totalPosts > 0 ? Math.round((challengePostsCount / totalPosts) * 100) : 0
 
     return {
       totalPosts,
@@ -317,7 +316,7 @@ export function AdminPage() {
         prev.map((p) => (p.id === postId ? { ...p, isApproved: newStatus } : p))
       )
     } catch {
-      // Toggle failure
+      alert('Não foi possível alterar a visibilidade da foto.')
     }
   }
 
@@ -336,10 +335,10 @@ export function AdminPage() {
     }
 
     try {
-      await postRepo.deletePost(postId)
+      await postRepo.deletePostAsAdmin(postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch {
-      // Delete failure
+      alert('Não foi possível excluir a foto. Tente novamente.')
     }
   }
 
@@ -353,8 +352,12 @@ export function AdminPage() {
       'ATENÇÃO: Isso apagará todas as fotos de teste do banco antes do evento oficial.\nDigite "ZERAR" para confirmar:'
     )
     if (confirmation === 'ZERAR') {
-      await postRepo.clearAllPosts()
-      setPosts([])
+      try {
+        await postRepo.clearAllPosts()
+        setPosts([])
+      } catch {
+        alert('Não foi possível zerar o feed. Tente novamente.')
+      }
     }
   }
 
@@ -482,7 +485,7 @@ export function AdminPage() {
       setNewChallengeDesc('')
       setNewChallengeIcon('✨')
     } catch {
-      alert('Falha ao criar desafio. Verifique as permissões no Supabase.')
+      alert('Não foi possível criar o desafio. Tente novamente.')
     } finally {
       setIsCreatingChallenge(false)
     }
@@ -1378,7 +1381,8 @@ export function AdminPage() {
                   Conceder Acesso de Cerimonial
                 </h3>
                 <p className="text-xs text-sage-800/70 mt-0.5">
-                  Adicione e-mails da assessoria/cerimonial para que possam moderar fotos e gerenciar desafios.
+                  Adicione e-mails da assessoria/cerimonial para que possam
+                  moderar fotos e gerenciar desafios.
                 </p>
               </div>
             </div>
@@ -1458,7 +1462,8 @@ export function AdminPage() {
                   Cerimonialistas Cadastrados ({ceremonialists.length})
                 </h3>
                 <p className="text-xs text-sage-800/70">
-                  Usuários com acesso concedido entram no painel de moderação com papel de Cerimonial.
+                  Usuários com acesso concedido entram no painel de moderação
+                  com papel de Cerimonial.
                 </p>
               </div>
             </div>
@@ -1467,7 +1472,8 @@ export function AdminPage() {
               <div className="p-8 text-center border-2 border-dashed border-sage-200 rounded-2xl space-y-2">
                 <Users className="w-8 h-8 text-sage-800/40 mx-auto" />
                 <p className="text-xs text-sage-800/70">
-                  Nenhum cerimonialista cadastrado ainda. Adicione o primeiro e-mail no formulário acima.
+                  Nenhum cerimonialista cadastrado ainda. Adicione o primeiro
+                  e-mail no formulário acima.
                 </p>
               </div>
             ) : (

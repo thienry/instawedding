@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '@/services/supabase/supabase.client'
+import { adminRequest } from '@/services/api/api.client'
 
 import type { CeremonialistRepository } from '@/services/contracts/ceremonialist-repository.contract'
 import type { Ceremonialist, CreateCeremonialistDTO } from '@/types/domain'
@@ -13,64 +13,21 @@ interface SupabaseCeremonialistRow {
 
 export class SupabaseCeremonialistRepository implements CeremonialistRepository {
   async getCeremonialists(): Promise<Ceremonialist[]> {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase
-      .from('ceremonialists')
-      .select('id, email, name, created_at, created_by')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      throw new Error(`Failed to fetch ceremonialists: ${error.message}`)
-    }
-
-    return (data as SupabaseCeremonialistRow[]).map(this.mapRowToCeremonialist)
+    const { ceremonialists } = await adminRequest<{
+      ceremonialists: SupabaseCeremonialistRow[]
+    }>('ceremonialists', { action: 'list' })
+    return ceremonialists.map(this.mapRowToCeremonialist)
   }
 
   async addCeremonialist(dto: CreateCeremonialistDTO): Promise<Ceremonialist> {
-    const supabase = getSupabaseClient()
-    const normalizedEmail = dto.email.trim().toLowerCase()
-
-    const { data, error } = await supabase
-      .from('ceremonialists')
-      .insert({
-        email: normalizedEmail,
-        name: dto.name?.trim() || null,
-        created_by: 'thmoura14@gmail.com',
-      })
-      .select('id, email, name, created_at, created_by')
-      .single()
-
-    if (error) {
-      throw new Error(`Failed to add ceremonialist: ${error.message}`)
-    }
-
-    return this.mapRowToCeremonialist(data as SupabaseCeremonialistRow)
+    const { ceremonialist } = await adminRequest<{
+      ceremonialist: SupabaseCeremonialistRow
+    }>('ceremonialists', { action: 'add', email: dto.email, name: dto.name })
+    return this.mapRowToCeremonialist(ceremonialist)
   }
 
   async removeCeremonialist(id: string): Promise<void> {
-    const supabase = getSupabaseClient()
-    const { error } = await supabase
-      .from('ceremonialists')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      throw new Error(`Failed to remove ceremonialist: ${error.message}`)
-    }
-  }
-
-  async isCeremonialistEmail(email: string): Promise<boolean> {
-    const supabase = getSupabaseClient()
-    const normalizedEmail = email.trim().toLowerCase()
-
-    const { data, error } = await supabase
-      .from('ceremonialists')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle()
-
-    if (error) return false
-    return Boolean(data)
+    await adminRequest('ceremonialists', { action: 'remove', id })
   }
 
   private mapRowToCeremonialist(row: SupabaseCeremonialistRow): Ceremonialist {

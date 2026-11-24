@@ -33,14 +33,12 @@ import { TermsModal } from '@/components/common/TermsModal'
 import { useFeedNotifications } from '@/hooks/useFeedNotifications'
 import { FeedNotificationService } from '@/services/feed-notification.service'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
-import {
-  OfflineQueueService,
-  type BackgroundUploadTask,
-} from '@/services/offline-queue.service'
+import { OfflineQueueService } from '@/services/offline-queue.service'
 import { getPostRepository } from '@/services/repositories.factory'
 import { getGuestSession } from '@/utils/session'
 import { resolvePostMediaType } from '@/utils/video'
 
+import type { BackgroundUploadTask } from '@/services/offline-queue.service'
 import type { GuestUser, Post } from '@/types/domain'
 
 type FeedFilterTab = 'all' | 'most-liked' | 'challenges' | 'mine'
@@ -75,12 +73,8 @@ export function FeedPage() {
     : null
   const lightboxPostId = searchParams.get('photoId')
 
-  const {
-    stagedPosts,
-    unseenAwayPostIds,
-    totalUnreadCount,
-    latestAuthors,
-  } = useFeedNotifications()
+  const { stagedPosts, unseenAwayPostIds, totalUnreadCount, latestAuthors } =
+    useFeedNotifications()
 
   const [posts, setPosts] = useState<Post[]>([])
   const [recentlyRevealedIds, setRecentlyRevealedIds] = useState<Set<string>>(
@@ -256,7 +250,10 @@ export function FeedPage() {
     }
 
     // Damped elastic curve for natural mobile pull feel
-    const dampedDistance = Math.min(MAX_PULL_DISTANCE, Math.round(deltaY * 0.45))
+    const dampedDistance = Math.min(
+      MAX_PULL_DISTANCE,
+      Math.round(deltaY * 0.45)
+    )
     setPullDistance(dampedDistance)
   }
 
@@ -594,7 +591,9 @@ export function FeedPage() {
       map.set(key, current)
     }
     return Array.from(map.values())
-      .sort((a, b) => (b.count !== a.count ? b.count - a.count : b.likes - a.likes))
+      .sort((a, b) =>
+        b.count !== a.count ? b.count - a.count : b.likes - a.likes
+      )
       .slice(0, 3)
   }, [posts])
 

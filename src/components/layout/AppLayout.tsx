@@ -116,9 +116,7 @@ export function AppLayout() {
 
   const getSidebarLinkClass = ({ isActive }: { isActive: boolean }): string =>
     `flex items-center rounded-2xl text-sm font-semibold transition-all duration-300 ease-in-out ${
-      isSidebarCollapsed
-        ? 'justify-center px-3 py-3'
-        : 'gap-3.5 px-4 py-3'
+      isSidebarCollapsed ? 'justify-center px-3 py-3' : 'gap-3.5 px-4 py-3'
     } ${
       isActive
         ? 'bg-sage-900 text-white shadow-xs'
@@ -134,9 +132,7 @@ export function AppLayout() {
       {/* Desktop / Notebook Left Sidebar Navigation */}
       <aside
         className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 bg-white border-r border-sage-200/80 z-30 justify-between shadow-2xs transition-[width,padding] duration-300 ease-in-out ${
-          isSidebarCollapsed
-            ? 'md:w-20 p-3'
-            : 'md:w-64 lg:w-72 p-5'
+          isSidebarCollapsed ? 'md:w-20 p-3' : 'md:w-64 lg:w-72 p-5'
         }`}
       >
         <div className="space-y-6">
@@ -333,14 +329,24 @@ export function AppLayout() {
                 }`}
               >
                 <Shield className="w-4 h-4 shrink-0" />
-                <span className={labelTransitionClass}>Painel de Moderação</span>
+                <span className={labelTransitionClass}>
+                  Painel de Moderação
+                </span>
               </Link>
 
               <button
                 type="button"
                 onClick={toggleSidebar}
-                title={isSidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
-                aria-label={isSidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+                title={
+                  isSidebarCollapsed
+                    ? 'Expandir menu lateral'
+                    : 'Recolher menu lateral'
+                }
+                aria-label={
+                  isSidebarCollapsed
+                    ? 'Expandir menu lateral'
+                    : 'Recolher menu lateral'
+                }
                 className={`flex items-center justify-center rounded-xl bg-sage-50 hover:bg-sage-100 border border-sage-200/80 text-sage-800 hover:text-sage-900 transition-colors shrink-0 ${
                   isSidebarCollapsed ? 'w-11 h-10' : 'w-9 h-9'
                 }`}

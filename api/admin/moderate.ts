@@ -1,175 +1,83 @@
-import process from 'node:process'
-import { createClient } from '@supabase/supabase-js'
+import { authorize } from '../_lib/auth.js'
+import { fail, json, readJson } from '../_lib/http.js'
+import { createServiceClient } from '../_lib/supabase.js'
 
-import { getAdminTokenFromRequest, verifyAdminToken } from '../_lib/security.js'
-
-interface ModerateRequestBody {
-  action: 'toggle_approval' | 'delete_post' | 'clear_all'
-  postId?: string
+interface ModerateBody {
+  action: 'list_posts' | 'toggle_approval' | 'delete_post' | 'clear_all'
+  postId: string
 }
 
 export async function POST(req: Request): Promise<Response> {
-  // 1. Authorize session token
-  const token = getAdminTokenFromRequest(req)
-  const payload = token ? verifyAdminToken(token) : null
-  if (!payload) {
-    return new Response(JSON.stringify({ error: 'Não autorizado.' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
+  const user = await authorize(req)
+  if (!user) return fail(401, 'Não autorizado.')
 
-  // 2. Parse request payload
-  let body: ModerateRequestBody
-  try {
-    body = (await req.json()) as ModerateRequestBody
-  } catch {
-    return new Response(
-      JSON.stringify({ error: 'Corpo da requisição inválido.' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    )
-  }
+  const body = await readJson<ModerateBody>(req)
+  if (!body) return fail(400, 'Corpo da requisição inválido.')
+  const { action, postId } = body
 
-  // 3. RBAC Enforcement: Only 'admin' role can execute destructive actions
   if (
-    (body.action === 'delete_post' || body.action === 'clear_all') &&
-    payload.role !== 'admin'
+    (action === 'delete_post' || action === 'clear_all') &&
+    user.role !== 'admin'
   ) {
-    return new Response(
-      JSON.stringify({
-        error:
-          'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.',
-      }),
-      {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return fail(
+      403,
+      'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.'
     )
   }
-
-  // 3. Initialize Supabase Admin client with Secret Key / Service Role
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const secretKey =
-    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !secretKey) {
-    return new Response(
-      JSON.stringify({
-        error: 'Supabase Secret Key / Service Role não configurado no servidor.',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+  if (
+    (action === 'delete_post' || action === 'toggle_approval') &&
+    (typeof postId !== 'string' || !postId)
+  ) {
+    return fail(400, 'postId é obrigatório')
   }
-
-  const supabaseAdmin = createClient(supabaseUrl, secretKey, {
-    auth: { persistSession: false },
-  })
 
   try {
-    if (body.action === 'toggle_approval') {
-      if (!body.postId) {
-        return new Response(JSON.stringify({ error: 'postId é obrigatório' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+    const posts = () => createServiceClient().from('posts')
+
+    switch (action) {
+      case 'list_posts': {
+        const { data, error } = await posts()
+          .select(
+            '*, challenges(id, title, description, icon, is_active, created_at)'
+          )
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        return json({ posts: data })
       }
+      case 'toggle_approval': {
+        const { data: post, error: readError } = await posts()
+          .select('is_approved')
+          .eq('id', postId!)
+          .maybeSingle()
+        if (readError) throw readError
+        if (!post) return fail(404, 'Publicação não encontrada')
 
-      // Read current status
-      const { data: post, error: readError } = await supabaseAdmin
-        .from('posts')
-        .select('is_approved')
-        .eq('id', body.postId)
-        .single()
-
-      if (readError || !post) {
-        return new Response(
-          JSON.stringify({ error: 'Publicação não encontrada' }),
-          {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
+        const isApproved = !post.is_approved
+        const { data: updated, error } = await posts()
+          .update({ is_approved: isApproved })
+          .eq('id', postId!)
+          .select('id')
+        if (error) throw error
+        if (updated.length === 0) return fail(404, 'Publicação não encontrada')
+        return json({ success: true, isApproved })
       }
-
-      const updatedStatus = !post.is_approved
-      const { error: updateError } = await supabaseAdmin
-        .from('posts')
-        .update({ is_approved: updatedStatus })
-        .eq('id', body.postId)
-
-      if (updateError) {
-        return new Response(JSON.stringify({ error: updateError.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        })
+      case 'delete_post': {
+        const { error } = await posts().delete().eq('id', postId!)
+        if (error) throw error
+        return json({ success: true })
       }
-
-      return new Response(
-        JSON.stringify({ success: true, isApproved: updatedStatus }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
+      case 'clear_all': {
+        const { error } = await posts()
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+        if (error) throw error
+        return json({ success: true })
+      }
+      default:
+        return fail(400, 'Ação desconhecida')
     }
-
-    if (body.action === 'delete_post') {
-      if (!body.postId) {
-        return new Response(JSON.stringify({ error: 'postId é obrigatório' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-
-      const { error: deleteError } = await supabaseAdmin
-        .from('posts')
-        .delete()
-        .eq('id', body.postId)
-
-      if (deleteError) {
-        return new Response(JSON.stringify({ error: deleteError.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
-
-    if (body.action === 'clear_all') {
-      const { error: clearError } = await supabaseAdmin
-        .from('posts')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000')
-
-      if (clearError) {
-        return new Response(JSON.stringify({ error: clearError.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
-
-    return new Response(JSON.stringify({ error: 'Ação desconhecida' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Server Error'
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    console.error('[moderate]', err)
+    return fail(500, 'Erro interno ao moderar publicações.')
   }
 }

@@ -1,15 +1,9 @@
-import {
-  Heart,
-  Loader2,
-  PenTool,
-  Sparkles,
-  X,
-} from 'lucide-react'
+import { Heart, Loader2, PenTool, Sparkles, X } from 'lucide-react'
 import { useState } from 'react'
 
 import {
-  GUESTBOOK_THEMES,
   generateGuestbookCardFile,
+  GUESTBOOK_THEMES,
 } from '@/utils/guestbook-card'
 
 import type { GuestbookThemeId } from '@/utils/guestbook-card'

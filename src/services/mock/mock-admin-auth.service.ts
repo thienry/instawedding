@@ -60,7 +60,9 @@ export class MockAdminAuthService implements AdminAuthService {
       name = 'Thiago (Admin Master)'
     } else {
       const ceremonialRepo = getCeremonialistRepository()
-      const isCeremonial = await ceremonialRepo.isCeremonialistEmail(email)
+      const isCeremonial = (await ceremonialRepo.getCeremonialists()).some(
+        (c) => c.email.toLowerCase() === email
+      )
 
       const modEmails = (
         import.meta.env.VITE_MODERATOR_EMAILS ||

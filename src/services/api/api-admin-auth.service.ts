@@ -1,4 +1,3 @@
-import { getCeremonialistRepository } from '@/services/repositories.factory'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
 import type {
@@ -7,6 +6,7 @@ import type {
   AdminOtpRequestResult,
   AdminUser,
 } from '@/services/contracts/admin-auth.contract'
+import type { Session } from '@supabase/supabase-js'
 
 export class ApiAdminAuthService implements AdminAuthService {
   private currentUser: AdminUser | null = null
@@ -23,50 +23,20 @@ export class ApiAdminAuthService implements AdminAuthService {
   }
 
   async checkSession(): Promise<boolean> {
-    // 1. Check Supabase OAuth session (only if email is in admin/moderator whitelist)
+    // The server accepts the Google session or the OTP cookie
+    let session: Session | null = null
     try {
-      const supabase = getSupabaseClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session?.user?.email) {
-        const user = await this.resolveRoleFromEmail(
-          session.user.email,
-          session.user.user_metadata?.full_name || 'Admin Google',
-          session.user.user_metadata?.avatar_url
-        )
-
-        if (user) {
-          this.authSource = 'oauth'
-          this.setCurrentUser(user)
-          return true
-        }
-      }
+      const { data } = await getSupabaseClient().auth.getSession()
+      session = data.session
     } catch {
       // Supabase not reachable or configured
     }
 
-    // 2. Check Serverless admin session cookie
-    try {
-      const response = await fetch('/api/admin/auth', {
-        method: 'GET',
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        const data = (await response.json()) as {
-          authenticated: boolean
-          user?: AdminUser
-        }
-        if (data.authenticated && data.user) {
-          this.authSource = 'cookie'
-          this.setCurrentUser(data.user)
-          return true
-        }
-      }
-    } catch {
-      // API endpoint not reachable
+    const user = await this.fetchIdentity(session)
+    if (user) {
+      this.authSource = this.isFromSession(user, session) ? 'oauth' : 'cookie'
+      this.setCurrentUser(user)
+      return true
     }
 
     this.authSource = null
@@ -190,13 +160,11 @@ export class ApiAdminAuthService implements AdminAuthService {
       const supabase = getSupabaseClient()
       supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user?.email) {
-          void this.resolveRoleFromEmail(
-            session.user.email,
-            session.user.user_metadata?.full_name || 'Admin Google',
-            session.user.user_metadata?.avatar_url
-          ).then((user) => {
+          void this.fetchIdentity(session).then((user) => {
             if (user) {
-              this.authSource = 'oauth'
+              this.authSource = this.isFromSession(user, session)
+                ? 'oauth'
+                : 'cookie'
               this.setCurrentUser(user)
             } else if (this.authSource === 'oauth') {
               this.authSource = null
@@ -213,58 +181,34 @@ export class ApiAdminAuthService implements AdminAuthService {
     }
   }
 
-  private async resolveRoleFromEmail(
-    email: string,
-    name: string,
-    avatarUrl?: string
+  private isFromSession(user: AdminUser, session: Session | null): boolean {
+    return session?.user.email?.trim().toLowerCase() === user.email
+  }
+
+  private async fetchIdentity(
+    session: Session | null
   ): Promise<AdminUser | null> {
-    const normalized = email.trim().toLowerCase()
-    const masterAdminEmail = (
-      import.meta.env.VITE_ADMIN_EMAILS || 'thmoura14@gmail.com'
-    )
-      .split(',')[0]
-      .trim()
-      .toLowerCase() || 'thmoura14@gmail.com'
-
-    if (normalized === masterAdminEmail) {
-      return {
-        email: normalized,
-        name: name || 'Thiago (Admin Master)',
-        role: 'admin',
-        avatarUrl,
-      }
-    }
-
     try {
-      const ceremonialRepo = getCeremonialistRepository()
-      const isCeremonial = await ceremonialRepo.isCeremonialistEmail(normalized)
-      if (isCeremonial) {
-        return {
-          email: normalized,
-          name: name || 'Cerimonial',
-          role: 'moderator',
-          avatarUrl,
-        }
+      const response = await fetch('/api/admin/auth', {
+        headers: session
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {},
+        credentials: 'include',
+      })
+      if (!response.ok) return null
+      const { user } = (await response.json()) as { user?: AdminUser }
+      if (!user) return null
+      if (!this.isFromSession(user, session)) return user
+
+      const metadata = session?.user.user_metadata
+      return {
+        ...user,
+        name: metadata?.full_name || user.name,
+        avatarUrl: metadata?.avatar_url,
       }
     } catch {
-      // Ceremonialist lookup error
+      return null
     }
-
-    const modEmails = (import.meta.env.VITE_MODERATOR_EMAILS || '')
-      .split(',')
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean)
-
-    if (modEmails.includes(normalized)) {
-      return {
-        email: normalized,
-        name: name || 'Cerimonial',
-        role: 'moderator',
-        avatarUrl,
-      }
-    }
-
-    return null
   }
 
   private setCurrentUser(user: AdminUser | null): void {

@@ -1,3 +1,4 @@
+import { adminRequest } from '@/services/api/api.client'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { isVideoUrl } from '@/utils/video'
 
@@ -71,6 +72,11 @@ export class SupabasePostRepository implements PostRepository {
       })
       .select(POST_SELECT_QUERY)
       .single()
+
+    // Older schemas may lack a column; any other error must not drop fields
+    if (error && error.code !== 'PGRST204') {
+      throw new Error(`Failed to create post in Supabase: ${error.message}`)
+    }
 
     if (error) {
       const fallbackWithAvatar = await supabase
@@ -175,49 +181,52 @@ export class SupabasePostRepository implements PostRepository {
   }
 
   async getAllPostsForModeration(): Promise<Post[]> {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase
-      .from('posts')
-      .select(POST_SELECT_QUERY)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      throw new Error(`Failed to fetch moderation posts: ${error.message}`)
-    }
-
-    return (data as unknown as SupabasePostRow[]).map(this.mapRowToPost)
+    const { posts } = await adminRequest<{ posts: SupabasePostRow[] }>(
+      'moderate',
+      { action: 'list_posts' }
+    )
+    return posts.map(this.mapRowToPost)
   }
 
   async togglePostApproval(postId: string): Promise<boolean> {
-    const supabase = getSupabaseClient()
-    const { data: post } = await supabase
-      .from('posts')
-      .select('is_approved')
-      .eq('id', postId)
-      .single()
-
-    if (!post) throw new Error('Post not found')
-    const newStatus = !post.is_approved
-
-    await supabase
-      .from('posts')
-      .update({ is_approved: newStatus })
-      .eq('id', postId)
-
-    return newStatus
+    const { isApproved } = await adminRequest<{ isApproved: boolean }>(
+      'moderate',
+      { action: 'toggle_approval', postId }
+    )
+    return isApproved
   }
 
   async deletePost(postId: string): Promise<void> {
     const supabase = getSupabaseClient()
-    await supabase.from('posts').delete().eq('id', postId)
+    // RLS blocks deletes silently, so check the affected rows
+    const { data: deleted, error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', postId)
+      .select('id')
+
+    if (error) {
+      throw new Error(`Failed to delete post in Supabase: ${error.message}`)
+    }
+    if (deleted.length > 0) return
+
+    const { data: remaining, error: readError } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('id', postId)
+
+    if (readError) {
+      throw new Error(`Failed to confirm deletion: ${readError.message}`)
+    }
+    if (remaining.length > 0) throw new Error('Post was not deleted')
+  }
+
+  async deletePostAsAdmin(postId: string): Promise<void> {
+    await adminRequest('moderate', { action: 'delete_post', postId })
   }
 
   async clearAllPosts(): Promise<void> {
-    const supabase = getSupabaseClient()
-    await supabase
-      .from('posts')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000')
+    await adminRequest('moderate', { action: 'clear_all' })
   }
 
   private mapRowToPost(row: SupabasePostRow): Post {

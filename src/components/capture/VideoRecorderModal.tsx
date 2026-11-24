@@ -200,8 +200,7 @@ export function VideoRecorderModal({
     }
 
     recorder.onstop = () => {
-      const actualMime =
-        recorder.mimeType || preferredMimeType || 'video/mp4'
+      const actualMime = recorder.mimeType || preferredMimeType || 'video/mp4'
       const recordedBlob = new Blob(chunksRef.current, { type: actualMime })
       if (recordedBlob.size === 0) {
         setErrorMessage('Não foi possível capturar o clipe. Tente novamente.')
@@ -369,9 +368,7 @@ export function VideoRecorderModal({
           <button
             type="button"
             disabled={isInitializing || Boolean(errorMessage)}
-            onClick={
-              isRecording ? handleStopRecording : handleStartRecording
-            }
+            onClick={isRecording ? handleStopRecording : handleStartRecording}
             aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação'}
             className="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
           >
