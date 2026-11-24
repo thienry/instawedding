@@ -104,8 +104,11 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 **4.3 Projector** (964 lines, used live: test in full screen)
 
-- [ ] hooks: `useSlideshow`, `useProjectorFeed`, `useFullscreen`, `useAutoHideControls`
-- [ ] components: `ProjectorHeader`, `OperatorControls`, `MainStage`, `Filmstrip`, `Podium`, `NewPostBanner`, `QrModal`
+Redesigned at the author's request, so the layout differs from the original page.
+
+- [x] hooks: `useSlideshow`, `useReadySlide`, `useCrossfade`, `useProjectorFeed`, `useFullscreen`, `useAutoHideControls`, `useProjectorShortcuts`; `useAdminSession` moved to `src/hooks/`
+- [x] components: `ProjectorLoading`, `ProjectorLocked`, `ProjectorShow`, `ProjectorHeader`, `OperatorControls`, `Backdrop`, `GoldDust`, `MainStage` (`StageSlide`), `Spotlight`, `Filmstrip`, `Podium`, `NewPostBanner`, `QrInvite`, `QrModal`, `EmptyStage`
+- [ ] check in full screen on the party computer (author)
 
 **4.4 Capture** (993 lines, critical: test photo, video and offline on a real device)
 
@@ -114,7 +117,7 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 **4.5 Shared**
 
-- [ ] `topContributors` and `totalLikesCount`: Feed uses `utils/post-stats.ts`; switch Projector to it (same logic)
+- [x] `topContributors` and `totalLikesCount`: Feed and Projector use `utils/post-stats.ts`
 - [ ] Guest login is repeated in Feed and Capture: consider `useGuestAuth`
 - [ ] Revisit the 4 remaining oxlint warnings
 
@@ -149,3 +152,19 @@ Feed, found while splitting:
 - [x] A failed like restores the heart but not the count
 - [x] The notice of new posts says "novas fotos postada"
 - [x] The download name drops accents instead of converting them (the admin ZIP converts)
+
+Projector, fixed by the redesign:
+
+- [x] The filmstrip ignored the filter, so clicking a thumbnail could open another post
+- [x] The progress bar and the timer drifted apart after changing the photo by hand
+- [x] A refresh that added or removed posts replaced the photo on display
+- [x] With "Destaques" on, a new post was announced but the most liked one was shown
+- [x] `animate-in` classes did nothing (the plugin is not installed), so there were no transitions
+- [x] A rejected session check left the loading screen forever
+
+Projector, open:
+
+- [ ] Videos of up to 10 s are cut by the 8 s slide
+- [ ] Hiding every post keeps the last ones on display (an empty refresh is ignored)
+- [ ] Space also clicks the focused button in some browsers, and Ctrl+F toggles full screen
+- [ ] `animate-in` classes also do nothing in the other screens that use them
