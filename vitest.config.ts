@@ -10,7 +10,12 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': path.resolve(root, './src') } },
   test: {
-    include: ['src/**/*.test.{ts,tsx}', 'api/**/*.test.ts', 'supabase/**/*.test.ts'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'api/**/*.test.ts',
+      'supabase/**/*.test.ts',
+      'scripts/**/*.test.mjs',
+    ],
     environment: 'node',
     setupFiles: ['src/test/setup.ts'],
     restoreMocks: true,
