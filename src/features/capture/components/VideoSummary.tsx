@@ -13,9 +13,7 @@ export function VideoSummary({ durationSeconds }: VideoSummaryProps) {
           <Video className="w-5 h-5 text-gold-500" />
         </div>
         <div>
-          <h4 className="text-sm font-bold text-sage-900">
-            Vídeo curto pronto para envio
-          </h4>
+          <h4 className="text-sm font-bold text-sage-900">Vídeo curto pronto para envio</h4>
           <p className="text-xs text-sage-800/70">
             Reprodução automática em loop no feed e no telão da festa
           </p>

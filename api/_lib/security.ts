@@ -93,10 +93,7 @@ export function verifyAdminToken(token: string): AdminTokenPayload | null {
       Buffer.from(payloadB64, 'base64url').toString('utf-8')
     ) as AdminTokenPayload
     const now = Math.floor(Date.now() / 1000)
-    if (
-      (payload.role === 'admin' || payload.role === 'moderator') &&
-      payload.exp > now
-    ) {
+    if ((payload.role === 'admin' || payload.role === 'moderator') && payload.exp > now) {
       return payload
     }
     return null

@@ -1,0 +1,52 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`draws the cinema frame 1`] = `
+[
+  "drawImage(photo,0,0,1000,500) {"filter":"grayscale(1) contrast(1.25) brightness(1.05)"}",
+  "fillRect(0,0,1000,50) {"filter":"none","fillStyle":"#05070a"}",
+  "fillRect(0,450,1000,50) {"filter":"none","fillStyle":"#05070a"}",
+  "fillText(● REC  THIAGO & PRISCILA,40,475) {"filter":"none","fillStyle":"rgba(255, 255, 255, 0.85)","font":"600 24px system-ui, -apple-system, sans-serif","textAlign":"left","textBaseline":"middle"}",
+  "fillText(02/01/2026,960,475) {"filter":"none","fillStyle":"rgba(255, 255, 255, 0.85)","font":"400 21.6px monospace","textAlign":"right","textBaseline":"middle"}",
+]
+`;
+
+exports[`draws the golden-border frame 1`] = `
+[
+  "drawImage(photo,0,0,1000,500) {"filter":"grayscale(1) contrast(1.25) brightness(1.05)"}",
+  "createLinearGradient(0,0,1000,500) {"filter":"none"}",
+  "addColorStop(0,#bf953f) {"filter":"none"}",
+  "addColorStop(0.25,#fcf6ba) {"filter":"none"}",
+  "addColorStop(0.5,#b38728) {"filter":"none"}",
+  "addColorStop(0.75,#fbf5b7) {"filter":"none"}",
+  "addColorStop(1,#aa771c) {"filter":"none"}",
+  "strokeRect(10,10,980,480) {"filter":"none","strokeStyle":{},"lineWidth":20}",
+  "strokeRect(45,45,910,410) {"filter":"none","strokeStyle":{},"lineWidth":1.5}",
+]
+`;
+
+exports[`draws the minimal-floral frame 1`] = `
+[
+  "drawImage(photo,0,0,1000,500) {"filter":"grayscale(1) contrast(1.25) brightness(1.05)"}",
+  "createLinearGradient(0,424,0,500) {"filter":"none"}",
+  "addColorStop(0,rgba(0,0,0,0)) {"filter":"none"}",
+  "addColorStop(1,rgba(0,0,0,0.65)) {"filter":"none"}",
+  "fillRect(0,424,1000,76) {"filter":"none","fillStyle":{}}",
+  "fillText(💍 Thiago & Priscila • 2026,500,481) {"filter":"none","fillStyle":"#ffffff","font":"italic 500 28px \\"Playfair Display\\", Georgia, serif","textAlign":"center","textBaseline":"middle"}",
+]
+`;
+
+exports[`draws the none frame 1`] = `
+[
+  "drawImage(photo,0,0,1000,500) {"filter":"grayscale(1) contrast(1.25) brightness(1.05)"}",
+]
+`;
+
+exports[`draws the polaroid frame 1`] = `
+[
+  "fillRect(0,0,1100,770) {"fillStyle":"#ffffff"}",
+  "fillRect(49,49,1002,502) {"fillStyle":"#f1f5f9"}",
+  "drawImage(photo,50,50,1000,500) {"fillStyle":"#f1f5f9","filter":"grayscale(1) contrast(1.25) brightness(1.05)"}",
+  "fillText(Thiago & Priscila,550,642.4) {"fillStyle":"#1e293b","filter":"none","font":"italic 600 42px \\"Playfair Display\\", Georgia, serif","textAlign":"center","textBaseline":"middle"}",
+  "fillText(Nosso Grande Dia • InstaWedding,550,676) {"fillStyle":"#64748b","filter":"none","font":"500 20px system-ui, -apple-system, sans-serif","textAlign":"center","textBaseline":"middle"}",
+]
+`;

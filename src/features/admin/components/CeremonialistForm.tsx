@@ -1,11 +1,4 @@
-import {
-  CheckCircle2,
-  Loader2,
-  Mail,
-  Plus,
-  ShieldAlert,
-  UserPlus,
-} from 'lucide-react'
+import { CheckCircle2, Loader2, Mail, Plus, ShieldAlert, UserPlus } from 'lucide-react'
 import { useId } from 'react'
 
 import type { CeremonialistAdmin } from '@/features/admin/hooks/useCeremonialists'
@@ -15,11 +8,8 @@ interface CeremonialistFormProps {
 }
 
 /** Form that grants ceremonialist access to an email. */
-export function CeremonialistForm({
-  ceremonialistAdmin,
-}: CeremonialistFormProps) {
-  const { draft, updateDraft, isAdding, feedback, addCeremonialist } =
-    ceremonialistAdmin
+export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps) {
+  const { draft, updateDraft, isAdding, feedback, addCeremonialist } = ceremonialistAdmin
   const id = useId()
 
   return (
@@ -33,8 +23,8 @@ export function CeremonialistForm({
             Conceder Acesso de Cerimonial
           </h3>
           <p className="text-xs text-sage-800/70 mt-0.5">
-            Adicione e-mails da assessoria/cerimonial para que possam moderar
-            fotos e gerenciar desafios.
+            Adicione e-mails da assessoria/cerimonial para que possam moderar fotos e gerenciar
+            desafios.
           </p>
         </div>
       </div>
@@ -58,13 +48,11 @@ export function CeremonialistForm({
           event.preventDefault()
           void addCeremonialist()
         }}
-        className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2"
-      >
+        className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
         <div className="sm:col-span-6">
           <label
             htmlFor={`${id}-email`}
-            className="text-xs font-semibold text-sage-800 block mb-1.5"
-          >
+            className="text-xs font-semibold text-sage-800 block mb-1.5">
             E-mail do Cerimonialista *
           </label>
           <div className="relative">
@@ -84,8 +72,7 @@ export function CeremonialistForm({
         <div className="sm:col-span-4">
           <label
             htmlFor={`${id}-name`}
-            className="text-xs font-semibold text-sage-800 block mb-1.5"
-          >
+            className="text-xs font-semibold text-sage-800 block mb-1.5">
             Nome / Identificação (Opcional)
           </label>
           <input
@@ -102,8 +89,7 @@ export function CeremonialistForm({
           <button
             type="submit"
             disabled={isAdding || !draft.email.trim()}
-            className="w-full py-2.5 px-4 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs h-[42px]"
-          >
+            className="w-full py-2.5 px-4 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs h-[42px]">
             {isAdding ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (

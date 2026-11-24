@@ -34,7 +34,7 @@ flowchart LR
 
 ## 2. Prerequisites
 
-1. **Node.js 20+** installed on your local machine (deployment is done directly through the **Vercel CLI**, with no GitHub needed).
+1. **Node.js 24 LTS** (`.nvmrc`) installed on your local machine (deployment is done directly through the **Vercel CLI**, with no GitHub needed).
 2. A [Supabase](https://supabase.com) account (the Free plan is enough).
 3. A [Cloudflare](https://dash.cloudflare.com) account with **R2** enabled (10 GB/month free).
 4. A [Resend](https://resend.com) account (3,000 emails/month free).
@@ -113,10 +113,7 @@ CORS is required because the guest's browser sends the image `PUT` directly to C
 ```json
 [
   {
-    "AllowedOrigins": [
-      "https://your-project.vercel.app",
-      "http://localhost:5173"
-    ],
+    "AllowedOrigins": ["https://your-project.vercel.app", "http://localhost:5173"],
     "AllowedMethods": ["GET", "PUT", "HEAD"],
     "AllowedHeaders": ["Content-Type"],
     "ExposeHeaders": ["ETag"],

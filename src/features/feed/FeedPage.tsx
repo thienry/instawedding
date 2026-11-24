@@ -73,11 +73,7 @@ export function FeedPage() {
             isRefreshing={isRefreshing}
             onRefresh={() => void refresh()}
           />
-          <FilterTabs
-            activeTab={filter.tab}
-            onChange={filter.setTab}
-            postCount={posts.length}
-          />
+          <FilterTabs activeTab={filter.tab} onChange={filter.setTab} postCount={posts.length} />
 
           {filter.challengeId !== null && (
             <ChallengeFilterPill
@@ -104,10 +100,7 @@ export function FeedPage() {
           {isLoading ? (
             <FeedSkeleton />
           ) : filter.filteredPosts.length === 0 ? (
-            <EmptyFeed
-              hasPosts={posts.length > 0}
-              challengeId={filter.challengeId}
-            />
+            <EmptyFeed hasPosts={posts.length > 0} challengeId={filter.challengeId} />
           ) : (
             <PostGrid
               filter={filter}

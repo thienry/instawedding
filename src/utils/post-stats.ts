@@ -21,10 +21,7 @@ export function countLikes(posts: readonly Post[]): number {
  *
  * @param limit - Maximum number of guests returned.
  */
-export function rankContributors(
-  posts: readonly Post[],
-  limit: number
-): Contributor[] {
+export function rankContributors(posts: readonly Post[], limit: number): Contributor[] {
   const contributors = new Map<string, Contributor>()
   for (const post of posts) {
     const name = post.authorName.trim()

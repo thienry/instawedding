@@ -28,13 +28,7 @@ interface StageSlideProps {
 }
 
 /** Media of a post in its frame, with the reveal and the leaving animation. */
-export function StageSlide({
-  post,
-  ratio,
-  isNew,
-  isLeaving,
-  onLeft,
-}: StageSlideProps) {
+export function StageSlide({ post, ratio, isNew, isLeaving, onLeft }: StageSlideProps) {
   const handleAnimationEnd = (event: AnimationEvent) => {
     // Animations of the children bubble up to here
     if (isLeaving && event.target === event.currentTarget) onLeft()
@@ -45,22 +39,15 @@ export function StageSlide({
       onAnimationEnd={handleAnimationEnd}
       className={`absolute inset-0 grid place-items-center ${
         isLeaving ? 'projector-slide-leave' : ''
-      }`}
-    >
-      <div
-        style={{ '--ratio': ratio } as CSSProperties}
-        className="projector-frame"
-      >
+      }`}>
+      <div style={{ '--ratio': ratio } as CSSProperties} className="projector-frame">
         <div className="projector-frame-shadow" />
         {isNew && <div className="projector-frame-glow" />}
         <div className={`projector-reveal ${pickReveal(post.id)}`}>
           {resolvePostMediaType(post) === 'video' ? (
             <video src={post.mediaUrl} autoPlay muted loop playsInline />
           ) : (
-            <img
-              src={post.mediaUrl}
-              alt={post.caption || `Foto por ${post.authorName}`}
-            />
+            <img src={post.mediaUrl} alt={post.caption || `Foto por ${post.authorName}`} />
           )}
         </div>
       </div>

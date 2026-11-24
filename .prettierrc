@@ -2,6 +2,8 @@
   "semi": false,
   "singleQuote": true,
   "tabWidth": 2,
+  "printWidth": 100,
+  "bracketSameLine": true,
   "trailingComma": "es5",
   "plugins": ["@ianvs/prettier-plugin-sort-imports"],
   "importOrder": [

@@ -35,9 +35,7 @@ export function useDialog() {
     setQueue((prev) => prev.slice(1))
   }
 
-  const dialog = current ? (
-    <DialogModal key={queue.length} {...current} onClose={close} />
-  ) : null
+  const dialog = current ? <DialogModal key={queue.length} {...current} onClose={close} /> : null
 
   return { confirm, notify, dialog }
 }

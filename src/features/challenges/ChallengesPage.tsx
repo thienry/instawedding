@@ -24,16 +24,11 @@ export function ChallengesPage() {
     [posts, guestUser, sessionId, guestName]
   )
   const postCounts = useMemo(() => countPostsByChallenge(posts), [posts])
-  const completedCount = challenges.filter(({ id }) =>
-    completedIds.has(id)
-  ).length
+  const completedCount = challenges.filter(({ id }) => completedIds.has(id)).length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <ChallengesBanner
-        completedCount={completedCount}
-        totalChallenges={challenges.length}
-      />
+      <ChallengesBanner completedCount={completedCount} totalChallenges={challenges.length} />
       <PhotographerRanking posts={posts} />
       {isLoading ? (
         <ChallengesSkeleton />

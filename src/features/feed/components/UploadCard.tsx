@@ -48,9 +48,7 @@ export function UploadCard({ task }: UploadCardProps) {
               ) : (
                 <>
                   <CloudUpload className="w-3.5 h-3.5 text-sage-800 shrink-0" />
-                  <span>
-                    {isVideo ? 'Postando seu vídeo...' : 'Postando sua foto...'}
-                  </span>
+                  <span>{isVideo ? 'Postando seu vídeo...' : 'Postando sua foto...'}</span>
                 </>
               )}
             </p>
@@ -69,8 +67,7 @@ export function UploadCard({ task }: UploadCardProps) {
             <button
               type="button"
               onClick={() => void OfflineQueueService.retryTask(task.id)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-sage-900 text-white hover:bg-sage-800 transition-colors"
-            >
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-sage-900 text-white hover:bg-sage-800 transition-colors">
               Tentar agora
             </button>
           )}
@@ -78,8 +75,7 @@ export function UploadCard({ task }: UploadCardProps) {
             type="button"
             onClick={() => void OfflineQueueService.cancelTask(task.id)}
             title="Cancelar envio"
-            className="p-1.5 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-          >
+            className="p-1.5 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -88,9 +84,7 @@ export function UploadCard({ task }: UploadCardProps) {
       <div className="h-1.5 w-full rounded-full bg-sage-100 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${
-            isPaused
-              ? 'bg-amber-500'
-              : 'bg-gradient-to-r from-sage-800 to-gold-500'
+            isPaused ? 'bg-amber-500' : 'bg-gradient-to-r from-sage-800 to-gold-500'
           }`}
           style={{
             width: `${Math.max(12, task.progress)}%`,

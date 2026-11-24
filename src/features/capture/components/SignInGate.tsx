@@ -7,11 +7,7 @@ interface SignInGateProps {
 }
 
 /** Login required before posting. */
-export function SignInGate({
-  isSigningIn,
-  errorMessage,
-  onSignIn,
-}: SignInGateProps) {
+export function SignInGate({ isSigningIn, errorMessage, onSignIn }: SignInGateProps) {
   return (
     <div className="max-w-xl mx-auto space-y-5 pt-2">
       <div className="bg-white rounded-3xl p-8 sm:p-10 border border-sage-200/90 text-center space-y-5 shadow-xs">
@@ -21,13 +17,10 @@ export function SignInGate({
           className="w-16 h-16 rounded-2xl mx-auto shadow-xs"
         />
         <div className="space-y-2">
-          <h3 className="font-serif text-2xl font-bold text-sage-900">
-            Entre para Postar Fotos
-          </h3>
+          <h3 className="font-serif text-2xl font-bold text-sage-900">Entre para Postar Fotos</h3>
           <p className="text-sm text-sage-800/75 max-w-md mx-auto leading-relaxed">
-            Conecte sua conta Google para enviar fotos ao mural e telão ao vivo.
-            Sua foto de perfil e nome serão usados automaticamente na
-            assinatura!
+            Conecte sua conta Google para enviar fotos ao mural e telão ao vivo. Sua foto de perfil
+            e nome serão usados automaticamente na assinatura!
           </p>
         </div>
 
@@ -42,16 +35,11 @@ export function SignInGate({
           type="button"
           disabled={isSigningIn}
           onClick={onSignIn}
-          className="w-full max-w-xs mx-auto py-3.5 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-60 text-white font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.99]"
-        >
+          className="w-full max-w-xs mx-auto py-3.5 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-60 text-white font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.99]">
           {isSigningIn ? (
             <Loader2 className="w-5 h-5 animate-spin shrink-0" />
           ) : (
-            <svg
-              className="w-5 h-5 shrink-0"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="#EA4335"
                 d="M12 10.2v3.9h5.4c-.2 1.2-.9 2.3-2 3l3.2 2.5c1.9-1.7 3-4.3 3-7.3 0-.7-.1-1.4-.2-2.1H12z"
@@ -70,9 +58,7 @@ export function SignInGate({
               />
             </svg>
           )}
-          <span>
-            {isSigningIn ? 'Redirecionando...' : 'Continuar com Google'}
-          </span>
+          <span>{isSigningIn ? 'Redirecionando...' : 'Continuar com Google'}</span>
         </button>
       </div>
     </div>

@@ -72,11 +72,7 @@ export function AdminPage() {
             stats={stats}
             isAdmin={isAdmin}
           />
-          <ModerationGrid
-            moderation={moderation}
-            isLoading={data.isLoading}
-            isAdmin={isAdmin}
-          />
+          <ModerationGrid moderation={moderation} isLoading={data.isLoading} isAdmin={isAdmin} />
         </>
       )}
 

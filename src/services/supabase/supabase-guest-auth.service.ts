@@ -1,18 +1,13 @@
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { setGuestName } from '@/utils/session'
 
-import type {
-  GuestAuthResult,
-  GuestAuthService,
-} from '@/services/contracts/guest-auth.contract'
+import type { GuestAuthResult, GuestAuthService } from '@/services/contracts/guest-auth.contract'
 import type { GuestUser } from '@/types/domain'
 import type { User } from '@supabase/supabase-js'
 
 const GUEST_USER_CACHE_KEY = 'instawedding_guest_user_cache'
 
-function mapSupabaseUserToGuest(
-  user: User | null | undefined
-): GuestUser | null {
+function mapSupabaseUserToGuest(user: User | null | undefined): GuestUser | null {
   if (!user) return null
   const metadata = user.user_metadata ?? {}
   const rawName =
@@ -88,13 +83,9 @@ export class SupabaseGuestAuthService implements GuestAuthService {
     const supabase = getSupabaseClient()
     const targetPath =
       redirectPath ??
-      (typeof window !== 'undefined'
-        ? `${window.location.pathname}${window.location.search}`
-        : '/')
+      (typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '/')
     const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}${targetPath}`
-        : undefined
+      typeof window !== 'undefined' ? `${window.location.origin}${targetPath}` : undefined
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

@@ -48,22 +48,14 @@ export function PostGrid({
 
   return (
     <>
-      <div
-        className={
-          viewMode === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 gap-6'
-            : 'space-y-6'
-        }
-      >
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'space-y-6'}>
         {visibleItems.map((post, index) => (
           <PostCard
             key={post.id}
             post={post}
             viewMode={viewMode}
             isPriority={index < PRIORITY_COUNT}
-            isNew={
-              unseenPostIds.has(post.id) || feed.revealedPostIds.has(post.id)
-            }
+            isNew={unseenPostIds.has(post.id) || feed.revealedPostIds.has(post.id)}
             isLiked={feed.likedPostIds.has(post.id)}
             isSignedIn={guest.guestUser !== null}
             showHeartBurst={likes.heartBurstPostId === post.id}
@@ -75,9 +67,7 @@ export function PostGrid({
             onSelectChallenge={() => {
               if (post.challenge) selectChallenge(post.challenge.id)
             }}
-            onDelete={
-              isOwnPost(post, guest) ? () => onDeletePost(post) : undefined
-            }
+            onDelete={isOwnPost(post, guest) ? () => onDeletePost(post) : undefined}
           />
         ))}
       </div>
@@ -85,8 +75,7 @@ export function PostGrid({
       {hasMore && (
         <div
           ref={sentinelRef}
-          className="py-6 flex items-center justify-center text-xs text-sage-800/60 gap-2"
-        >
+          className="py-6 flex items-center justify-center text-xs text-sage-800/60 gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-sage-800" />
           <span>Carregando mais fotos...</span>
         </div>

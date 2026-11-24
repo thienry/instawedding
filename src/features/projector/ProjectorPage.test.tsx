@@ -4,10 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { ProjectorPage } from '@/features/projector/ProjectorPage'
-import {
-  getPostRepository,
-  getRealtimeService,
-} from '@/services/repositories.factory'
+import { getPostRepository, getRealtimeService } from '@/services/repositories.factory'
 import { setupBrowser } from '@/test/browser'
 
 import type { Post } from '@/types/domain'
@@ -57,12 +54,10 @@ async function open(posts: readonly Post[]) {
   )
   localStorage.setItem('instawedding_mock_posts', JSON.stringify(posts))
   let announce: (post: Post) => void = () => {}
-  vi.spyOn(getRealtimeService(), 'subscribeToNewPosts').mockImplementation(
-    (callback) => {
-      announce = callback
-      return () => {}
-    }
-  )
+  vi.spyOn(getRealtimeService(), 'subscribeToNewPosts').mockImplementation((callback) => {
+    announce = callback
+    return () => {}
+  })
   render(
     <MemoryRouter>
       <ProjectorPage />
@@ -146,9 +141,7 @@ it.each([
   const media = HTMLMediaElement.prototype
   vi.spyOn(media, 'load').mockImplementation(() => {})
   vi.spyOn(media, 'duration', 'get').mockReturnValue(seconds)
-  vi.spyOn(media, 'src', 'set').mockImplementation(function (
-    this: HTMLMediaElement
-  ) {
+  vi.spyOn(media, 'src', 'set').mockImplementation(function (this: HTMLMediaElement) {
     queueMicrotask(() => this.onloadedmetadata?.(new Event('loadedmetadata')))
   })
   await open([post('1', { mediaUrl: '/media/1.mp4' }), post('2')])

@@ -59,9 +59,7 @@ export async function POST(req: Request): Promise<Response> {
         if (!current) return fail(404, 'Desafio não encontrado.')
 
         const isActive = !current.is_active
-        const { error } = await challenges()
-          .update({ is_active: isActive })
-          .eq('id', id!)
+        const { error } = await challenges().update({ is_active: isActive }).eq('id', id!)
         if (error) throw error
         return json({ isActive })
       }

@@ -18,8 +18,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
         event.preventDefault()
         void createChallenge()
       }}
-      className="w-full bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4"
-    >
+      className="w-full bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4">
       <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
         <Plus className="w-4 h-4 text-gold-500" />
         <span>Criar Novo Desafio</span>
@@ -27,10 +26,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
 
       <div className="grid grid-cols-4 lg:grid-cols-12 gap-3 sm:gap-4">
         <div className="col-span-1 lg:col-span-2 xl:col-span-1">
-          <label
-            htmlFor={`${id}-icon`}
-            className="text-xs font-bold text-sage-800 block mb-1.5"
-          >
+          <label htmlFor={`${id}-icon`} className="text-xs font-bold text-sage-800 block mb-1.5">
             Ícone
           </label>
           <input
@@ -44,10 +40,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
           />
         </div>
         <div className="col-span-3 lg:col-span-4 xl:col-span-5">
-          <label
-            htmlFor={`${id}-title`}
-            className="text-xs font-bold text-sage-800 block mb-1.5"
-          >
+          <label htmlFor={`${id}-title`} className="text-xs font-bold text-sage-800 block mb-1.5">
             Título do Desafio
           </label>
           <input
@@ -63,8 +56,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
         <div className="col-span-4 lg:col-span-6">
           <label
             htmlFor={`${id}-description`}
-            className="text-xs font-bold text-sage-800 block mb-1.5"
-          >
+            className="text-xs font-bold text-sage-800 block mb-1.5">
             Descrição para os Convidados
           </label>
           <input
@@ -72,9 +64,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
             required
             id={`${id}-description`}
             value={draft.description}
-            onChange={(event) =>
-              updateDraft({ description: event.target.value })
-            }
+            onChange={(event) => updateDraft({ description: event.target.value })}
             placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
             className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-sm bg-white"
           />
@@ -84,8 +74,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
       <button
         type="submit"
         disabled={isCreating}
-        className="w-full py-3 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-      >
+        className="w-full py-3 px-4 rounded-xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors">
         {isCreating ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />

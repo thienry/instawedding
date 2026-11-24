@@ -23,13 +23,9 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5 text-gold-500" />
-          <h3 className="font-serif text-lg font-bold text-sage-900">
-            Top Fotógrafos da Noite
-          </h3>
+          <h3 className="font-serif text-lg font-bold text-sage-900">Top Fotógrafos da Noite</h3>
         </div>
-        <span className="text-xs font-bold text-sage-800/60 uppercase tracking-wider">
-          Ranking
-        </span>
+        <span className="text-xs font-bold text-sage-800/60 uppercase tracking-wider">Ranking</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -41,22 +37,15 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
                 index === 0
                   ? 'bg-gold-400/10 border-gold-400/45 shadow-2xs'
                   : 'bg-sage-50/80 border-sage-200/70'
-              }`}
-            >
+              }`}>
               <div className="flex sm:flex-col items-center gap-3 sm:gap-1.5 min-w-0">
                 <div className="relative">
-                  <AuthorAvatar
-                    name={person.name}
-                    avatarUrl={person.avatarUrl}
-                    size="md"
-                  />
+                  <AuthorAvatar name={person.name} avatarUrl={person.avatarUrl} size="md" />
                   <span className="absolute -bottom-1 -right-1 text-base leading-none">
                     {MEDALS[index]}
                   </span>
                 </div>
-                <p className="text-base font-bold text-sage-900 truncate">
-                  {person.name}
-                </p>
+                <p className="text-base font-bold text-sage-900 truncate">{person.name}</p>
               </div>
               <div className="flex items-center justify-center gap-3 text-xs sm:text-sm text-sage-800/85 font-semibold shrink-0">
                 <span>📷 {person.postCount} fotos</span>

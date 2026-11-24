@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import {
-  getChallengeRepository,
-  getPostRepository,
-} from '@/services/repositories.factory'
+import { getChallengeRepository, getPostRepository } from '@/services/repositories.factory'
 
 import type { Challenge, Post } from '@/types/domain'
 

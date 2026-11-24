@@ -20,10 +20,7 @@ const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, index) => {
 /** Specks of gold rising slowly through the room. */
 export function GoldDust() {
   return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-    >
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none">
       {PARTICLES.map((style, index) => (
         <span key={index} style={style} className="projector-dust" />
       ))}

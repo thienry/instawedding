@@ -19,15 +19,10 @@ export function Podium({ posts }: PodiumProps) {
 
   return (
     <section>
-      <h2 className="text-[clamp(0.75rem,1.6vh,1.125rem)] text-gold-400">
-        Top fotógrafos
-      </h2>
+      <h2 className="text-[clamp(0.75rem,1.6vh,1.125rem)] text-gold-400">Top fotógrafos</h2>
       <ol className="mt-[1.4vh] grid grid-cols-3 gap-4">
         {contributors.map((person, index) => (
-          <li
-            key={person.name}
-            className="projector-rise min-w-0 flex items-center gap-2.5"
-          >
+          <li key={person.name} className="projector-rise min-w-0 flex items-center gap-2.5">
             <div className="relative shrink-0">
               <AuthorAvatar
                 name={person.name}
@@ -40,9 +35,7 @@ export function Podium({ posts }: PodiumProps) {
               </span>
             </div>
             <div className="min-w-0 text-[clamp(0.75rem,1.6vh,1.125rem)] leading-tight">
-              <p className="truncate font-medium">
-                {person.name.split(' ')[0]}
-              </p>
+              <p className="truncate font-medium">{person.name.split(' ')[0]}</p>
               <p className="text-white/60 tabular-nums">{person.postCount}</p>
             </div>
           </li>

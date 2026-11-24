@@ -15,9 +15,7 @@ export function FrameOverlay({ frameId }: FrameOverlayProps) {
         <>
           <div className="absolute top-0 inset-x-0 h-7 bg-[#05070a] pointer-events-none" />
           <div className="absolute bottom-0 inset-x-0 h-7 bg-[#05070a] flex items-center justify-between px-4 text-[11px] text-white/85 font-mono pointer-events-none">
-            <span className="font-semibold text-white">
-              ● REC THIAGO &amp; PRISCILA
-            </span>
+            <span className="font-semibold text-white">● REC THIAGO &amp; PRISCILA</span>
             <span>{CURRENT_DATE_STR}</span>
           </div>
         </>

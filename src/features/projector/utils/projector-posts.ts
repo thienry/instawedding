@@ -10,10 +10,7 @@ export function isShownOnProjector(post: Post): boolean {
  * Returns the posts of the slideshow, in display order. Does not change the
  * input. Without challenge posts, the `challenges` mode shows every post.
  */
-export function selectSlides(
-  posts: readonly Post[],
-  mode: ProjectorFilterMode
-): readonly Post[] {
+export function selectSlides(posts: readonly Post[], mode: ProjectorFilterMode): readonly Post[] {
   switch (mode) {
     case 'highlights':
       return [...posts].sort((a, b) => b.likesCount - a.likesCount)

@@ -19,25 +19,14 @@ function database(answers: Record<string, Rows | 'error' | 'duplicate'>) {
     methods.push(method)
     const answer = answers[method] ?? []
     if (answer === 'error') {
-      return Response.json(
-        { message: 'denied', code: '42501' },
-        { status: 403 }
-      )
+      return Response.json({ message: 'denied', code: '42501' }, { status: 403 })
     }
     if (answer === 'duplicate') {
-      return Response.json(
-        { message: 'duplicate key', code: '23505' },
-        { status: 409 }
-      )
+      return Response.json({ message: 'duplicate key', code: '23505' }, { status: 409 })
     }
-    const single = new Headers(init.headers)
-      .get('accept')
-      ?.includes('vnd.pgrst.object')
+    const single = new Headers(init.headers).get('accept')?.includes('vnd.pgrst.object')
     if (single && answer.length !== 1) {
-      return Response.json(
-        { message: 'no single row', code: 'PGRST116' },
-        { status: 406 }
-      )
+      return Response.json({ message: 'no single row', code: 'PGRST116' }, { status: 406 })
     }
     return Response.json(single ? answer[0] : answer)
   })

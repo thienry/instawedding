@@ -39,9 +39,7 @@ describe('admin token', () => {
   it('rejects a payload changed to escalate the role', () => {
     const [payload, signature] = createAdminToken('moderator').split('.')
     const data = JSON.parse(Buffer.from(payload!, 'base64url').toString())
-    const forged = Buffer.from(
-      JSON.stringify({ ...data, role: 'admin' })
-    ).toString('base64url')
+    const forged = Buffer.from(JSON.stringify({ ...data, role: 'admin' })).toString('base64url')
     expect(verifyAdminToken(`${forged}.${signature}`)).toBeNull()
   })
 
@@ -58,21 +56,20 @@ describe('admin token', () => {
 })
 
 describe('OTP challenge', () => {
-  const issue = () =>
-    createOtpChallengeToken(EMAIL, '123456', 'moderator', 'Ana')
+  const issue = () => createOtpChallengeToken(EMAIL, '123456', 'moderator', 'Ana')
 
   it('accepts the right code and normalizes the email', () => {
-    expect(
-      verifyOtpChallenge(issue(), ` ${EMAIL.toUpperCase()} `, '123456')
-    ).toEqual({ valid: true, role: 'moderator', name: 'Ana' })
+    expect(verifyOtpChallenge(issue(), ` ${EMAIL.toUpperCase()} `, '123456')).toEqual({
+      valid: true,
+      role: 'moderator',
+      name: 'Ana',
+    })
   })
 
   it('rejects a wrong code, another email and a tampered token', () => {
     const token = issue()
     expect(verifyOtpChallenge(token, EMAIL, '000000').valid).toBe(false)
-    expect(verifyOtpChallenge(token, 'b@example.com', '123456').valid).toBe(
-      false
-    )
+    expect(verifyOtpChallenge(token, 'b@example.com', '123456').valid).toBe(false)
     expect(verifyOtpChallenge(`x${token}`, EMAIL, '123456').valid).toBe(false)
   })
 

@@ -48,9 +48,7 @@ function findTopAuthor(posts: readonly Post[]): TopAuthor | null {
 export function computeAdminStats(posts: readonly Post[]): AdminStats {
   const totalPosts = posts.length
   const approvedPosts = posts.filter((post) => post.isApproved)
-  const totalVideos = posts.filter(
-    (post) => resolvePostMediaType(post) === 'video'
-  ).length
+  const totalVideos = posts.filter((post) => resolvePostMediaType(post) === 'video').length
   const challengePosts = posts.filter((post) => post.challengeId != null).length
 
   return {
@@ -61,7 +59,6 @@ export function computeAdminStats(posts: readonly Post[]): AdminStats {
     topLikedPost: findTopLikedPost(posts),
     topAuthor: findTopAuthor(approvedPosts),
     challengePosts,
-    challengeRate:
-      totalPosts > 0 ? Math.round((challengePosts / totalPosts) * 100) : 0,
+    challengeRate: totalPosts > 0 ? Math.round((challengePosts / totalPosts) * 100) : 0,
   }
 }

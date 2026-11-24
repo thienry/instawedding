@@ -31,9 +31,7 @@ export function CapturePage() {
   const formRef = useRef<HTMLFormElement>(null)
 
   const [errorMessage, setErrorMessage] = useState('')
-  const [openModal, setOpenModal] = useState<
-    'recorder' | 'guestbook' | 'terms' | null
-  >(null)
+  const [openModal, setOpenModal] = useState<'recorder' | 'guestbook' | 'terms' | null>(null)
   const [isCardCaption, setIsCardCaption] = useState(false)
   const closeModal = () => setOpenModal(null)
 
@@ -86,15 +84,11 @@ export function CapturePage() {
     setErrorMessage('')
     try {
       const result = await signIn(
-        preselectedChallengeId
-          ? `/capture?challengeId=${preselectedChallengeId}`
-          : '/capture'
+        preselectedChallengeId ? `/capture?challengeId=${preselectedChallengeId}` : '/capture'
       )
       if (!result.success && result.message) setErrorMessage(result.message)
     } catch {
-      setErrorMessage(
-        'Não foi possível iniciar o login com Google. Tente novamente.'
-      )
+      setErrorMessage('Não foi possível iniciar o login com Google. Tente novamente.')
     }
   }
 
@@ -140,10 +134,7 @@ export function CapturePage() {
         />
       ) : !previewUrl ? (
         <div className="max-w-xl mx-auto space-y-5 pt-2">
-          <GuestProfileBar
-            guestUser={guestUser}
-            onSignOut={() => void signOut()}
-          />
+          <GuestProfileBar guestUser={guestUser} onSignOut={() => void signOut()} />
           <CaptureChoices
             errorMessage={errorMessage}
             onOpenCamera={() => cameraInputRef.current?.click()}
@@ -157,8 +148,7 @@ export function CapturePage() {
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0"
-        >
+          className="lg:grid lg:grid-cols-12 lg:gap-8 items-start space-y-6 lg:space-y-0">
           <MediaPreview
             media={media}
             previewUrl={previewUrl}

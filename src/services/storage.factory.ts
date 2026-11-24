@@ -9,9 +9,7 @@ let storageInstance: StorageService | null = null
 
 export function getStorageService(): StorageService {
   if (!storageInstance) {
-    storageInstance = isMockEnabled
-      ? new MockStorageService()
-      : new R2StorageService()
+    storageInstance = isMockEnabled ? new MockStorageService() : new R2StorageService()
   }
   return storageInstance
 }

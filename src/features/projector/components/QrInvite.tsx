@@ -12,13 +12,9 @@ export function QrInvite({ onOpen }: QrInviteProps) {
       type="button"
       onClick={onOpen}
       title="Abrir o QR Code em tela cheia"
-      className="group w-full flex items-center gap-[1.4vw] text-left cursor-pointer"
-    >
+      className="group w-full flex items-center gap-[1.4vw] text-left cursor-pointer">
       <span className="shrink-0 p-1.5 rounded-lg bg-white transition-transform duration-500 group-hover:scale-105">
-        <QrCodeSvg
-          value={CAPTURE_URL}
-          className="w-[clamp(6rem,15vh,11rem)] h-auto"
-        />
+        <QrCodeSvg value={CAPTURE_URL} className="w-[clamp(6rem,15vh,11rem)] h-auto" />
       </span>
       <span>
         <span className="block font-serif text-[clamp(1.1rem,2.9vh,2rem)] leading-tight text-balance">

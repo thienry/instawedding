@@ -5,8 +5,7 @@ export function ChallengesSkeleton() {
       {[1, 2, 3, 4].map((n) => (
         <div
           key={n}
-          className="bg-white rounded-3xl p-5 border border-sage-200/60 animate-pulse flex items-center gap-4"
-        >
+          className="bg-white rounded-3xl p-5 border border-sage-200/60 animate-pulse flex items-center gap-4">
           <div className="w-14 h-14 bg-sage-200 rounded-2xl shrink-0" />
           <div className="flex-1 space-y-2.5">
             <div className="h-5 bg-sage-200 rounded w-36" />

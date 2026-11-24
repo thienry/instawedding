@@ -12,10 +12,7 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false, error: null }
@@ -48,9 +45,7 @@ export class ErrorBoundary extends Component<
             </div>
 
             <div className="space-y-1.5">
-              <h2 className="font-serif text-lg font-bold text-sage-900">
-                Ops! Algo deu errado
-              </h2>
+              <h2 className="font-serif text-lg font-bold text-sage-900">Ops! Algo deu errado</h2>
               <p className="text-xs text-sage-800/70">
                 Ocorreu uma instabilidade momentânea na exibição desta página.
               </p>
@@ -66,15 +61,13 @@ export class ErrorBoundary extends Component<
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 hover:bg-sage-100 transition-colors"
-              >
+                className="flex-1 py-2.5 px-3 rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 hover:bg-sage-100 transition-colors">
                 Tentar de novo
               </button>
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-sage-900 hover:bg-sage-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
-              >
+                className="flex-1 py-2.5 px-3 rounded-xl bg-sage-900 hover:bg-sage-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs">
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Recarregar</span>
               </button>

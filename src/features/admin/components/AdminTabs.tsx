@@ -40,20 +40,14 @@ interface AdminTabsProps {
 }
 
 /** Switches between the dashboard sections. */
-export function AdminTabs({
-  activeTab,
-  onChange,
-  counts,
-  isAdmin,
-}: AdminTabsProps) {
+export function AdminTabs({ activeTab, onChange, counts, isAdmin }: AdminTabsProps) {
   const tabs = isAdmin ? ALL_TABS : PHOTOS_AND_CHALLENGES
 
   return (
     <div
       className={`grid ${
         isAdmin ? 'grid-cols-3 max-w-xl' : 'grid-cols-2 max-w-md'
-      } gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl`}
-    >
+      } gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl`}>
       {tabs.map(({ id, label, Icon, iconClass }) => (
         <button
           key={id}
@@ -63,8 +57,7 @@ export function AdminTabs({
             activeTab === id
               ? 'bg-white text-sage-900 shadow-xs'
               : 'text-sage-800 hover:text-sage-900'
-          }`}
-        >
+          }`}>
           <Icon className={iconClass} />
           <span>
             {label} ({counts[id]})

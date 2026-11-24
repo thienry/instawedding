@@ -53,10 +53,7 @@ vi.mock('./supabase.js', () => {
   return {
     createServiceClient: () => ({
       from: query,
-      rpc: async (
-        _name: string,
-        { p_key, p_max }: { p_key: string; p_max: number }
-      ) => {
+      rpc: async (_name: string, { p_key, p_max }: { p_key: string; p_max: number }) => {
         if (db.limiterDown) return { data: null, error: { message: 'down' } }
         const hits = (db.hits.get(p_key) ?? 0) + 1
         db.hits.set(p_key, hits)
@@ -112,9 +109,7 @@ describe('identity', () => {
     expect(await role(bearer(ADMIN))).toBe('admin')
     expect(await role(bearer(MOD))).toBe('moderator')
     expect(await role(cookie(MOD, 'moderator'))).toBe('moderator')
-    expect(await role({ ...bearer(GUEST), ...cookie(ADMIN, 'admin') })).toBe(
-      'admin'
-    )
+    expect(await role({ ...bearer(GUEST), ...cookie(ADMIN, 'admin') })).toBe('admin')
   })
 
   it('rejects guests, unconfirmed emails and nobody', async () => {
@@ -170,22 +165,18 @@ it.each([
   ['challenges', { action: 'create', title: ' ', description: 'b' }],
   ['ceremonialists', { action: 'add', email: 'invalid' }],
   ['ceremonialists', null],
-] as [keyof typeof ENDPOINTS, unknown][])(
-  '%s rejects %j',
-  async (name, body) => {
-    const response = await ENDPOINTS[name](post(body, bearer(ADMIN)))
-    expect(response.status).toBe(400)
-    expect(db.writes).toEqual([])
-  }
-)
+] as [keyof typeof ENDPOINTS, unknown][])('%s rejects %j', async (name, body) => {
+  const response = await ENDPOINTS[name](post(body, bearer(ADMIN)))
+  expect(response.status).toBe(400)
+  expect(db.writes).toEqual([])
+})
 
 describe('OTP', () => {
   const request = (email = ADMIN) => otp(post({ action: 'request', email }))
   const challengeOf = (response: Response) =>
     response.headers.get('set-cookie')!.split(';')[0]!.split('=')[1]!
   const verify = async (challengeToken: string, code: string) =>
-    (await otp(post({ action: 'verify', email: ADMIN, code, challengeToken })))
-      .status
+    (await otp(post({ action: 'verify', email: ADMIN, code, challengeToken }))).status
   const issue = async () => {
     const response = await request()
     const { debugCode } = (await response.json()) as { debugCode: string }
@@ -270,19 +261,13 @@ describe('upload URL', () => {
     const res = await upload(bearer(GUEST))
     const { uploadUrl: url } = (await res.json()) as { uploadUrl: string }
     const signed = new URL(url).searchParams.get('X-Amz-SignedHeaders')
-    expect(signed?.split(';')).toEqual([
-      'content-length',
-      'content-type',
-      'host',
-    ])
+    expect(signed?.split(';')).toEqual(['content-length', 'content-type', 'host'])
   })
 
   it.each([undefined, 0, -1, 1.5, '10', 25 * 1024 * 1024 + 1])(
     'rejects the size %s',
     async (sizeBytes) => {
-      const res = await uploadUrl(
-        post({ contentType: 'image/webp', sizeBytes }, bearer(GUEST))
-      )
+      const res = await uploadUrl(post({ contentType: 'image/webp', sizeBytes }, bearer(GUEST)))
       expect(res.status).toBe(400)
     }
   )

@@ -18,15 +18,10 @@ export interface GuestAuth {
 /** Tracks the signed-in guest, including logins made elsewhere. */
 export function useGuestAuth(): GuestAuth {
   const guestAuthService = getGuestAuthService()
-  const [guestUser, setGuestUser] = useState(() =>
-    guestAuthService.getCurrentGuest()
-  )
+  const [guestUser, setGuestUser] = useState(() => guestAuthService.getCurrentGuest())
   const [isSigningIn, setIsSigningIn] = useState(false)
 
-  useEffect(
-    () => guestAuthService.onAuthStateChange(setGuestUser),
-    [guestAuthService]
-  )
+  useEffect(() => guestAuthService.onAuthStateChange(setGuestUser), [guestAuthService])
 
   const signIn = async (redirectPath: string) => {
     setIsSigningIn(true)

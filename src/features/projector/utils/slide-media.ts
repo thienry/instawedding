@@ -1,8 +1,5 @@
 import { SLIDE_DURATION_MS } from '@/features/projector/constants'
-import {
-  MAX_VIDEO_DURATION_TOLERANCE_SECONDS,
-  resolvePostMediaType,
-} from '@/utils/video'
+import { MAX_VIDEO_DURATION_TOLERANCE_SECONDS, resolvePostMediaType } from '@/utils/video'
 
 import type { SlideMedia } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
@@ -17,10 +14,7 @@ const MAX_VIDEO_DURATION_MS = MAX_VIDEO_DURATION_TOLERANCE_SECONDS * 1000
 function getVideoDurationMs(seconds: number): number {
   // Recorded videos may report an infinite duration
   if (!Number.isFinite(seconds)) return MAX_VIDEO_DURATION_MS
-  return Math.min(
-    MAX_VIDEO_DURATION_MS,
-    Math.max(SLIDE_DURATION_MS, seconds * 1000)
-  )
+  return Math.min(MAX_VIDEO_DURATION_MS, Math.max(SLIDE_DURATION_MS, seconds * 1000))
 }
 
 function normalizeRatio(width: number, height: number): number {

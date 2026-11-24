@@ -44,19 +44,13 @@ export function MockLoginShortcuts({ onSelect }: MockLoginShortcutsProps) {
             key={email}
             type="button"
             onClick={() => onSelect(email)}
-            className={`w-full p-2.5 rounded-xl border border-sage-200 bg-white ${hoverClass} hover:bg-sage-50/60 flex items-center justify-between text-left transition-colors`}
-          >
+            className={`w-full p-2.5 rounded-xl border border-sage-200 bg-white ${hoverClass} hover:bg-sage-50/60 flex items-center justify-between text-left transition-colors`}>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-sage-900 block truncate">
-                {name}
-              </span>
-              <span className="text-[11px] text-sage-800/60 block truncate">
-                {email}
-              </span>
+              <span className="text-xs font-bold text-sage-900 block truncate">{name}</span>
+              <span className="text-[11px] text-sage-800/60 block truncate">{email}</span>
             </div>
             <span
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm ${badgeClass} shrink-0`}
-            >
+              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm ${badgeClass} shrink-0`}>
               {badge}
             </span>
           </button>

@@ -101,9 +101,7 @@ it('hides the ranking without posts', async () => {
 })
 
 it('reports a failed load and tries again', async () => {
-  vi.spyOn(getChallengeRepository(), 'getChallenges').mockRejectedValueOnce(
-    new Error('offline')
-  )
+  vi.spyOn(getChallengeRepository(), 'getChallenges').mockRejectedValueOnce(new Error('offline'))
   render(
     <MemoryRouter>
       <ChallengesPage />

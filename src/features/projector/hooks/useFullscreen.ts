@@ -11,8 +11,7 @@ export function useFullscreen(): Fullscreen {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
-    const handleChange = () =>
-      setIsFullscreen(document.fullscreenElement !== null)
+    const handleChange = () => setIsFullscreen(document.fullscreenElement !== null)
     document.addEventListener('fullscreenchange', handleChange)
     return () => document.removeEventListener('fullscreenchange', handleChange)
   }, [])

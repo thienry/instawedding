@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { FeedNotificationService } from '@/services/feed-notification.service'
 
-import type { FeedNotificationState } from '@/services/feed-notification.service'
+import type { FeedNotificationState } from '@/services/feed-notification/notification-state'
 
 /**
  * React hook that subscribes to real-time and while-away feed notification state.

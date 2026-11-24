@@ -16,14 +16,9 @@ export interface FeedFilter extends GuestIdentity {
 }
 
 /** Whether the post was created by the guest, who may then delete it. */
-export function isOwnPost(
-  post: Post,
-  { guestUser, sessionId }: GuestIdentity
-): boolean {
+export function isOwnPost(post: Post, { guestUser, sessionId }: GuestIdentity): boolean {
   if (!post.clientSessionId) return false
-  return (
-    post.clientSessionId === guestUser?.id || post.clientSessionId === sessionId
-  )
+  return post.clientSessionId === guestUser?.id || post.clientSessionId === sessionId
 }
 
 function hasGuestName(post: Post, guestUser: GuestUser | null): boolean {
@@ -33,10 +28,7 @@ function hasGuestName(post: Post, guestUser: GuestUser | null): boolean {
 }
 
 /** Returns the posts to show, in display order. Does not change the input. */
-export function filterFeedPosts(
-  posts: readonly Post[],
-  filter: FeedFilter
-): readonly Post[] {
+export function filterFeedPosts(posts: readonly Post[], filter: FeedFilter): readonly Post[] {
   const { tab, challengeId, guestUser } = filter
   const list =
     challengeId === null || Number.isNaN(challengeId)
@@ -48,9 +40,7 @@ export function filterFeedPosts(
       return list.filter((post) => Boolean(post.challengeId))
     case 'mine':
       // Older posts may only be matched by the author's name
-      return list.filter(
-        (post) => isOwnPost(post, filter) || hasGuestName(post, guestUser)
-      )
+      return list.filter((post) => isOwnPost(post, filter) || hasGuestName(post, guestUser))
     case 'most-liked':
       return [...list].sort((a, b) => b.likesCount - a.likesCount)
     default:
@@ -59,10 +49,7 @@ export function filterFeedPosts(
 }
 
 /** Prepends the posts that are not in the list yet. */
-export function mergeNewPosts(
-  posts: readonly Post[],
-  newPosts: readonly Post[]
-): readonly Post[] {
+export function mergeNewPosts(posts: readonly Post[], newPosts: readonly Post[]): readonly Post[] {
   const knownIds = new Set(posts.map((post) => post.id))
   return [...newPosts.filter((post) => !knownIds.has(post.id)), ...posts]
 }

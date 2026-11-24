@@ -5,8 +5,7 @@ export function FeedSkeleton() {
       {[1, 2].map((n) => (
         <div
           key={n}
-          className="bg-white rounded-3xl overflow-hidden border border-sage-200/70 shadow-xs animate-pulse"
-        >
+          className="bg-white rounded-3xl overflow-hidden border border-sage-200/70 shadow-xs animate-pulse">
           <div className="p-4 flex items-center space-x-3">
             <div className="w-11 h-11 rounded-full bg-sage-200" />
             <div className="space-y-2 flex-1">

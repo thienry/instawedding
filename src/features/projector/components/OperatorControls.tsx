@@ -59,8 +59,7 @@ function ControlButton({ title, Icon, onClick }: ControlButtonProps) {
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="projector-control"
-    >
+      className="projector-control">
       <Icon className="w-4 h-4" />
     </button>
   )
@@ -85,15 +84,12 @@ export function OperatorControls({
   const { slides, filterMode, isPaused } = slideshow
 
   return (
-    <div
-      className={`projector-controls ${isVisible ? '' : 'projector-controls-hidden'}`}
-    >
+    <div className={`projector-controls ${isVisible ? '' : 'projector-controls-hidden'}`}>
       <Link
         to="/admin"
         title="Voltar ao Painel Administrativo"
         aria-label="Voltar ao Painel Administrativo"
-        className="projector-control"
-      >
+        className="projector-control">
         <ArrowLeft className="w-4 h-4" />
       </Link>
 
@@ -105,8 +101,7 @@ export function OperatorControls({
           title={title}
           aria-label={label}
           aria-pressed={filterMode === mode}
-          className="projector-control"
-        >
+          className="projector-control">
           <Icon className="w-4 h-4" />
           <span className="hidden md:inline">
             {label}
@@ -123,11 +118,7 @@ export function OperatorControls({
             onClick={slideshow.showPrevious}
           />
           <ControlButton
-            title={
-              isPaused
-                ? 'Retomar apresentação (Espaço)'
-                : 'Pausar apresentação (Espaço)'
-            }
+            title={isPaused ? 'Retomar apresentação (Espaço)' : 'Pausar apresentação (Espaço)'}
             Icon={isPaused ? Play : Pause}
             onClick={slideshow.togglePause}
           />
@@ -139,17 +130,9 @@ export function OperatorControls({
         </>
       )}
 
+      <ControlButton title="Ampliar QR Code na tela" Icon={QrCode} onClick={onOpenQr} />
       <ControlButton
-        title="Ampliar QR Code na tela"
-        Icon={QrCode}
-        onClick={onOpenQr}
-      />
-      <ControlButton
-        title={
-          fullscreen.isFullscreen
-            ? 'Sair da Tela Cheia (F)'
-            : 'Modo Tela Cheia (F)'
-        }
+        title={fullscreen.isFullscreen ? 'Sair da Tela Cheia (F)' : 'Modo Tela Cheia (F)'}
         Icon={fullscreen.isFullscreen ? Minimize2 : Maximize2}
         onClick={fullscreen.toggle}
       />

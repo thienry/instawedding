@@ -34,9 +34,7 @@ export function DialogModal({
   // Focus the safest control and give the focus back when closing
   useEffect(() => {
     const previous = document.activeElement
-    formRef.current
-      ?.querySelector<HTMLElement>('input, button[type=button], button')
-      ?.focus()
+    formRef.current?.querySelector<HTMLElement>('input, button[type=button], button')?.focus()
     return () => {
       if (previous instanceof HTMLElement) previous.focus()
     }
@@ -49,9 +47,7 @@ export function DialogModal({
       return
     }
     if (event.key !== 'Tab') return
-    const controls = formRef.current?.querySelectorAll<HTMLElement>(
-      'input, button:not(:disabled)'
-    )
+    const controls = formRef.current?.querySelectorAll<HTMLElement>('input, button:not(:disabled)')
     const first = controls?.[0]
     const last = controls?.[controls.length - 1]
     if (event.shiftKey && document.activeElement === first) {
@@ -70,36 +66,25 @@ export function DialogModal({
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-message`}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-    >
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
       <form
         ref={formRef}
         onSubmit={(event) => {
           event.preventDefault()
           if (!isBlocked) onClose(true)
         }}
-        className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-sage-200 space-y-4"
-      >
+        className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-sage-200 space-y-4">
         <div
           className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
-            isDestructive
-              ? 'bg-rose-100 text-rose-600'
-              : 'bg-sage-100 text-sage-800'
-          }`}
-        >
+            isDestructive ? 'bg-rose-100 text-rose-600' : 'bg-sage-100 text-sage-800'
+          }`}>
           <Icon className="w-6 h-6" />
         </div>
         <div className="text-center space-y-1.5">
-          <h3
-            id={`${id}-title`}
-            className="font-serif text-lg font-bold text-sage-900"
-          >
+          <h3 id={`${id}-title`} className="font-serif text-lg font-bold text-sage-900">
             {title}
           </h3>
-          <p
-            id={`${id}-message`}
-            className="text-sm text-sage-800/75 leading-relaxed break-words"
-          >
+          <p id={`${id}-message`} className="text-sm text-sage-800/75 leading-relaxed break-words">
             {message}
           </p>
         </div>
@@ -119,8 +104,7 @@ export function DialogModal({
             <button
               type="button"
               onClick={() => onClose(false)}
-              className="flex-1 py-3 px-4 rounded-xl border border-sage-200 text-sm font-semibold text-sage-800 hover:bg-sage-100 transition-colors"
-            >
+              className="flex-1 py-3 px-4 rounded-xl border border-sage-200 text-sm font-semibold text-sage-800 hover:bg-sage-100 transition-colors">
               {cancelLabel}
             </button>
           )}
@@ -128,11 +112,8 @@ export function DialogModal({
             type="submit"
             disabled={isBlocked}
             className={`flex-1 py-3 px-4 rounded-xl text-white text-sm font-semibold shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              isDestructive
-                ? 'bg-rose-600 hover:bg-rose-700'
-                : 'bg-sage-900 hover:bg-sage-800'
-            }`}
-          >
+              isDestructive ? 'bg-rose-600 hover:bg-rose-700' : 'bg-sage-900 hover:bg-sage-800'
+            }`}>
             {confirmLabel}
           </button>
         </div>

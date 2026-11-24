@@ -41,12 +41,7 @@ interface AlbumToolbarProps {
 }
 
 /** Album downloads, feed reset and the filter of the moderation grid. */
-export function AlbumToolbar({
-  moderation,
-  albumExport,
-  stats,
-  isAdmin,
-}: AlbumToolbarProps) {
+export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumToolbarProps) {
   const { totalPosts, approvedPosts } = stats
   const { filter, setFilter, clearFeed } = moderation
   const { progress, downloadAlbum, exportCsv } = albumExport
@@ -74,14 +69,11 @@ export function AlbumToolbar({
             type="button"
             disabled={progress !== null || isEmpty}
             onClick={() => void downloadAlbum()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors shadow-xs"
-          >
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors shadow-xs">
             {progress ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>
-                  {`Empacotando ZIP (${progress.current}/${progress.total})...`}
-                </span>
+                <span>{`Empacotando ZIP (${progress.current}/${progress.total})...`}</span>
               </>
             ) : (
               <>
@@ -96,8 +88,7 @@ export function AlbumToolbar({
             disabled={isEmpty}
             onClick={exportCsv}
             title="Exportar planilha CSV com links e metadados das fotos"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-sm font-semibold transition-colors border border-sage-200/80 shadow-2xs"
-          >
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-sm font-semibold transition-colors border border-sage-200/80 shadow-2xs">
             <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
             <span>Relatório (.CSV)</span>
           </button>
@@ -107,8 +98,7 @@ export function AlbumToolbar({
               type="button"
               onClick={() => void clearFeed()}
               title="Apenas Admin: apaga todos os posts de teste"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold border border-rose-200 transition-colors shadow-2xs"
-            >
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold border border-rose-200 transition-colors shadow-2xs">
               <RotateCcw className="w-4 h-4" />
               <span>Zerar Feed</span>
             </button>
@@ -124,8 +114,7 @@ export function AlbumToolbar({
             onClick={() => setFilter(id)}
             className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
               filter === id ? activeClass : idleClass
-            }`}
-          >
+            }`}>
             {label} ({counts[id]})
           </button>
         ))}

@@ -1,26 +1,14 @@
-import { getGuestAuthService } from '@/services/guest-auth.factory'
 import {
-  getPostRepository,
-  getRealtimeService,
-} from '@/services/repositories.factory'
-import { getGuestSession } from '@/utils/session'
+  getLastSeenTimestamp,
+  getNewestTimestamp,
+  setLastSeenTimestamp,
+} from '@/services/feed-notification/last-seen'
+import { summarizeUnread } from '@/services/feed-notification/notification-state'
+import { isOwnPost } from '@/services/feed-notification/own-post'
+import { getPostRepository, getRealtimeService } from '@/services/repositories.factory'
 
+import type { FeedNotificationState } from '@/services/feed-notification/notification-state'
 import type { Post } from '@/types/domain'
-
-const LAST_SEEN_POST_AT_KEY = 'instawedding_last_seen_post_at'
-
-export interface NotificationAuthorPreview {
-  readonly name: string
-  readonly avatarUrl: string | null
-}
-
-export interface FeedNotificationState {
-  readonly stagedPosts: readonly Post[]
-  readonly unseenAwayPostIds: ReadonlySet<string>
-  readonly unseenAwayPosts: readonly Post[]
-  readonly totalUnreadCount: number
-  readonly latestAuthors: readonly NotificationAuthorPreview[]
-}
 
 type NotificationStateListener = (state: FeedNotificationState) => void
 
@@ -77,42 +65,15 @@ class FeedNotificationManager {
    * Returns a snapshot of the current notification state.
    */
   getState(): FeedNotificationState {
-    const combinedUnreadPosts = [...this.stagedPosts, ...this.unseenAwayPosts]
-    const uniquePostsMap = new Map<string, Post>()
-    for (const post of combinedUnreadPosts) {
-      if (!uniquePostsMap.has(post.id)) {
-        uniquePostsMap.set(post.id, post)
-      }
-    }
-
-    const deduplicatedUnread = Array.from(uniquePostsMap.values())
-    const authorsMap = new Map<string, NotificationAuthorPreview>()
-
-    for (const post of deduplicatedUnread) {
-      const normalizedKey = post.authorName.trim().toLowerCase()
-      if (!normalizedKey || authorsMap.has(normalizedKey)) continue
-      authorsMap.set(normalizedKey, {
-        name: post.authorName.trim(),
-        avatarUrl: post.authorAvatarUrl ?? null,
-      })
-      if (authorsMap.size >= 3) break
-    }
-
-    return {
-      stagedPosts: [...this.stagedPosts],
-      unseenAwayPostIds: new Set(this.unseenAwayPostIds),
-      unseenAwayPosts: [...this.unseenAwayPosts],
-      totalUnreadCount: deduplicatedUnread.length,
-      latestAuthors: Array.from(authorsMap.values()),
-    }
+    return summarizeUnread(this.stagedPosts, this.unseenAwayPosts)
   }
 
   /**
    * Synchronizes the notification manager with a freshly loaded list of posts from the repository.
    */
   syncWithFetchedPosts(fetchedPosts: readonly Post[]): void {
-    const lastSeenIso = this.getLastSeenTimestamp()
-    const newestTimestamp = this.getNewestTimestamp(fetchedPosts)
+    const lastSeenIso = getLastSeenTimestamp()
+    const newestTimestamp = getNewestTimestamp(fetchedPosts)
 
     for (const post of fetchedPosts) {
       this.knownPostIds.add(post.id)
@@ -124,7 +85,7 @@ class FeedNotificationManager {
 
     // First visit ever: baseline lastSeenPostAt so existing historical posts aren't marked unread
     if (!lastSeenIso) {
-      this.setLastSeenTimestamp(newestTimestamp ?? new Date().toISOString())
+      setLastSeenTimestamp(newestTimestamp ?? new Date().toISOString())
       this.unseenAwayPosts = []
       this.unseenAwayPostIds.clear()
       this.notifyListeners()
@@ -133,13 +94,13 @@ class FeedNotificationManager {
 
     const lastSeenMs = Date.parse(lastSeenIso)
     if (Number.isNaN(lastSeenMs)) {
-      this.setLastSeenTimestamp(newestTimestamp ?? new Date().toISOString())
+      setLastSeenTimestamp(newestTimestamp ?? new Date().toISOString())
       this.notifyListeners()
       return
     }
 
     const unseenFromFetch = fetchedPosts.filter((post) => {
-      if (this.isOwnPost(post)) return false
+      if (isOwnPost(post)) return false
       const createdMs = Date.parse(post.createdAt)
       return !Number.isNaN(createdMs) && createdMs > lastSeenMs
     })
@@ -155,7 +116,7 @@ class FeedNotificationManager {
   registerOwnPublishedPost(post: Post): void {
     this.knownPostIds.add(post.id)
     this.stagedPosts = this.stagedPosts.filter((p) => p.id !== post.id)
-    this.advanceLastSeenIfNewer(post.createdAt)
+    setLastSeenTimestamp(post.createdAt)
     this.notifyListeners()
   }
 
@@ -177,13 +138,12 @@ class FeedNotificationManager {
       ...this.unseenAwayPosts,
       ...(currentFeedPosts ?? []),
     ]
-    const newestIso =
-      this.getNewestTimestamp(allCandidatePosts) ?? new Date().toISOString()
+    const newestIso = getNewestTimestamp(allCandidatePosts) ?? new Date().toISOString()
 
     this.stagedPosts = []
     this.unseenAwayPosts = []
     this.unseenAwayPostIds.clear()
-    this.setLastSeenTimestamp(newestIso)
+    setLastSeenTimestamp(newestIso)
     this.notifyListeners()
 
     return {
@@ -199,25 +159,6 @@ class FeedNotificationManager {
     this.stagedPosts = this.stagedPosts.filter((p) => p.id !== postId)
     this.unseenAwayPosts = this.unseenAwayPosts.filter((p) => p.id !== postId)
     this.unseenAwayPostIds.delete(postId)
-    this.notifyListeners()
-  }
-
-  /**
-   * Clears unread indicators and updates the last-seen timestamp without returning staged posts.
-   */
-  markAllAsSeen(currentFeedPosts?: readonly Post[]): void {
-    const allCandidatePosts = [
-      ...this.stagedPosts,
-      ...this.unseenAwayPosts,
-      ...(currentFeedPosts ?? []),
-    ]
-    const newestIso =
-      this.getNewestTimestamp(allCandidatePosts) ?? new Date().toISOString()
-
-    this.stagedPosts = []
-    this.unseenAwayPosts = []
-    this.unseenAwayPostIds.clear()
-    this.setLastSeenTimestamp(newestIso)
     this.notifyListeners()
   }
 
@@ -239,7 +180,7 @@ class FeedNotificationManager {
 
     try {
       const fetchedPosts = await getPostRepository().getPosts()
-      const lastSeenIso = this.getLastSeenTimestamp()
+      const lastSeenIso = getLastSeenTimestamp()
       const lastSeenMs = lastSeenIso ? Date.parse(lastSeenIso) : 0
 
       let hasChanges = false
@@ -247,13 +188,10 @@ class FeedNotificationManager {
         if (this.knownPostIds.has(post.id)) continue
         this.knownPostIds.add(post.id)
 
-        if (this.isOwnPost(post)) continue
+        if (isOwnPost(post)) continue
 
         const createdMs = Date.parse(post.createdAt)
-        if (
-          !lastSeenMs ||
-          (!Number.isNaN(createdMs) && createdMs > lastSeenMs)
-        ) {
+        if (!lastSeenMs || (!Number.isNaN(createdMs) && createdMs > lastSeenMs)) {
           if (!this.stagedPosts.some((p) => p.id === post.id)) {
             this.stagedPosts = [post, ...this.stagedPosts]
             hasChanges = true
@@ -262,9 +200,7 @@ class FeedNotificationManager {
       }
 
       if (hasChanges) {
-        this.stagedPosts.sort(
-          (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)
-        )
+        this.stagedPosts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
         this.notifyListeners()
       }
     } catch {
@@ -278,8 +214,8 @@ class FeedNotificationManager {
     if (this.knownPostIds.has(newPost.id)) return
     this.knownPostIds.add(newPost.id)
 
-    if (this.isOwnPost(newPost)) {
-      this.advanceLastSeenIfNewer(newPost.createdAt)
+    if (isOwnPost(newPost)) {
+      setLastSeenTimestamp(newPost.createdAt)
       return
     }
 
@@ -287,70 +223,6 @@ class FeedNotificationManager {
       this.stagedPosts = [newPost, ...this.stagedPosts]
       this.notifyListeners()
     }
-  }
-
-  private isOwnPost(post: Post): boolean {
-    const guestUser = getGuestAuthService().getCurrentGuest()
-    const session = getGuestSession()
-
-    if (
-      post.clientSessionId &&
-      (post.clientSessionId === session.sessionId ||
-        (guestUser && post.clientSessionId === guestUser.id))
-    ) {
-      return true
-    }
-
-    if (
-      guestUser &&
-      post.authorName.trim().toLowerCase() ===
-        guestUser.name.trim().toLowerCase()
-    ) {
-      return true
-    }
-
-    return false
-  }
-
-  private getNewestTimestamp(posts: readonly Post[]): string | null {
-    let maxMs = -1
-    let maxIso: string | null = null
-
-    for (const post of posts) {
-      const ms = Date.parse(post.createdAt)
-      if (!Number.isNaN(ms) && ms > maxMs) {
-        maxMs = ms
-        maxIso = post.createdAt
-      }
-    }
-
-    return maxIso
-  }
-
-  private getLastSeenTimestamp(): string | null {
-    if (typeof localStorage === 'undefined') return null
-    return localStorage.getItem(LAST_SEEN_POST_AT_KEY)
-  }
-
-  private setLastSeenTimestamp(isoTimestamp: string): void {
-    if (typeof localStorage === 'undefined') return
-    const currentIso = localStorage.getItem(LAST_SEEN_POST_AT_KEY)
-    if (currentIso) {
-      const currentMs = Date.parse(currentIso)
-      const nextMs = Date.parse(isoTimestamp)
-      if (
-        !Number.isNaN(currentMs) &&
-        !Number.isNaN(nextMs) &&
-        nextMs < currentMs
-      ) {
-        return
-      }
-    }
-    localStorage.setItem(LAST_SEEN_POST_AT_KEY, isoTimestamp)
-  }
-
-  private advanceLastSeenIfNewer(isoTimestamp: string): void {
-    this.setLastSeenTimestamp(isoTimestamp)
   }
 
   private notifyListeners(): void {

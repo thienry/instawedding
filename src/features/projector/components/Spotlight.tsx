@@ -7,8 +7,7 @@ import type { Slide } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
 import type { AnimationEvent, CSSProperties } from 'react'
 
-const DEFAULT_CAPTION =
-  'Celebrando o amor e a alegria do grande dia de Thiago & Priscila!'
+const DEFAULT_CAPTION = 'Celebrando o amor e a alegria do grande dia de Thiago & Priscila!'
 /** Longer captions use smaller text and appear at once instead of by word. */
 const MAX_STAGGERED_WORDS = 16
 
@@ -30,12 +29,7 @@ export function Spotlight({ slide }: SpotlightProps) {
   return (
     <div className="grid min-h-0 items-center">
       {layers.map(({ slide: { post }, isLeaving }) => (
-        <SpotlightText
-          key={post.id}
-          post={post}
-          isLeaving={isLeaving}
-          onLeft={removeLeaving}
-        />
+        <SpotlightText key={post.id} post={post} isLeaving={isLeaving} onLeft={removeLeaving} />
       ))}
     </div>
   )
@@ -62,8 +56,7 @@ function SpotlightText({ post, isLeaving, onLeft }: SpotlightTextProps) {
     <article
       aria-hidden={isLeaving}
       onAnimationEnd={handleAnimationEnd}
-      className={`[grid-area:1/1] min-w-0 ${isLeaving ? 'projector-text-leave' : ''}`}
-    >
+      className={`[grid-area:1/1] min-w-0 ${isLeaving ? 'projector-text-leave' : ''}`}>
       {post.challenge && (
         <p className="projector-rise mb-[1.6vh] text-sm lg:text-[clamp(0.8rem,1.8vh,1.25rem)] text-gold-400">
           {post.challenge.icon} {post.challenge.title}
@@ -75,16 +68,12 @@ function SpotlightText({ post, isLeaving, onLeft }: SpotlightTextProps) {
           isLong
             ? 'projector-rise lg:text-[clamp(1.1rem,2.9vh,2rem)]'
             : 'lg:text-[clamp(1.35rem,4vh,2.9rem)]'
-        }`}
-      >
+        }`}>
         {isLong
           ? caption
           : words.map((word, index) => (
               <span key={index}>
-                <span
-                  style={{ '--order': index } as CSSProperties}
-                  className="projector-word"
-                >
+                <span style={{ '--order': index } as CSSProperties} className="projector-word">
                   {word}
                 </span>{' '}
               </span>

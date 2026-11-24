@@ -10,11 +10,7 @@ interface ChallengeListProps {
 }
 
 /** Every challenge, paused ones included. */
-export function ChallengeList({
-  challenges,
-  challengeAdmin,
-  isAdmin,
-}: ChallengeListProps) {
+export function ChallengeList({ challenges, challengeAdmin, isAdmin }: ChallengeListProps) {
   const { toggleChallenge, deleteChallenge } = challengeAdmin
 
   return (
@@ -24,9 +20,7 @@ export function ChallengeList({
           key={challenge.id}
           challenge={challenge}
           onToggle={() => void toggleChallenge(challenge.id)}
-          onDelete={
-            isAdmin ? () => void deleteChallenge(challenge.id) : undefined
-          }
+          onDelete={isAdmin ? () => void deleteChallenge(challenge.id) : undefined}
         />
       ))}
     </div>

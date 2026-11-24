@@ -21,8 +21,7 @@ export function BottomNavigation() {
             {totalUnreadCount > 0 && (
               <span
                 aria-label={`${totalUnreadCount} novas fotos`}
-                className="absolute -top-1.5 -right-2.5 min-w-4.5 h-4.5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs ring-2 ring-white animate-in zoom-in-50 duration-150"
-              >
+                className="absolute -top-1.5 -right-2.5 min-w-4.5 h-4.5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-xs ring-2 ring-white animate-in zoom-in-50 duration-150">
                 {badgeLabel}
               </span>
             )}
@@ -30,10 +29,7 @@ export function BottomNavigation() {
           <span>Feed</span>
         </NavLink>
 
-        <NavLink
-          to="/capture"
-          className="flex flex-col items-center justify-center -mt-6"
-        >
+        <NavLink to="/capture" className="flex flex-col items-center justify-center -mt-6">
           <div className="w-15 h-15 rounded-full bg-gradient-to-tr from-sage-800 to-sage-900 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform border-4 border-white">
             <Camera className="w-7 h-7" />
           </div>

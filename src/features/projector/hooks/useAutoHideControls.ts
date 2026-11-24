@@ -16,10 +16,7 @@ export function useAutoHideControls(): AutoHideControls {
 
   const scheduleHide = () => {
     window.clearTimeout(timeoutRef.current)
-    timeoutRef.current = window.setTimeout(
-      () => setIsVisible(false),
-      HIDE_DELAY_MS
-    )
+    timeoutRef.current = window.setTimeout(() => setIsVisible(false), HIDE_DELAY_MS)
   }
 
   useEffect(() => {

@@ -53,9 +53,7 @@ export function usePostSubmit(
       navigate('/')
     } catch (err) {
       onError(
-        err instanceof Error
-          ? err.message
-          : 'Falha ao preparar a publicação. Tente novamente.'
+        err instanceof Error ? err.message : 'Falha ao preparar a publicação. Tente novamente.'
       )
       setIsSubmitting(false)
     }

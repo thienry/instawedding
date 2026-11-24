@@ -16,9 +16,7 @@ export function ProjectorToggle({ draft }: ProjectorToggleProps) {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-sage-900">
-              Exibir no Telão da Festa
-            </span>
+            <span className="text-sm font-bold text-sage-900">Exibir no Telão da Festa</span>
             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
               Ao vivo
             </span>

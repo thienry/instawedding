@@ -1,12 +1,8 @@
 import { useRef, useState } from 'react'
 
 import { compressPhoto } from '@/utils/compressor'
-import { renderFilteredAndFramedPhoto } from '@/utils/photo-filters'
-import {
-  isVideoFile,
-  normalizeVideoFile,
-  validateVideoFile,
-} from '@/utils/video'
+import { renderFilteredAndFramedPhoto } from '@/utils/photo-renderer'
+import { isVideoFile, normalizeVideoFile, validateVideoFile } from '@/utils/video'
 
 import type { PhotoFilterId, PhotoFrameId } from '@/utils/photo-filters'
 
@@ -41,9 +37,7 @@ export interface MediaSelection {
  *
  * @param onError - Receives the message to show when a file is refused.
  */
-export function useMediaSelection(
-  onError: (message: string) => void
-): MediaSelection {
+export function useMediaSelection(onError: (message: string) => void): MediaSelection {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [compressedFile, setCompressedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -93,9 +87,7 @@ export function useMediaSelection(
 
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
       const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
-      onError(
-        `O arquivo selecionado tem ${sizeMb}MB e excede o limite máximo permitido de 25MB.`
-      )
+      onError(`O arquivo selecionado tem ${sizeMb}MB e excede o limite máximo permitido de 25MB.`)
       return
     }
 
@@ -139,9 +131,7 @@ export function useMediaSelection(
 
     setIsProcessing(true)
     // The compressed file spares the canvas from decoding a 12 MP original
-    const sourceUrl = compressedFile
-      ? URL.createObjectURL(compressedFile)
-      : previewUrl
+    const sourceUrl = compressedFile ? URL.createObjectURL(compressedFile) : previewUrl
     try {
       return await renderFilteredAndFramedPhoto(
         sourceUrl,

@@ -60,8 +60,6 @@ export async function deleteUpload(id: string): Promise<void> {
 }
 
 export async function loadUploads(): Promise<StoredUpload[]> {
-  const uploads = await runRequest<StoredUpload[]>('readonly', (store) =>
-    store.getAll()
-  )
+  const uploads = await runRequest<StoredUpload[]>('readonly', (store) => store.getAll())
   return uploads ?? []
 }

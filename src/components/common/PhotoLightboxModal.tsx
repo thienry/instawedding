@@ -41,13 +41,11 @@ export function PhotoLightboxModal({
       role="dialog"
       aria-modal="true"
       className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 animate-in fade-in duration-150 overflow-hidden"
-      onClick={onClose}
-    >
+      onClick={onClose}>
       {/* Ambient Color-Matched Blurred Backdrop of the Media itself */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none"
-      >
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
         {isVideo ? (
           <video
             src={post.mediaUrl}
@@ -70,8 +68,7 @@ export function PhotoLightboxModal({
       {/* Top Bar */}
       <div
         className="relative z-10 flex items-center justify-between text-white max-w-2xl w-full mx-auto pt-1"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2.5">
           <AuthorAvatar
             name={post.authorName}
@@ -80,9 +77,7 @@ export function PhotoLightboxModal({
             fallbackClassName="bg-white/15 text-white border border-white/25"
           />
           <div>
-            <h3 className="text-sm font-bold leading-tight">
-              {post.authorName}
-            </h3>
+            <h3 className="text-sm font-bold leading-tight">{post.authorName}</h3>
             {post.challenge && (
               <span className="inline-flex items-center gap-1 text-[11px] text-gold-400 font-medium">
                 <Sparkles className="w-3 h-3" />
@@ -98,8 +93,7 @@ export function PhotoLightboxModal({
           type="button"
           onClick={onClose}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-          aria-label="Fechar visualização"
-        >
+          aria-label="Fechar visualização">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -107,8 +101,7 @@ export function PhotoLightboxModal({
       {/* Main Media */}
       <div
         className="relative z-10 flex-1 flex items-center justify-center my-3 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
           <video
             src={post.mediaUrl}
@@ -130,8 +123,7 @@ export function PhotoLightboxModal({
       {/* Bottom Controls & Caption */}
       <div
         className="relative z-10 max-w-2xl w-full mx-auto space-y-3 pb-2 text-white"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         {post.caption && (
           <p className="text-xs sm:text-sm text-white/90 text-center leading-relaxed px-2">
             &ldquo;{post.caption}&rdquo;
@@ -142,13 +134,10 @@ export function PhotoLightboxModal({
           <button
             type="button"
             onClick={() => onToggleLike(post.id)}
-            className="flex items-center gap-2 text-xs font-semibold text-white hover:opacity-80 active:scale-95 transition-all"
-          >
+            className="flex items-center gap-2 text-xs font-semibold text-white hover:opacity-80 active:scale-95 transition-all">
             <Heart
               className={`w-5 h-5 transition-colors ${
-                isLiked
-                  ? 'fill-rose-500 text-rose-500'
-                  : 'text-white stroke-[1.75]'
+                isLiked ? 'fill-rose-500 text-rose-500' : 'text-white stroke-[1.75]'
               }`}
             />
             <span>{post.likesCount} curtidas</span>
@@ -158,16 +147,14 @@ export function PhotoLightboxModal({
             <button
               type="button"
               onClick={() => onShare(post)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors"
-            >
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors">
               <Share2 className="w-4 h-4" />
               <span>Compartilhar</span>
             </button>
             <button
               type="button"
               onClick={() => onDownload(post)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-xs font-semibold text-slate-950 transition-colors"
-            >
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-xs font-semibold text-slate-950 transition-colors">
               <Download className="w-4 h-4" />
               <span>Baixar</span>
             </button>

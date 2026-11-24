@@ -15,14 +15,8 @@ export async function POST(req: Request): Promise<Response> {
   if (!body) return fail(400, 'Corpo da requisição inválido.')
   const { action, postId } = body
 
-  if (
-    (action === 'delete_post' || action === 'clear_all') &&
-    user.role !== 'admin'
-  ) {
-    return fail(
-      403,
-      'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.'
-    )
+  if ((action === 'delete_post' || action === 'clear_all') && user.role !== 'admin') {
+    return fail(403, 'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.')
   }
   if (
     (action === 'delete_post' || action === 'toggle_approval') &&
@@ -37,9 +31,7 @@ export async function POST(req: Request): Promise<Response> {
     switch (action) {
       case 'list_posts': {
         const { data, error } = await posts()
-          .select(
-            '*, challenges(id, title, description, icon, is_active, created_at)'
-          )
+          .select('*, challenges(id, title, description, icon, is_active, created_at)')
           .order('created_at', { ascending: false })
         if (error) throw error
         return json({ posts: data })
@@ -67,9 +59,7 @@ export async function POST(req: Request): Promise<Response> {
         return json({ success: true })
       }
       case 'clear_all': {
-        const { error } = await posts()
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000')
+        const { error } = await posts().delete().neq('id', '00000000-0000-0000-0000-000000000000')
         if (error) throw error
         return json({ success: true })
       }

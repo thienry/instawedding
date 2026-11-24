@@ -60,9 +60,7 @@ export class SupabaseRealtimeService implements RealtimeService {
           }
 
           const mediaType: PostMediaType =
-            newRow.media_type === 'video' || isVideoUrl(newRow.media_url)
-              ? 'video'
-              : 'image'
+            newRow.media_type === 'video' || isVideoUrl(newRow.media_url) ? 'video' : 'image'
 
           const post: Post = {
             id: newRow.id,
@@ -75,8 +73,7 @@ export class SupabaseRealtimeService implements RealtimeService {
             clientSessionId: newRow.client_session_id,
             likesCount: newRow.likes_count,
             isApproved: newRow.is_approved,
-            showOnProjector:
-              (newRow as Record<string, unknown>).show_on_projector !== false,
+            showOnProjector: (newRow as Record<string, unknown>).show_on_projector !== false,
             createdAt: newRow.created_at,
             challenge,
           }

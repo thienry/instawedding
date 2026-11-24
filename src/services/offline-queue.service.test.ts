@@ -23,8 +23,7 @@ const network = { onLine: true }
 // A fresh module simulates reloading the app with the same IndexedDB.
 async function loadApp() {
   vi.resetModules()
-  const { OfflineQueueService } =
-    await import('@/services/offline-queue.service')
+  const { OfflineQueueService } = await import('@/services/offline-queue.service')
   return OfflineQueueService
 }
 
@@ -45,9 +44,7 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', undefined)
   uploadFile.mockReset().mockResolvedValue('https://x.test/a.webp')
   deletePost.mockReset().mockResolvedValue(undefined)
-  createPost
-    .mockReset()
-    .mockImplementation(async (dto: CreatePostDTO) => ({ id: 'p1', ...dto }))
+  createPost.mockReset().mockImplementation(async (dto: CreatePostDTO) => ({ id: 'p1', ...dto }))
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -210,8 +207,6 @@ it('shows the post when its removal after a cancel fails', async () => {
   await vi.waitFor(() => expect(createPost).toHaveBeenCalled())
   await queue.cancelTask(id)
   creation.resolve({ id: 'p1' })
-  await vi.waitFor(() =>
-    expect(published).toHaveBeenCalledWith({ id: 'p1' }, id)
-  )
+  await vi.waitFor(() => expect(published).toHaveBeenCalledWith({ id: 'p1' }, id))
   expect(createPost).toHaveBeenCalledOnce()
 })

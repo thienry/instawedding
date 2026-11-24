@@ -59,18 +59,15 @@ it('shows the page, without the projector, to guests', async () => {
   expect(screen.queryByTitle(/Modo Telão/)).toBeNull()
 })
 
-it.each(['admin', 'moderator'] as const)(
-  'gives the projector to the %s',
-  async (role) => {
-    const { sidebar, header } = await open('/', role)
-    const label = role === 'admin' ? '👑 Admin' : '🛡️ Mod'
-    sidebar.getByText(label)
-    header.getByText(label)
-    sidebar.getByTitle('Modo Telão')
-    header.getByTitle('Abrir Modo Telão')
-    sidebar.getByText('admin@x.test')
-  }
-)
+it.each(['admin', 'moderator'] as const)('gives the projector to the %s', async (role) => {
+  const { sidebar, header } = await open('/', role)
+  const label = role === 'admin' ? '👑 Admin' : '🛡️ Mod'
+  sidebar.getByText(label)
+  header.getByText(label)
+  sidebar.getByTitle('Modo Telão')
+  header.getByTitle('Abrir Modo Telão')
+  sidebar.getByText('admin@x.test')
+})
 
 it.each(['expanded sidebar', 'collapsed sidebar', 'mobile header'])(
   'signs out from the %s and returns to the feed',
@@ -107,9 +104,7 @@ it.each([undefined, 'admin'] as const)(
 it('shows unread posts in the title and in both sidebar states', async () => {
   unread = 120
   const { sidebar } = await open('/challenges')
-  expect(document.title).toBe(
-    '(120) Desafios da Festa | Casamento de Thiago & Priscila'
-  )
+  expect(document.title).toBe('(120) Desafios da Festa | Casamento de Thiago & Priscila')
   sidebar.getByText('99+')
   fireEvent.click(sidebar.getByLabelText('Recolher menu lateral'))
   sidebar.getByText('9+')

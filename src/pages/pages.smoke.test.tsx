@@ -1,11 +1,5 @@
 // @vitest-environment jsdom
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { expect, it, vi } from 'vitest'
 
@@ -85,12 +79,8 @@ it('feed: likes a photo', async () => {
   signInGuest()
   open(<FeedPage />)
   fireEvent.click(await screen.findByTitle('Curtir foto'))
-  await waitFor(async () =>
-    expect(await getPostRepository().hasUserLiked('p1', 'g1')).toBe(true)
-  )
-  await waitFor(() =>
-    expect(screen.getByTitle('Curtir foto').textContent).toBe('6')
-  )
+  await waitFor(async () => expect(await getPostRepository().hasUserLiked('p1', 'g1')).toBe(true))
+  await waitFor(() => expect(screen.getByTitle('Curtir foto').textContent).toBe('6'))
 })
 
 it('feed: asks a signed-out guest to log in before liking', async () => {
@@ -102,9 +92,7 @@ it('feed: asks a signed-out guest to log in before liking', async () => {
 
 it('capture: posts the selected photo and returns to the feed', async () => {
   signInGuest()
-  const submit = vi
-    .spyOn(OfflineQueueService, 'submitInBackground')
-    .mockResolvedValue('task')
+  const submit = vi.spyOn(OfflineQueueService, 'submitInBackground').mockResolvedValue('task')
   const { container } = open(<CapturePage />)
   const file = new File(['x'], 'a.jpg', { type: 'image/jpeg' })
   fireEvent.change(container.querySelector('input[type=file]')!, {
@@ -164,20 +152,13 @@ it('admin: hides a photo', async () => {
 
 it.each([
   ['togglePostApproval', 'Ocultar do Telão', null, /Não foi possível alterar/],
-  [
-    'deletePostAsAdmin',
-    /^Excluir Definitivamente/,
-    'Excluir Foto',
-    /Não foi possível excluir/,
-  ],
+  ['deletePostAsAdmin', /^Excluir Definitivamente/, 'Excluir Foto', /Não foi possível excluir/],
   ['clearAllPosts', /apaga todos/, 'Zerar Feed', /Não foi possível zerar/],
 ] as const)(
   'admin: reports a %s failure and keeps the photo',
   async (method, control, confirmLabel, message) => {
     signInAdmin()
-    const action = vi
-      .spyOn(getPostRepository(), method)
-      .mockRejectedValue(new Error('denied'))
+    const action = vi.spyOn(getPostRepository(), method).mockRejectedValue(new Error('denied'))
     open(<AdminPage />)
     fireEvent.click(await screen.findByTitle(control))
     if (confirmLabel) {
@@ -230,9 +211,7 @@ it('admin: only clears the feed after the exact word is typed', async () => {
 
 it('feed: reports a failed deletion and keeps the photo', async () => {
   signInGuest()
-  vi.spyOn(getPostRepository(), 'deletePost').mockRejectedValue(
-    new Error('denied')
-  )
+  vi.spyOn(getPostRepository(), 'deletePost').mockRejectedValue(new Error('denied'))
   open(<FeedPage />, { clientSessionId: 'g1' })
   fireEvent.click(await screen.findByTitle(/Excluir/))
   fireEvent.click(await screen.findByRole('button', { name: 'Excluir Foto' }))

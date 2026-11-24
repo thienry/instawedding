@@ -36,8 +36,7 @@ async function sendEmailViaResend(
     return { ok: true }
   }
 
-  const fromEmail =
-    process.env.RESEND_FROM_EMAIL || 'InstaWedding <onboarding@resend.dev>'
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'InstaWedding <onboarding@resend.dev>'
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -95,11 +94,7 @@ async function sendEmailViaResend(
 const OTP_WINDOW_SECONDS = 600
 
 // Fails closed on deployments. Local development works without a database.
-async function checkLimit(
-  scope: string,
-  subject: string,
-  max: number
-): Promise<boolean> {
+async function checkLimit(scope: string, subject: string, max: number): Promise<boolean> {
   try {
     return await withinRateLimit(scope, subject, max, OTP_WINDOW_SECONDS)
   } catch (err) {
@@ -122,10 +117,10 @@ export async function POST(req: Request): Promise<Response> {
   try {
     body = (await req.json()) as OtpRequestBody
   } catch {
-    return new Response(
-      JSON.stringify({ error: 'Corpo da requisição inválido.' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: 'Corpo da requisição inválido.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   const { action, email } = body
@@ -175,8 +170,7 @@ export async function POST(req: Request): Promise<Response> {
     if (!dispatchResult.ok) {
       return new Response(
         JSON.stringify({
-          error:
-            'Falha ao enviar o e-mail com o código de acesso. Tente novamente.',
+          error: 'Falha ao enviar o e-mail com o código de acesso. Tente novamente.',
         }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       )
@@ -218,8 +212,7 @@ export async function POST(req: Request): Promise<Response> {
     if (!challengeToken) {
       return new Response(
         JSON.stringify({
-          error:
-            'Desafio de verificação não encontrado ou expirado. Solicite um novo código.',
+          error: 'Desafio de verificação não encontrado ou expirado. Solicite um novo código.',
         }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       )
@@ -232,11 +225,7 @@ export async function POST(req: Request): Promise<Response> {
       (await checkLimit('otp-verify', challengeId, 5))
     if (!allowed) return tooManyAttempts()
 
-    const verification = verifyOtpChallenge(
-      challengeToken,
-      normalizedEmail,
-      code.trim()
-    )
+    const verification = verifyOtpChallenge(challengeToken, normalizedEmail, code.trim())
 
     if (!verification.valid || !verification.role || !verification.name) {
       return new Response(
@@ -253,11 +242,7 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     // Create session token (valid for 24 hours)
-    const adminToken = createAdminToken(
-      verification.role,
-      normalizedEmail,
-      verification.name
-    )
+    const adminToken = createAdminToken(verification.role, normalizedEmail, verification.name)
 
     const sessionCookie = buildSetCookieHeader(adminToken)
     const clearOtpCookie = buildClearOtpCookieHeader()

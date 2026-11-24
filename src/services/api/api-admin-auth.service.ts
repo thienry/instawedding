@@ -107,10 +107,7 @@ export class ApiAdminAuthService implements AdminAuthService {
 
       return {
         success: false,
-        message:
-          data.error ||
-          data.message ||
-          'Código inválido ou expirado. Tente novamente.',
+        message: data.error || data.message || 'Código inválido ou expirado. Tente novamente.',
       }
     } catch {
       return {
@@ -162,9 +159,7 @@ export class ApiAdminAuthService implements AdminAuthService {
         if (session?.user?.email) {
           void this.fetchIdentity(session).then((user) => {
             if (user) {
-              this.authSource = this.isFromSession(user, session)
-                ? 'oauth'
-                : 'cookie'
+              this.authSource = this.isFromSession(user, session) ? 'oauth' : 'cookie'
               this.setCurrentUser(user)
             } else if (this.authSource === 'oauth') {
               this.authSource = null
@@ -185,14 +180,10 @@ export class ApiAdminAuthService implements AdminAuthService {
     return session?.user.email?.trim().toLowerCase() === user.email
   }
 
-  private async fetchIdentity(
-    session: Session | null
-  ): Promise<AdminUser | null> {
+  private async fetchIdentity(session: Session | null): Promise<AdminUser | null> {
     try {
       const response = await fetch('/api/admin/auth', {
-        headers: session
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : {},
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         credentials: 'include',
       })
       if (!response.ok) return null

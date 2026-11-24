@@ -1,9 +1,6 @@
 import { setGuestName } from '@/utils/session'
 
-import type {
-  GuestAuthResult,
-  GuestAuthService,
-} from '@/services/contracts/guest-auth.contract'
+import type { GuestAuthResult, GuestAuthService } from '@/services/contracts/guest-auth.contract'
 import type { GuestUser } from '@/types/domain'
 
 const MOCK_GUEST_STORAGE_KEY = 'instawedding_mock_guest_user'

@@ -44,10 +44,7 @@ export interface Slideshow {
  *
  * @param newPost - Interrupts the sequence to be shown at once.
  */
-export function useSlideshow(
-  posts: readonly Post[],
-  newPost: Post | null
-): Slideshow {
+export function useSlideshow(posts: readonly Post[], newPost: Post | null): Slideshow {
   const [filterMode, setMode] = useState<ProjectorFilterMode>('all')
   const [position, setPosition] = useState(START)
   const [isPaused, setIsPaused] = useState(false)
@@ -58,22 +55,14 @@ export function useSlideshow(
     if (newPost) setPosition({ postId: newPost.id, index: 0 })
   }
 
-  const slides = useMemo(
-    () => selectSlides(posts, filterMode),
-    [posts, filterMode]
-  )
+  const slides = useMemo(() => selectSlides(posts, filterMode), [posts, filterMode])
   const foundIndex = slides.findIndex(({ id }) => id === position.postId)
   const index =
-    foundIndex >= 0
-      ? foundIndex
-      : Math.max(0, Math.min(position.index, slides.length - 1))
+    foundIndex >= 0 ? foundIndex : Math.max(0, Math.min(position.index, slides.length - 1))
   const currentPost = slides[index]
   const hasManySlides = slides.length > 1
 
-  const { slide, isReady } = useReadySlide(
-    currentPost,
-    slides[(index + 1) % slides.length]
-  )
+  const { slide, isReady } = useReadySlide(currentPost, slides[(index + 1) % slides.length])
   const isRunning = hasManySlides && !isPaused && isReady
   const durationMs = slide?.media?.durationMs ?? SLIDE_DURATION_MS
 
@@ -107,7 +96,6 @@ export function useSlideshow(
     durationMs,
     showPrevious: () => step(-1),
     showNext: () => step(1),
-    showPost: (post) =>
-      setPosition({ postId: post.id, index: slides.indexOf(post) }),
+    showPost: (post) => setPosition({ postId: post.id, index: slides.indexOf(post) }),
   }
 }

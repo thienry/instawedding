@@ -1,7 +1,4 @@
-import type {
-  PresignedUploadResult,
-  UploadProgressCallback,
-} from '@/types/domain'
+import type { PresignedUploadResult, UploadProgressCallback } from '@/types/domain'
 
 export interface StorageService {
   getPresignedUploadUrl(
