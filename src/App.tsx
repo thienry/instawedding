@@ -3,7 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { FeedPage } from '@/pages/FeedPage'
+import { FeedPage } from '@/features/feed/FeedPage'
 
 // Lazy-loaded routes for 4G performance & chunk isolation
 const CapturePage = lazy(() =>

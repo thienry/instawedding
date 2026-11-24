@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 
 // Known warnings (set-state-in-effect). Lower this as they get fixed.
-const MAX_LINT_WARNINGS = 6
+const MAX_LINT_WARNINGS = 4
 
 const steps = [
   ['typecheck', 'tsc -b --pretty false'],
