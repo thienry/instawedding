@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 
-// Known warnings (set-state-in-effect). Lower this as they get fixed.
+// Files already over the max-lines limit. Lower this as they get split.
 const MAX_LINT_WARNINGS = 4
 
 const steps = [

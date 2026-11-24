@@ -12,7 +12,7 @@ const repo = new SupabasePostRepository()
 type Rows = Record<string, unknown>[]
 
 // Fakes PostgREST: each HTTP method answers with rows, or fails if 'error'.
-function database(answers: Record<string, Rows | 'error'>) {
+function database(answers: Record<string, Rows | 'error' | 'duplicate'>) {
   const methods: string[] = []
   vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
     const method = init.method ?? 'GET'
@@ -22,6 +22,12 @@ function database(answers: Record<string, Rows | 'error'>) {
       return Response.json(
         { message: 'denied', code: '42501' },
         { status: 403 }
+      )
+    }
+    if (answer === 'duplicate') {
+      return Response.json(
+        { message: 'duplicate key', code: '23505' },
+        { status: 409 }
       )
     }
     const single = new Headers(init.headers)
@@ -105,5 +111,54 @@ describe('createPost', () => {
       })
     ).rejects.toThrow('denied')
     expect(methods).toEqual(['POST'])
+  })
+
+  const dto = {
+    id: ID,
+    authorName: 'Ana',
+    mediaUrl: '/media/a.webp',
+    clientSessionId: 'g1',
+  }
+  const row = {
+    id: ID,
+    author_name: 'Ana',
+    media_url: '/media/first.webp',
+    client_session_id: 'g1',
+  }
+
+  it('sends the id', async () => {
+    let body: unknown
+    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+      body = JSON.parse(init.body as string)
+      return Response.json(row)
+    })
+    await repo.createPost(dto)
+    expect(body).toMatchObject({ id: ID })
+  })
+
+  it('returns the post a previous attempt already created', async () => {
+    const methods = database({ POST: 'duplicate', GET: [row] })
+    const post = await repo.createPost(dto)
+    expect(post).toMatchObject({ id: ID, mediaUrl: '/media/first.webp' })
+    expect(methods).toEqual(['POST', 'GET'])
+  })
+
+  it('rejects an id taken by a post it cannot find', async () => {
+    database({ POST: 'duplicate', GET: [] })
+    await expect(repo.createPost(dto)).rejects.toThrow('duplicate key')
+  })
+
+  it('looks only for posts of the same guest', async () => {
+    const urls: string[] = []
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+      if (init.method === 'POST') {
+        return Response.json({ message: 'x', code: '23505' }, { status: 409 })
+      }
+      urls.push(decodeURIComponent(url))
+      return Response.json([row])
+    })
+    await repo.createPost(dto)
+    expect(urls[0]).toContain(`id=eq.${ID}`)
+    expect(urls[0]).toContain('client_session_id=eq.g1')
   })
 })

@@ -86,6 +86,13 @@ describe('posts', () => {
     await expect(anon(insertPost('anonymous'))).rejects.toThrow()
   })
 
+  it('accepts the id chosen by the guest, but only once', async () => {
+    const id = `'55555555-5555-5555-5555-555555555555'`
+    expect(await ana(insertPost(ANA, { id }))).toHaveLength(1)
+    await expect(ana(insertPost(ANA, { id }))).rejects.toThrow('duplicate key')
+    await expect(bob(insertPost(BOB, { id }))).rejects.toThrow('duplicate key')
+  })
+
   it.each([
     ['likes_count', '99'],
     ['is_approved', 'false'],

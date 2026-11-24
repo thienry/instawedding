@@ -28,6 +28,15 @@ describe('MockPostRepository', () => {
     expect((await repo.getPosts())[0]?.id).toBe(post.id)
   })
 
+  it('does not create the same post twice', async () => {
+    const dto = { id: 'p-1', authorName: 'Ana', mediaUrl: 'a.webp' }
+    const first = await repo.createPost(dto)
+    expect(await repo.createPost(dto)).toEqual(first)
+    expect(broadcastNewPost).toHaveBeenCalledOnce()
+    const posts = await repo.getPosts()
+    expect(posts.filter(({ id }) => id === 'p-1')).toHaveLength(1)
+  })
+
   it('toggles a like per session', async () => {
     const { id } = await create()
     expect(await repo.toggleLike(id, 's1')).toEqual({

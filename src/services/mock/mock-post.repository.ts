@@ -95,12 +95,15 @@ export class MockPostRepository implements PostRepository {
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 
+    const existing = rawPosts.find(({ id }) => id === dto.id)
+    if (existing) return existing
+
     const challenge = dto.challengeId
       ? await this.challengeRepo.getChallengeById(dto.challengeId)
       : null
 
     const newPost: Post = {
-      id: generateUUID(),
+      id: dto.id ?? generateUUID(),
       authorName: dto.authorName.trim(),
       authorAvatarUrl: dto.authorAvatarUrl ?? null,
       mediaUrl: dto.mediaUrl,

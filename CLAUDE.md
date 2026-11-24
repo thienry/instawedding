@@ -19,7 +19,7 @@ Realtime wedding photo wall PWA. React 19 + Vite + Tailwind v4, Supabase (Postgr
 - `src/services/contracts/`: interfaces; implementations in `mock/`, `supabase/`, `r2/` and `api/`
 - `src/services/api/api.client.ts`: calls to the admin API
 - `src/services/*.factory.ts`: pick the mock or real implementation
-- `src/services/offline-queue.service.ts`: background and offline uploads
+- `src/services/offline-queue.service.ts`: background and offline uploads; tasks, IndexedDB and the legacy queue in `offline-queue/`
 - `src/utils/`: compression, filters, video, ZIP and guest session
 - `src/index.css`: Tailwind theme (`sage` and `gold` colors)
 - `api/`: Vercel Functions (rules in `api/CLAUDE.md`)
