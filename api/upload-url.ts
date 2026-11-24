@@ -73,7 +73,12 @@ export async function POST(req: Request): Promise<Response> {
       : MAX_IMAGE_SIZE_BYTES
 
     // Validate size limit
-    if (!sizeBytes || sizeBytes > maxAllowedBytes || sizeBytes <= 0) {
+    if (
+      typeof sizeBytes !== 'number' ||
+      !Number.isSafeInteger(sizeBytes) ||
+      sizeBytes <= 0 ||
+      sizeBytes > maxAllowedBytes
+    ) {
       return new Response(
         JSON.stringify({
           error: `Tamanho excede o limite permitido (máximo ${maxAllowedBytes / (1024 * 1024)}MB).`,
@@ -114,10 +119,17 @@ export async function POST(req: Request): Promise<Response> {
       Bucket: bucketName,
       Key: objectKey,
       ContentType: contentType,
+      // Signed into the URL: R2 rejects a body of any other size
+      ContentLength: sizeBytes,
     })
 
     // Generate presigned PUT URL expiring in 5 minutes (300 seconds)
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 })
+    const uploadUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 300,
+      // The SDK leaves content-type unsigned by default, which would let a
+      // client upload HTML to a URL issued for an image
+      signableHeaders: new Set(['host', 'content-type', 'content-length']),
+    })
     const publicUrl = `${publicDomain.replace(/\/$/, '')}/${objectKey}`
 
     return new Response(
