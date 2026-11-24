@@ -30,6 +30,7 @@ import { GuestNameModal } from '@/components/common/GuestNameModal'
 import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
 import { ProgressiveImage } from '@/components/common/ProgressiveImage'
 import { TermsModal } from '@/components/common/TermsModal'
+import { useDialog } from '@/hooks/useDialog'
 import { useFeedNotifications } from '@/hooks/useFeedNotifications'
 import { FeedNotificationService } from '@/services/feed-notification.service'
 import { getGuestAuthService } from '@/services/guest-auth.factory'
@@ -66,6 +67,7 @@ function formatRelativeTime(isoString: string): string {
 }
 
 export function FeedPage() {
+  const { notify, dialog } = useDialog()
   const [searchParams, setSearchParams] = useSearchParams()
   const challengeFilterParam = searchParams.get('challengeId')
   const challengeFilterId = challengeFilterParam
@@ -494,7 +496,7 @@ export function FeedPage() {
       }
       setPostToDelete(null)
     } catch {
-      alert('Não foi possível excluir a publicação. Tente novamente.')
+      void notify('Não foi possível excluir a publicação. Tente novamente.')
     } finally {
       setIsDeleting(false)
     }
@@ -1447,6 +1449,8 @@ export function FeedPage() {
           <span>{shareToastMessage}</span>
         </div>
       )}
+
+      {dialog}
 
       {/* Terms and Privacy Modal */}
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />

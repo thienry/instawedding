@@ -125,6 +125,15 @@ it('keeps challenges read-only', async () => {
   ).rejects.toThrow('row-level security')
 })
 
+it('numbers new challenges after the seeded ones', async () => {
+  const rows = await as(
+    'service_role',
+    `INSERT INTO challenges (title, description) VALUES ('a', 'b') RETURNING id`
+  )
+  expect(Number(rows[0]?.id)).toBeGreaterThan(5)
+  await db.exec('DELETE FROM challenges WHERE id > 5')
+})
+
 it('hides ceremonialists and blocks self-promotion', async () => {
   for (const run of [anon, ana]) {
     expect(await run('SELECT * FROM ceremonialists')).toEqual([])

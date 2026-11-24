@@ -17,7 +17,6 @@ export function setupBrowser(): void {
     URL.createObjectURL = () => 'blob:test'
     URL.revokeObjectURL = () => {}
     window.scrollTo = () => {}
-    window.confirm = () => true
     Element.prototype.scrollIntoView = () => {}
     HTMLMediaElement.prototype.play = () => Promise.resolve()
     HTMLMediaElement.prototype.pause = () => {}

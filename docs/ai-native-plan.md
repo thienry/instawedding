@@ -61,7 +61,7 @@ All decided; no phase is blocked.
 - [x] OTP: attempt limits, single-use codes, no code in responses on deployments
 - [x] Uploads require a Google session and are rate limited
 - [x] Migrations written and tested in an embedded Postgres
-- [ ] Rollout: see `docs/SECURITY_ROLLOUT.md`
+- [x] Rollout done on 2026-11-24 (`docs/SECURITY_ROLLOUT.md`)
 
 ## Phase 3: Tests and agent configuration (~1 day, low risk)
 

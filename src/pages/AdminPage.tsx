@@ -29,6 +29,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { useDialog } from '@/hooks/useDialog'
 import { getAdminAuthService } from '@/services/admin-auth.factory'
 import {
   getCeremonialistRepository,
@@ -47,6 +48,7 @@ type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
 
 export function AdminPage() {
   const navigate = useNavigate()
+  const { confirm, notify, dialog } = useDialog()
   const isMockEnv = import.meta.env.VITE_USE_MOCKS === 'true'
 
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null)
@@ -316,20 +318,24 @@ export function AdminPage() {
         prev.map((p) => (p.id === postId ? { ...p, isApproved: newStatus } : p))
       )
     } catch {
-      alert('Não foi possível alterar a visibilidade da foto.')
+      void notify('Não foi possível alterar a visibilidade da foto.')
     }
   }
 
   const handleDeletePost = async (postId: string) => {
     if (currentUser?.role !== 'admin') {
-      alert('Apenas administradores podem excluir fotos definitivamente.')
+      void notify('Apenas administradores podem excluir fotos definitivamente.')
       return
     }
 
     if (
-      !window.confirm(
-        'Tem certeza que deseja excluir esta foto permanentemente do banco de dados e telão?'
-      )
+      !(await confirm({
+        title: 'Excluir foto?',
+        message: 'Esta foto será removida permanentemente do feed e do telão.',
+        confirmLabel: 'Excluir Foto',
+        cancelLabel: 'Cancelar',
+        isDestructive: true,
+      }))
     ) {
       return
     }
@@ -338,25 +344,31 @@ export function AdminPage() {
       await postRepo.deletePostAsAdmin(postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
     } catch {
-      alert('Não foi possível excluir a foto. Tente novamente.')
+      void notify('Não foi possível excluir a foto. Tente novamente.')
     }
   }
 
   const handleClearAll = async () => {
     if (currentUser?.role !== 'admin') {
-      alert('Apenas administradores podem zerar o feed.')
+      void notify('Apenas administradores podem zerar o feed.')
       return
     }
 
-    const confirmation = window.prompt(
-      'ATENÇÃO: Isso apagará todas as fotos de teste do banco antes do evento oficial.\nDigite "ZERAR" para confirmar:'
-    )
-    if (confirmation === 'ZERAR') {
+    const confirmed = await confirm({
+      title: 'Zerar o feed?',
+      message:
+        'Todas as fotos serão apagadas do banco. Digite ZERAR para confirmar.',
+      confirmLabel: 'Zerar Feed',
+      cancelLabel: 'Cancelar',
+      isDestructive: true,
+      requiredText: 'ZERAR',
+    })
+    if (confirmed) {
       try {
         await postRepo.clearAllPosts()
         setPosts([])
       } catch {
-        alert('Não foi possível zerar o feed. Tente novamente.')
+        void notify('Não foi possível zerar o feed. Tente novamente.')
       }
     }
   }
@@ -364,7 +376,7 @@ export function AdminPage() {
   const handleDownloadAlbum = async () => {
     const approvedPosts = posts.filter((p) => p.isApproved)
     if (approvedPosts.length === 0) {
-      alert('Não há fotos aprovadas para baixar.')
+      void notify('Não há fotos aprovadas para baixar.')
       return
     }
 
@@ -402,7 +414,9 @@ export function AdminPage() {
       }
 
       if (zipEntries.length === 0) {
-        alert('Não foi possível carregar as mídias para gerar o arquivo ZIP.')
+        void notify(
+          'Não foi possível carregar as mídias para gerar o arquivo ZIP.'
+        )
         return
       }
 
@@ -416,7 +430,7 @@ export function AdminPage() {
       document.body.removeChild(a)
       URL.revokeObjectURL(downloadUrl)
     } catch {
-      alert('Ocorreu um erro ao empacotar o álbum em ZIP.')
+      void notify('Ocorreu um erro ao empacotar o álbum em ZIP.')
     } finally {
       setIsDownloadingAlbum(false)
       setDownloadProgress(null)
@@ -425,7 +439,7 @@ export function AdminPage() {
 
   const handleExportCsv = () => {
     if (posts.length === 0) {
-      alert('Não há postagens para exportar.')
+      void notify('Não há postagens para exportar.')
       return
     }
 
@@ -485,7 +499,7 @@ export function AdminPage() {
       setNewChallengeDesc('')
       setNewChallengeIcon('✨')
     } catch {
-      alert('Não foi possível criar o desafio. Tente novamente.')
+      void notify('Não foi possível criar o desafio. Tente novamente.')
     } finally {
       setIsCreatingChallenge(false)
     }
@@ -498,23 +512,31 @@ export function AdminPage() {
         prev.map((c) => (c.id === id ? { ...c, isActive: newStatus } : c))
       )
     } catch {
-      alert('Não foi possível alterar o status do desafio.')
+      void notify('Não foi possível alterar o status do desafio.')
     }
   }
 
   const handleDeleteChallenge = async (id: number) => {
     if (currentUser?.role !== 'admin') {
-      alert('Apenas administradores podem excluir desafios.')
+      void notify('Apenas administradores podem excluir desafios.')
       return
     }
-    if (!window.confirm('Deseja excluir este desafio permanentemente?')) {
+    if (
+      !(await confirm({
+        title: 'Excluir desafio?',
+        message: 'Este desafio será removido permanentemente.',
+        confirmLabel: 'Excluir',
+        cancelLabel: 'Cancelar',
+        isDestructive: true,
+      }))
+    ) {
       return
     }
     try {
       await challengeRepo.deleteChallenge(id)
       setChallenges((prev) => prev.filter((c) => c.id !== id))
     } catch {
-      alert('Não foi possível excluir o desafio.')
+      void notify('Não foi possível excluir o desafio.')
     }
   }
 
@@ -564,9 +586,13 @@ export function AdminPage() {
   const handleRemoveCeremonialist = async (id: string, email: string) => {
     if (!isMasterAdmin) return
     if (
-      !window.confirm(
-        `Tem certeza que deseja revogar o acesso de cerimonial para "${email}"?`
-      )
+      !(await confirm({
+        title: 'Revogar acesso?',
+        message: `${email} perderá o acesso de cerimonial.`,
+        confirmLabel: 'Revogar',
+        cancelLabel: 'Cancelar',
+        isDestructive: true,
+      }))
     ) {
       return
     }
@@ -1524,6 +1550,7 @@ export function AdminPage() {
           </div>
         </div>
       ) : null}
+      {dialog}
     </div>
   )
 }
