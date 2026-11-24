@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { withMembership } from '@/features/feed/utils/feed-posts'
 import { getPostRepository } from '@/services/repositories.factory'
@@ -37,6 +37,12 @@ export function useLikes(
   const [heartBurstPostId, setHeartBurstPostId] = useState<string | null>(null)
   const lastTapsRef = useRef(new Map<string, number>())
   const postRepository = getPostRepository()
+
+  useEffect(() => {
+    if (heartBurstPostId === null) return
+    const timer = setTimeout(() => setHeartBurstPostId(null), HEART_BURST_MS)
+    return () => clearTimeout(timer)
+  }, [heartBurstPostId])
 
   const setLikesCount = (postId: string, likesCount: number) =>
     setPosts((prev) =>
@@ -78,9 +84,6 @@ export function useLikes(
     }
 
     setHeartBurstPostId(postId)
-    window.setTimeout(() => {
-      setHeartBurstPostId((prev) => (prev === postId ? null : prev))
-    }, HEART_BURST_MS)
     if (!likedPostIds.has(postId)) void toggleLike(postId)
   }
 
