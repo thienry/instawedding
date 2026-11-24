@@ -18,19 +18,17 @@ Tokens estimated as bytes / 4.
 | Tests                  | 0                         | critical modules covered |
 | `CLAUDE.md`            | missing                   | up to 60 lines           |
 
-### Remeasured (2026-11-24, after PR #9, before splitting `AppLayout.tsx` and `offline-queue.service.ts`)
+### Remeasured (2026-11-24, after PR #11)
 
 | Metric                 | Now                                                   | Target met |
 | ---------------------- | ----------------------------------------------------- | ---------- |
-| Versioned text         | 817 KB (637 KB on `be2341b`, remeasured the same way) | track only |
-| Largest file in `src/` | 17.9 KB (`AppLayout.tsx`)                             | no         |
-| Largest page           | 6.9 KB (`CapturePage.tsx`)                            | yes        |
+| Versioned text         | 849 KB (637 KB on `be2341b`, remeasured the same way) | track only |
+| Largest file in `src/` | 8.4 KB (`GuestbookModal.tsx`, tests aside)            | yes        |
+| Largest page           | 6.8 KB (`CapturePage.tsx`)                            | yes        |
 | Files failing Prettier | 0                                                     | yes        |
-| oxlint warnings        | 0 `set-state-in-effect`, 1 justified                  | yes        |
-| Tests                  | 199 in 20 files                                       | yes        |
+| oxlint warnings        | 0, 1 justified                                        | yes        |
+| Tests                  | 259 in 25 files                                       | yes        |
 | `CLAUDE.md`            | 58 lines                                              | yes        |
-
-Above 15 KB: `AppLayout.tsx` and `offline-queue.service.ts` (16.2 KB).
 
 ## Rules
 
@@ -50,7 +48,7 @@ All decided; no phase is blocked.
 
 ## Phase 1: Formatting and verification (~1 h, low risk)
 
-- [ ] Isolated commit with `npm run format`; record its hash in `.git-blame-ignore-revs` afterwards (optional)
+- [x] Discarded: isolated formatting commit in `.git-blame-ignore-revs`. Formatting was committed together with code (PR #11), so ignoring it would hide real changes
 - [x] Add scripts: `typecheck` (`tsc -b`), `lint` (`oxlint -f unix`, 931 bytes instead of 2,917), `check` (types + lint + formatting; tests join in phase 3)
 - [x] Make `check` print only errors
 - [x] GitHub Actions CI running `check` and `build`
@@ -93,9 +91,9 @@ Claude Code (versioned `.claude/settings.json`):
 - [x] Allow `npm run check/lint/test/typecheck/build`; deny reading `.env` and `.env.local`
 - [x] Post-edit hook: run Prettier on the changed file, silently
 - [x] Disable the Vercel plugin in this project; re-enable for deploys and logs
-- [ ] `new-migration` and `new-endpoint` skills, only if the routine repeats
+- [x] Not needed so far: `new-migration` and `new-endpoint` skills, only if the routine repeats
 
-**Done when:** deliberately breaking a critical function makes `check` fail.
+**Done when:** deliberately breaking a critical function makes `check` fail. Verified on 2026-11-24: 8 of 8 breakages caught (upload queue, media selection, duplicate posts, camera release, QR Code, token signature and expiration, RLS).
 
 ## Phase 4: Split the pages (2 to 4 days, medium risk)
 
@@ -142,7 +140,7 @@ Redesigned at the author's request, so the layout differs from the original page
 ## Phase 5: Measure and maintain (~1 h)
 
 - [x] Remeasure the baseline
-- [ ] Run 3 fixed tasks in clean sessions, on `be2341b` and now, comparing with `/context` and `/cost`:
+- [x] Discarded by the author, without a valid result: run 3 fixed tasks in clean sessions, on `be2341b` and now, comparing with `/context` and `/cost`. So there is no measurement of the gain per task:
   1. "Add a 'videos' filter to the feed" (discard the diff)
   2. "Explain the offline upload flow"
   3. "Add a column to the admin CSV" (discard the diff)
@@ -150,7 +148,7 @@ Redesigned at the author's request, so the layout differs from the original page
 - [x] Split `AppLayout.tsx` into `Sidebar` (`SidebarNav`, `SidebarAccount`, `SidebarAdminCard`, `SidebarAdminIcons`), `MobileHeader`, `OfflineBanner`, `usePageTitle` and `useSidebarCollapsed`
 - [x] Split `offline-queue.service.ts`: `upload-task.ts`, `upload-store.ts` and `legacy-queue.ts` in `src/services/offline-queue/`; the unused `enqueue` was removed
 - [x] Split the other 4: `VideoRecorderModal.tsx`, `QrCodeSvg.tsx`, `feed-notification.service.ts`, `photo-filters.ts`
-- [ ] Update `CLAUDE.md` only when the agent fails for lack of context
+- [x] Standing rule: update `CLAUDE.md` only when the agent fails for lack of context
 
 ## Out-of-scope findings
 
