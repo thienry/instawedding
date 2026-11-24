@@ -49,7 +49,7 @@ type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
 export function AdminPage() {
   const navigate = useNavigate()
   const { confirm, notify, dialog } = useDialog()
-  const isMockEnv = import.meta.env.VITE_USE_MOCKS === 'true'
+  const isMockEnv = import.meta.env.VITE_USE_MOCKS !== 'false'
 
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null)
   const [isVerifying, setIsVerifying] = useState(true)

@@ -134,7 +134,7 @@ Security: the list is kept outside the repository.
 
 Consistency:
 
-- [ ] `AdminPage.tsx:49` uses `VITE_USE_MOCKS === 'true'` while the factories use `!== 'false'`: they diverge when the variable is empty
+- [x] `AdminPage.tsx` used `VITE_USE_MOCKS === 'true'` while the factories used `!== 'false'`: they diverged when the variable is empty
 
 Upload queue (`offline-queue.service.ts`), found while writing tests:
 

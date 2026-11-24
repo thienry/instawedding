@@ -265,4 +265,25 @@ describe('upload URL', () => {
     db.limiterDown = true
     expect((await upload(bearer(GUEST))).status).toBe(200)
   })
+
+  it('signs the declared size and type into the URL', async () => {
+    const res = await upload(bearer(GUEST))
+    const { uploadUrl: url } = (await res.json()) as { uploadUrl: string }
+    const signed = new URL(url).searchParams.get('X-Amz-SignedHeaders')
+    expect(signed?.split(';')).toEqual([
+      'content-length',
+      'content-type',
+      'host',
+    ])
+  })
+
+  it.each([undefined, 0, -1, 1.5, '10', 25 * 1024 * 1024 + 1])(
+    'rejects the size %s',
+    async (sizeBytes) => {
+      const res = await uploadUrl(
+        post({ contentType: 'image/webp', sizeBytes }, bearer(GUEST))
+      )
+      expect(res.status).toBe(400)
+    }
+  )
 })
