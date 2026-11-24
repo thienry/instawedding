@@ -18,6 +18,8 @@ interface UploadDetails {
   readonly blurDataUrl?: string
   readonly status: UploadTaskStatus
   readonly errorMessage?: string
+  /** Only the guest may retry. Set with the status `failed`. */
+  readonly isPermanentFailure?: boolean
   readonly showOnProjector?: boolean
   readonly createdAt: string
 }

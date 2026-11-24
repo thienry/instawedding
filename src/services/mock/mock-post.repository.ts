@@ -80,6 +80,10 @@ export class MockPostRepository implements PostRepository {
     return enriched
   }
 
+  async getVisiblePostIds(): Promise<ReadonlySet<string>> {
+    return new Set((await this.getPosts()).map(({ id }) => id))
+  }
+
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const rawPosts: Post[] =
       typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)

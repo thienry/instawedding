@@ -33,6 +33,7 @@ export class ApiAdminAuthService implements AdminAuthService {
     }
 
     const user = await this.fetchIdentity(session)
+    if (user === undefined) return this.currentUser !== null
     if (user) {
       this.authSource = this.isFromSession(user, session) ? 'oauth' : 'cookie'
       this.setCurrentUser(user)
@@ -121,7 +122,8 @@ export class ApiAdminAuthService implements AdminAuthService {
     if (this.authSource === 'oauth') {
       try {
         const supabase = getSupabaseClient()
-        await supabase.auth.signOut()
+        // The default would also end the sessions of the other devices
+        await supabase.auth.signOut({ scope: 'local' })
       } catch {
         // Ignore Supabase signout error
       }
@@ -158,6 +160,8 @@ export class ApiAdminAuthService implements AdminAuthService {
       supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user?.email) {
           void this.fetchIdentity(session).then((user) => {
+            // Unknown is not signed out: keeps the projector on when offline
+            if (user === undefined) return
             if (user) {
               this.authSource = this.isFromSession(user, session) ? 'oauth' : 'cookie'
               this.setCurrentUser(user)
@@ -180,13 +184,14 @@ export class ApiAdminAuthService implements AdminAuthService {
     return session?.user.email?.trim().toLowerCase() === user.email
   }
 
-  private async fetchIdentity(session: Session | null): Promise<AdminUser | null> {
+  /** Resolves to `undefined` when the server could not tell. */
+  private async fetchIdentity(session: Session | null): Promise<AdminUser | null | undefined> {
     try {
       const response = await fetch('/api/admin/auth', {
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         credentials: 'include',
       })
-      if (!response.ok) return null
+      if (!response.ok) return undefined
       const { user } = (await response.json()) as { user?: AdminUser }
       if (!user) return null
       if (!this.isFromSession(user, session)) return user
@@ -198,7 +203,7 @@ export class ApiAdminAuthService implements AdminAuthService {
         avatarUrl: metadata?.avatar_url,
       }
     } catch {
-      return null
+      return undefined
     }
   }
 

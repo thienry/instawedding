@@ -30,6 +30,9 @@ interface SupabasePostRow {
 
 const POST_SELECT_QUERY = '*, challenges(id, title, description, icon, is_active, created_at)'
 
+/** The server returns at most 1000 rows; a lower cap also works. */
+const PAGE_SIZE = 1000
+
 const UNIQUE_VIOLATION = '23505'
 
 export class SupabasePostRepository implements PostRepository {
@@ -46,6 +49,28 @@ export class SupabasePostRepository implements PostRepository {
     }
 
     return (data as unknown as SupabasePostRow[]).map(this.mapRowToPost)
+  }
+
+  async getVisiblePostIds(): Promise<ReadonlySet<string>> {
+    const ids = new Set<string>()
+    let lastId: string | null = null
+    for (;;) {
+      // Paged by id: with offsets, a deletion meanwhile would skip a post
+      let query = getSupabaseClient()
+        .from('posts')
+        .select('id')
+        .eq('is_approved', true)
+        .order('id')
+        .limit(PAGE_SIZE)
+      if (lastId) query = query.gt('id', lastId)
+      const { data, error } = await query
+      if (error) throw new Error(`Failed to fetch post ids: ${error.message}`)
+
+      const page = data as { id: string }[]
+      for (const { id } of page) ids.add(id)
+      lastId = page.at(-1)?.id ?? null
+      if (!lastId) return ids
+    }
   }
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
@@ -75,38 +100,8 @@ export class SupabasePostRepository implements PostRepository {
       if (existing) return existing
     }
 
-    // Older schemas may lack a column; any other error must not drop fields
-    if (error && error.code !== 'PGRST204') {
-      throw new Error(`Failed to create post in Supabase: ${error.message}`)
-    }
-
     if (error) {
-      const fallbackWithAvatar = await supabase
-        .from('posts')
-        .insert({
-          ...basePayload,
-          author_avatar_url: dto.authorAvatarUrl ?? null,
-        })
-        .select(POST_SELECT_QUERY)
-        .single()
-
-      if (!fallbackWithAvatar.error && fallbackWithAvatar.data) {
-        return this.mapRowToPost(fallbackWithAvatar.data as unknown as SupabasePostRow)
-      }
-
-      const fallbackResult = await supabase
-        .from('posts')
-        .insert(basePayload)
-        .select(POST_SELECT_QUERY)
-        .single()
-
-      if (fallbackResult.error || !fallbackResult.data) {
-        throw new Error(
-          `Failed to create post in Supabase: ${fallbackResult.error?.message ?? error.message}`
-        )
-      }
-
-      return this.mapRowToPost(fallbackResult.data as unknown as SupabasePostRow)
+      throw new Error(`Failed to create post in Supabase: ${error.message}`, { cause: error })
     }
 
     return this.mapRowToPost(data as unknown as SupabasePostRow)
@@ -114,36 +109,29 @@ export class SupabasePostRepository implements PostRepository {
 
   async toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult> {
     const supabase = getSupabaseClient()
-
-    // Check existing like
-    const { data: existingLike } = await supabase
+    const { data: existingLike, error: readError } = await supabase
       .from('likes')
       .select('id')
       .eq('post_id', postId)
       .eq('client_session_id', sessionId)
       .maybeSingle()
+    if (readError) throw new Error(`Failed to read like: ${readError.message}`)
 
-    if (existingLike) {
-      // Remove like
-      await supabase.from('likes').delete().eq('id', existingLike.id)
-      const { data: post } = await supabase.rpc('decrement_likes', {
-        target_post_id: postId,
-      })
-      return {
-        isLiked: false,
-        likesCount: post?.likes_count ?? 0,
-      }
-    } else {
-      // Add like
-      await supabase.from('likes').insert({ post_id: postId, client_session_id: sessionId })
-      const { data: post } = await supabase.rpc('increment_likes', {
-        target_post_id: postId,
-      })
-      return {
-        isLiked: true,
-        likesCount: post?.likes_count ?? 1,
-      }
+    const isLiked = !existingLike
+    const { error } = existingLike
+      ? await supabase.from('likes').delete().eq('id', existingLike.id)
+      : await supabase.from('likes').insert({ post_id: postId, client_session_id: sessionId })
+    // Already liked in another tab: the result is the one wanted
+    if (error && error.code !== UNIQUE_VIOLATION) {
+      throw new Error(`Failed to change like: ${error.message}`)
     }
+
+    const { data: post, error: countError } = await supabase.rpc(
+      isLiked ? 'increment_likes' : 'decrement_likes',
+      { target_post_id: postId }
+    )
+    // The like itself was saved, so only the total is unknown
+    return { isLiked, likesCount: countError ? null : (post?.likes_count ?? null) }
   }
 
   async hasUserLiked(postId: string, sessionId: string): Promise<boolean> {

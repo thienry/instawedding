@@ -2,6 +2,8 @@ import type { CreatePostDTO, Post, ToggleLikeResult } from '@/types/domain'
 
 export interface PostRepository {
   getPosts(): Promise<Post[]>
+  /** Ids of every approved post, to notice the ones hidden or deleted. */
+  getVisiblePostIds(): Promise<ReadonlySet<string>>
   getAllPostsForModeration(): Promise<Post[]>
   /** Creates a post. One already created with the same id is returned as is. */
   createPost(dto: CreatePostDTO): Promise<Post>

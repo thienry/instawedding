@@ -11,7 +11,11 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
+import { useVisibleInterval } from '@/hooks/useVisibleInterval'
 import { OfflineQueueService } from '@/services/offline-queue.service'
+
+/** Retries the uploads that failed on a bad network. */
+const UPLOAD_RETRY_MS = 30_000
 
 /** Navigation around every screen, except the projector. */
 export function AppLayout() {
@@ -26,6 +30,10 @@ export function AppLayout() {
   useEffect(() => {
     if (isOnline) void OfflineQueueService.flush()
   }, [isOnline])
+
+  useVisibleInterval(() => {
+    if (isOnline) void OfflineQueueService.flush()
+  }, UPLOAD_RETRY_MS)
 
   const handleSignOut = async () => {
     await signOut()

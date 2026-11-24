@@ -8,6 +8,7 @@ import { CeremonialistForm } from '@/features/admin/components/CeremonialistForm
 import { CeremonialistList } from '@/features/admin/components/CeremonialistList'
 import { ChallengeForm } from '@/features/admin/components/ChallengeForm'
 import { ChallengeList } from '@/features/admin/components/ChallengeList'
+import { LoadError } from '@/features/admin/components/LoadError'
 import { MetricsCards } from '@/features/admin/components/MetricsCards'
 import { ModerationGrid } from '@/features/admin/components/ModerationGrid'
 import { useAdminData } from '@/features/admin/hooks/useAdminData'
@@ -62,6 +63,8 @@ export function AdminPage() {
           ceremonial: ceremonialistAdmin.ceremonialists.length,
         }}
       />
+
+      {data.hasError && <LoadError onRetry={data.refresh} />}
 
       {activeTab === 'photos' && (
         <>

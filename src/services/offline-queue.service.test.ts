@@ -96,7 +96,7 @@ it('fails after two attempts, then can be retried', async () => {
     () =>
       expect(queue.getTasksSnapshot()[0]).toMatchObject({
         status: 'failed',
-        errorMessage: 'boom',
+        errorMessage: expect.stringContaining('Oscilação'),
       }),
     { timeout: 3000 }
   )
@@ -134,7 +134,7 @@ it('keeps the projector opt-out when a failed upload is resumed', async () => {
     async () => {
       const reloaded = await loadApp()
       await reloaded.hydrateFromIdb()
-      expect(reloaded.getTasksSnapshot()[0]?.errorMessage).toBe('boom')
+      expect(reloaded.getTasksSnapshot()[0]?.errorMessage).toContain('Oscilação')
     },
     { timeout: 3000 }
   )
@@ -209,4 +209,38 @@ it('shows the post when its removal after a cancel fails', async () => {
   creation.resolve({ id: 'p1' })
   await vi.waitFor(() => expect(published).toHaveBeenCalledWith({ id: 'p1' }, id))
   expect(createPost).toHaveBeenCalledOnce()
+})
+
+it('aborts the upload when cancelled', async () => {
+  uploadFile.mockReturnValue(new Promise(() => {}))
+  const queue = await loadApp()
+  const id = await submit(queue)
+  await queue.cancelTask(id)
+  expect((uploadFile.mock.calls[0] as [File, unknown, AbortSignal])[2].aborted).toBe(true)
+})
+
+it('does not send the media again when only the post failed', async () => {
+  createPost.mockRejectedValueOnce(new Error('answer lost'))
+  const queue = await loadApp()
+  await submit(queue)
+  await vi.waitFor(() => expect(queue.getTasksSnapshot()).toEqual([]), { timeout: 3000 })
+  expect(uploadFile).toHaveBeenCalledOnce()
+})
+
+it('waits for the guest after a refusal', async () => {
+  createPost.mockRejectedValue(new Error('denied', { cause: { code: '42501' } }))
+  const queue = await loadApp()
+  const id = await submit(queue)
+  await vi.waitFor(() =>
+    expect(queue.getTasksSnapshot()[0]).toMatchObject({
+      status: 'failed',
+      isPermanentFailure: true,
+    })
+  )
+  expect(await queue.flush()).toBe(0)
+  expect(createPost).toHaveBeenCalledOnce()
+
+  createPost.mockResolvedValue({ id })
+  await queue.retryTask(id)
+  expect(queue.getTasksSnapshot()).toEqual([])
 })

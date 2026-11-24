@@ -18,12 +18,15 @@ const db = vi.hoisted(() => ({
   writes: [] as string[],
   hits: new Map<string, number>(),
   limiterDown: false,
+  authDown: false,
+  databaseDown: false,
 }))
 
 // Bearer tokens are just emails; queries record their writes.
 vi.mock('./supabase.js', () => {
   const query = (table: string) => {
     let email = ''
+    const failed = { data: null, error: { message: 'down' } }
     const result = () => ({
       data:
         table === 'ceremonialists' && email
@@ -37,7 +40,7 @@ vi.mock('./supabase.js', () => {
         if (column === 'email') email = value
         return builder
       },
-      maybeSingle: async () => result(),
+      maybeSingle: async () => (db.databaseDown ? failed : result()),
       single: async () => result(),
       then: (resolve: (value: unknown) => void) => resolve(rows()),
     }
@@ -61,6 +64,7 @@ vi.mock('./supabase.js', () => {
       },
     }),
     getBearerUser: async (req: Request) => {
+      if (db.authDown) throw new Error('down')
       const email = req.headers.get('authorization')?.slice(7)
       if (!email) return null
       const confirmed = !email.startsWith('unconfirmed:')
@@ -96,6 +100,8 @@ beforeEach(() => {
   db.writes = []
   db.hits.clear()
   db.limiterDown = false
+  db.authDown = false
+  db.databaseDown = false
 })
 
 describe('identity', () => {
@@ -110,6 +116,25 @@ describe('identity', () => {
     expect(await role(bearer(MOD))).toBe('moderator')
     expect(await role(cookie(MOD, 'moderator'))).toBe('moderator')
     expect(await role({ ...bearer(GUEST), ...cookie(ADMIN, 'admin') })).toBe('admin')
+  })
+
+  it('does not mistake an outage for a denial', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production')
+    vi.stubEnv('ADMIN_JWT_SECRET', 'test-secret')
+    const status = async (headers: Record<string, string>) =>
+      (await auth(new Request('https://x.test', { headers }))).status
+
+    db.databaseDown = true
+    expect(await status(bearer(MOD))).toBe(503)
+    expect((await moderate(post({ action: 'clear_all' }, bearer(MOD)))).status).toBe(503)
+    expect((await otp(post({ action: 'request', email: MOD }))).status).toBe(503)
+    expect(await status(bearer(ADMIN))).toBe(200)
+
+    db.authDown = true
+    expect(await status(bearer(ADMIN))).toBe(503)
+    expect(await role(cookie(ADMIN, 'admin'))).toBe('admin')
+    expect(db.writes).toEqual([])
+    expect((await otp(post(null))).status, 'broken body').toBe(400)
   })
 
   it('rejects guests, unconfirmed emails and nobody', async () => {

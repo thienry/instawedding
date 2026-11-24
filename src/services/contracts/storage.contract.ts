@@ -6,5 +6,6 @@ export interface StorageService {
     fileType: string,
     sizeBytes?: number
   ): Promise<PresignedUploadResult>
-  uploadFile(file: File, onProgress?: UploadProgressCallback): Promise<string>
+  /** @param signal - Cancels the upload. */
+  uploadFile(file: File, onProgress?: UploadProgressCallback, signal?: AbortSignal): Promise<string>
 }

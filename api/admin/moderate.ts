@@ -1,4 +1,4 @@
-import { authorize } from '../_lib/auth.js'
+import { requireIdentity } from '../_lib/auth.js'
 import { fail, json, readJson } from '../_lib/http.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
@@ -8,8 +8,8 @@ interface ModerateBody {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const user = await authorize(req)
-  if (!user) return fail(401, 'Não autorizado.')
+  const user = await requireIdentity(req)
+  if (user instanceof Response) return user
 
   const body = await readJson<ModerateBody>(req)
   if (!body) return fail(400, 'Corpo da requisição inválido.')

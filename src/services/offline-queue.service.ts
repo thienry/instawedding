@@ -1,4 +1,5 @@
 import { flushLegacyQueue } from '@/services/offline-queue/legacy-queue'
+import { describeUploadFailure, withTimeout } from '@/services/offline-queue/upload-failure'
 import { deleteUpload, loadUploads, saveUpload } from '@/services/offline-queue/upload-store'
 import {
   createUploadTask,
@@ -14,6 +15,7 @@ import type { Post } from '@/types/domain'
 
 const MAX_ATTEMPTS = 2
 const RETRY_DELAY_MS = 900
+const CREATE_TIMEOUT_MS = 30_000
 
 type QueueChangeListener = (tasks: BackgroundUploadTask[]) => void
 type PostPublishedListener = (post: Post, taskId: string) => void
@@ -31,7 +33,11 @@ function isOffline(): boolean {
 export class OfflineQueueService {
   private static tasks = new Map<string, BackgroundUploadTask>()
   private static files = new Map<string, File>()
-  private static inFlightIds = new Set<string>()
+  /** Running uploads, with what cancels each one. */
+  private static inFlight = new Map<string, AbortController>()
+  /** Media already sent, so a retry does not send it again. */
+  private static mediaUrls = new Map<string, string>()
+  private static flushing: Promise<number> | null = null
   private static changeListeners = new Set<QueueChangeListener>()
   private static publishedListeners = new Set<PostPublishedListener>()
   private static hydration: Promise<void> | null = null
@@ -98,7 +104,7 @@ export class OfflineQueueService {
   }
 
   static async retryTask(id: string): Promise<void> {
-    if (!this.tasks.has(id) || this.inFlightIds.has(id)) return
+    if (!this.tasks.has(id) || this.inFlight.has(id)) return
 
     if (isOffline()) {
       this.updateTask(id, {
@@ -118,17 +124,24 @@ export class OfflineQueueService {
   }
 
   /**
-   * Uploads everything that is waiting.
+   * Uploads everything that is waiting, except what only the guest may retry.
    *
    * @returns How many posts were published.
    */
-  static async flush(): Promise<number> {
+  static flush(): Promise<number> {
+    this.flushing ??= this.uploadWaiting().finally(() => {
+      this.flushing = null
+    })
+    return this.flushing
+  }
+
+  private static async uploadWaiting(): Promise<number> {
     if (isOffline()) return 0
 
     await this.hydrateFromIdb()
     let publishedCount = 0
     for (const [id, task] of this.tasks.entries()) {
-      if (task.status === 'uploading') continue
+      if (task.status === 'uploading' || task.isPermanentFailure) continue
       if (await this.executeTask(id)) publishedCount++
     }
 
@@ -139,23 +152,26 @@ export class OfflineQueueService {
   private static async executeTask(id: string): Promise<boolean> {
     const task = this.tasks.get(id)
     const file = this.files.get(id)
-    if (!task || !file || this.inFlightIds.has(id)) return false
+    if (!task || !file || this.inFlight.has(id)) return false
 
-    this.inFlightIds.add(id)
+    const controller = new AbortController()
+    this.inFlight.set(id, controller)
     this.updateTask(id, {
       status: 'uploading',
       progress: Math.max(10, task.progress),
       errorMessage: undefined,
+      isPermanentFailure: undefined,
     })
     this.notifyChange()
 
     let lastError: unknown = null
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        return await this.publish(task, file)
+        return await this.publish(task, file, controller.signal)
       } catch (err) {
         lastError = err
         if (!this.tasks.has(id)) return false
+        if (describeUploadFailure(err).isPermanent) break
         if (attempt < MAX_ATTEMPTS) {
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt))
           if (!this.tasks.has(id)) return false
@@ -168,23 +184,30 @@ export class OfflineQueueService {
   }
 
   /** Uploads the file and creates the post. False means it was cancelled. */
-  private static async publish(task: BackgroundUploadTask, file: File): Promise<boolean> {
+  private static async publish(
+    task: BackgroundUploadTask,
+    file: File,
+    signal: AbortSignal
+  ): Promise<boolean> {
     const { id } = task
     const postRepo = getPostRepository()
 
-    const mediaUrl = await getStorageService().uploadFile(file, (pct) => {
+    const trackProgress = (pct: number) => {
       if (!this.tasks.has(id)) return
       const progress = Math.min(92, Math.max(12, Math.round(pct * 0.9)))
       this.updateTask(id, { progress, status: 'uploading' })
       this.notifyChange()
-    })
+    }
+    const mediaUrl =
+      this.mediaUrls.get(id) ?? (await getStorageService().uploadFile(file, trackProgress, signal))
     if (!this.tasks.has(id)) return false
+    this.mediaUrls.set(id, mediaUrl)
 
     if (task.blurDataUrl) cacheBlurPlaceholder(mediaUrl, task.blurDataUrl)
     this.updateTask(id, { progress: 96 })
     this.notifyChange()
 
-    const post = await postRepo.createPost({
+    const creation = postRepo.createPost({
       id,
       authorName: task.authorName,
       authorAvatarUrl: task.authorAvatarUrl,
@@ -195,6 +218,7 @@ export class OfflineQueueService {
       clientSessionId: task.clientSessionId,
       showOnProjector: task.showOnProjector ?? true,
     })
+    const post = await withTimeout(creation, CREATE_TIMEOUT_MS)
 
     // Cancelled while the post was being created: take it down
     if (!this.tasks.has(id)) {
@@ -216,18 +240,16 @@ export class OfflineQueueService {
 
   /** Keeps a task that could not be uploaded, so it can be retried. */
   private static async failTask(id: string, file: File, error: unknown): Promise<void> {
-    this.inFlightIds.delete(id)
+    this.inFlight.delete(id)
     const isQueued = isOffline()
-    const failureMessage =
-      error instanceof Error
-        ? error.message
-        : 'Oscilação na rede móvel. Toque para tentar novamente.'
+    const failure = describeUploadFailure(error)
     const failed = this.updateTask(id, {
       status: isQueued ? 'queued-offline' : 'failed',
       progress: 0,
       errorMessage: isQueued
         ? 'Sem sinal no momento. Será enviado automaticamente quando a internet voltar.'
-        : failureMessage,
+        : failure.message,
+      isPermanentFailure: !isQueued && failure.isPermanent,
     })
     if (!failed) return
 
@@ -251,7 +273,9 @@ export class OfflineQueueService {
     if (task?.previewUrl) URL.revokeObjectURL(task.previewUrl)
     this.tasks.delete(id)
     this.files.delete(id)
-    this.inFlightIds.delete(id)
+    this.mediaUrls.delete(id)
+    this.inFlight.get(id)?.abort()
+    this.inFlight.delete(id)
     await deleteUpload(id)
   }
 

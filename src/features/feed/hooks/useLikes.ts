@@ -35,6 +35,7 @@ export function useLikes(
   }: Pick<FeedGuest, 'guestUser' | 'likerId' | 'openAuthPrompt'>
 ): Likes {
   const [heartBurstPostId, setHeartBurstPostId] = useState<string | null>(null)
+  const pendingRef = useRef(new Set<string>())
   const lastTapsRef = useRef(new Map<string, number>())
   const postRepository = getPostRepository()
 
@@ -53,17 +54,24 @@ export function useLikes(
       return
     }
 
+    // A second toggle before the answer would race with the first one
+    if (pendingRef.current.has(postId)) return
+    pendingRef.current.add(postId)
+
     const wasLiked = likedPostIds.has(postId)
     const previousCount = posts.find(({ id }) => id === postId)?.likesCount ?? 0
     setLikedPostIds((prev) => withMembership(prev, postId, !wasLiked))
     setLikesCount(postId, Math.max(0, previousCount + (wasLiked ? -1 : 1)))
 
     try {
-      const { likesCount } = await postRepository.toggleLike(postId, likerId)
-      setLikesCount(postId, likesCount)
+      const { isLiked, likesCount } = await postRepository.toggleLike(postId, likerId)
+      setLikedPostIds((prev) => withMembership(prev, postId, isLiked))
+      if (likesCount !== null) setLikesCount(postId, likesCount)
     } catch {
       setLikedPostIds((prev) => withMembership(prev, postId, wasLiked))
       setLikesCount(postId, previousCount)
+    } finally {
+      pendingRef.current.delete(postId)
     }
   }
 

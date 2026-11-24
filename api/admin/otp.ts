@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import process from 'node:process'
 
 import { resolveUserRole } from '../_lib/auth.js'
-import { getClientIp } from '../_lib/http.js'
+import { fail, getClientIp, readJson } from '../_lib/http.js'
 import { withinRateLimit } from '../_lib/rate-limit.js'
 import {
   buildClearOtpCookieHeader,
@@ -113,15 +113,8 @@ function tooManyAttempts(): Response {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  let body: OtpRequestBody
-  try {
-    body = (await req.json()) as OtpRequestBody
-  } catch {
-    return new Response(JSON.stringify({ error: 'Corpo da requisição inválido.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
+  const body = await readJson<OtpRequestBody>(req)
+  if (!body) return fail(400, 'Corpo da requisição inválido.')
 
   const { action, email } = body
 
@@ -143,7 +136,13 @@ export async function POST(req: Request): Promise<Response> {
       (await checkLimit('otp-email', normalizedEmail, 5))
     if (!allowed) return tooManyAttempts()
 
-    const userRoleInfo = await resolveUserRole(normalizedEmail)
+    let userRoleInfo
+    try {
+      userRoleInfo = await resolveUserRole(normalizedEmail)
+    } catch (error) {
+      console.error('[otp]', error)
+      return fail(503, 'Serviço indisponível no momento. Tente novamente.')
+    }
 
     if (!userRoleInfo) {
       return new Response(

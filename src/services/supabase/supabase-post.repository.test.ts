@@ -151,3 +151,31 @@ describe('createPost', () => {
     expect(urls[0]).toContain('client_session_id=eq.g1')
   })
 })
+
+describe('toggleLike', () => {
+  it('rejects when the like is not saved', async () => {
+    database({ GET: [], POST: 'error' })
+    await expect(repo.toggleLike(ID, 'g1')).rejects.toThrow('denied')
+  })
+
+  it('does not invent a total when the count fails', async () => {
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+      if (url.includes('/rpc/')) return Response.json({ message: 'x' }, { status: 500 })
+      return Response.json(init.method === 'GET' ? [] : null)
+    })
+    expect(await repo.toggleLike(ID, 'g1')).toEqual({ isLiked: true, likesCount: null })
+  })
+})
+
+describe('getVisiblePostIds', () => {
+  it('reads every page', async () => {
+    const pages = [[{ id: 'a' }, { id: 'b' }], [{ id: 'c' }], []]
+    const urls: string[] = []
+    vi.stubGlobal('fetch', async (url: string) => {
+      urls.push(url)
+      return Response.json(pages[urls.length - 1])
+    })
+    expect([...(await repo.getVisiblePostIds())]).toEqual(['a', 'b', 'c'])
+    expect(urls[1]).toContain('id=gt.b')
+  })
+})

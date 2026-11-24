@@ -1,4 +1,4 @@
-import { CloudUpload, Loader2, WifiOff, X } from 'lucide-react'
+import { AlertCircle, CloudUpload, Loader2, WifiOff, X } from 'lucide-react'
 
 import { OfflineQueueService } from '@/services/offline-queue.service'
 
@@ -12,6 +12,8 @@ interface UploadCardProps {
 export function UploadCard({ task }: UploadCardProps) {
   const isOffline = !navigator.onLine
   const isPaused = isOffline || task.status === 'failed'
+  const isRefused = task.isPermanentFailure === true && !isOffline
+  const PausedIcon = isRefused ? AlertCircle : WifiOff
   const isVideo = task.mediaType === 'video'
 
   return (
@@ -38,11 +40,13 @@ export function UploadCard({ task }: UploadCardProps) {
             <p className="text-sm font-bold text-sage-900 truncate flex items-center gap-1.5">
               {isPaused ? (
                 <>
-                  <WifiOff className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <PausedIcon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                   <span>
                     {isOffline
-                      ? 'Aguardando sinal de rede móvel...'
-                      : 'Envio pausado na rede móvel'}
+                      ? 'Aguardando internet...'
+                      : isRefused
+                        ? 'Não foi possível enviar'
+                        : 'Envio pausado'}
                   </span>
                 </>
               ) : (
@@ -52,11 +56,11 @@ export function UploadCard({ task }: UploadCardProps) {
                 </>
               )}
             </p>
-            <p className="text-xs text-sage-800/70 truncate">
-              {task.caption
-                ? `"${task.caption}"`
+            <p className={`text-xs ${isRefused ? 'text-rose-700' : 'text-sage-800 truncate'}`}>
+              {isRefused
+                ? task.errorMessage
                 : isPaused
-                  ? 'Salvo no aparelho — será enviado automaticamente'
+                  ? 'Salvo no aparelho. Enviaremos automaticamente com o app aberto.'
                   : `${task.progress}% enviado`}
             </p>
           </div>
@@ -75,6 +79,7 @@ export function UploadCard({ task }: UploadCardProps) {
             type="button"
             onClick={() => void OfflineQueueService.cancelTask(task.id)}
             title="Cancelar envio"
+            aria-label="Cancelar envio"
             className="p-1.5 rounded-full text-sage-800/50 hover:text-rose-600 hover:bg-rose-50 transition-colors">
             <X className="w-4 h-4" />
           </button>

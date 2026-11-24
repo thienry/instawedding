@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { mergeNewPosts, withMembership } from '@/features/feed/utils/feed-posts'
+import { useRemovedPosts } from '@/hooks/useRemovedPosts'
 import { FeedNotificationService } from '@/services/feed-notification.service'
 import { OfflineQueueService } from '@/services/offline-queue.service'
 import { getPostRepository } from '@/services/repositories.factory'
@@ -8,6 +9,8 @@ import { getPostRepository } from '@/services/repositories.factory'
 import type { FeedGuest } from '@/features/feed/hooks/useFeedGuest'
 import type { Post } from '@/types/domain'
 import type { Dispatch, SetStateAction } from 'react'
+
+const REMOVED_CHECK_MS = 30_000
 
 /** Posts of the feed, as returned by {@link useFeedPosts}. */
 export interface FeedPosts {
@@ -76,6 +79,12 @@ export function useFeedPosts({
       isMounted = false
     }
   }, [fetchFeed])
+
+  const { stagedPosts } = FeedNotificationService.getState()
+  useRemovedPosts([...posts, ...stagedPosts], REMOVED_CHECK_MS, (ids) => {
+    for (const id of ids) FeedNotificationService.removePost(id)
+    setPosts((prev) => prev.filter(({ id }) => !ids.has(id)))
+  })
 
   const addRevealedIds = (ids: ReadonlySet<string>) =>
     setRevealedPostIds((prev) => new Set([...prev, ...ids]))

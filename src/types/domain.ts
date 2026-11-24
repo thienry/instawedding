@@ -46,7 +46,8 @@ export interface CreatePostDTO {
 
 export interface ToggleLikeResult {
   readonly isLiked: boolean
-  readonly likesCount: number
+  /** `null` when the like was saved but the total is unknown. */
+  readonly likesCount: number | null
 }
 
 export interface GuestUser {

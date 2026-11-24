@@ -1,4 +1,4 @@
-import { authorize } from '../_lib/auth.js'
+import { requireIdentity } from '../_lib/auth.js'
 import { fail, json, readJson } from '../_lib/http.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
@@ -13,8 +13,8 @@ const COLUMNS = 'id, email, name, created_at, created_by'
 const UNIQUE_VIOLATION = '23505'
 
 export async function POST(req: Request): Promise<Response> {
-  const user = await authorize(req)
-  if (!user) return fail(401, 'Não autorizado.')
+  const user = await requireIdentity(req)
+  if (user instanceof Response) return user
   if (user.role !== 'admin') {
     return fail(403, 'Apenas o administrador pode gerenciar acessos.')
   }

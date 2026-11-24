@@ -111,7 +111,8 @@ export class SupabaseGuestAuthService implements GuestAuthService {
 
   async logout(): Promise<void> {
     const supabase = getSupabaseClient()
-    await supabase.auth.signOut()
+    // The default would also end the sessions of the other devices
+    await supabase.auth.signOut({ scope: 'local' })
     this.writeCachedUser(null)
     this.notifyListeners(null)
   }

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 
 import { isShownOnProjector } from '@/features/projector/utils/projector-posts'
+import { useRemovedPosts } from '@/hooks/useRemovedPosts'
 import { getPostRepository, getRealtimeService } from '@/services/repositories.factory'
 
 import type { Post } from '@/types/domain'
 
 /** Covers for realtime events lost while offline. */
 const POLL_INTERVAL_MS = 30_000
+const REMOVED_CHECK_MS = 10_000
 const ANNOUNCEMENT_MS = 6000
 
 /** Posts of the projector, as returned by {@link useProjectorFeed}. */
@@ -43,6 +45,11 @@ export function useProjectorFeed(): ProjectorFeed {
       window.clearInterval(intervalId)
     }
   }, [postRepository])
+
+  useRemovedPosts(posts, REMOVED_CHECK_MS, (ids) => {
+    setPosts((prev) => prev.filter(({ id }) => !ids.has(id)))
+    setNewPost((prev) => (prev && ids.has(prev.id) ? null : prev))
+  })
 
   useEffect(() => {
     return realtimeService.subscribeToNewPosts((post) => {
