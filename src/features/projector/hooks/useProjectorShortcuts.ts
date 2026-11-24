@@ -17,6 +17,9 @@ interface ProjectorShortcuts {
 /** Lets the operator drive the projector from the keyboard. */
 export function useProjectorShortcuts(shortcuts: ProjectorShortcuts): void {
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    // Leaves the shortcuts of the browser alone, such as Ctrl+F
+    if (event.ctrlKey || event.metaKey || event.altKey) return
+
     switch (event.key) {
       case 'ArrowLeft':
         return shortcuts.onPrevious()
@@ -35,7 +38,15 @@ export function useProjectorShortcuts(shortcuts: ProjectorShortcuts): void {
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => handleKeyDown(event)
+    // Space clicks the focused button when released
+    const preventSpaceClick = (event: KeyboardEvent) => {
+      if (event.key === ' ') event.preventDefault()
+    }
     window.addEventListener('keydown', listener)
-    return () => window.removeEventListener('keydown', listener)
+    window.addEventListener('keyup', preventSpaceClick)
+    return () => {
+      window.removeEventListener('keydown', listener)
+      window.removeEventListener('keyup', preventSpaceClick)
+    }
   }, [])
 }

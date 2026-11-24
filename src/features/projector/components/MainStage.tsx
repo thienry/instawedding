@@ -16,12 +16,12 @@ export function MainStage({ slide, newPostId }: MainStageProps) {
   return (
     <div className="projector-stage absolute inset-0">
       {layers.map(
-        ({ slide: { post, ratio }, isLeaving }) =>
-          ratio !== null && (
+        ({ slide: { post, media }, isLeaving }) =>
+          media && (
             <StageSlide
               key={post.id}
               post={post}
-              ratio={ratio}
+              ratio={media.ratio}
               isNew={post.id === newPostId}
               isLeaving={isLeaving}
               onLeft={removeLeaving}

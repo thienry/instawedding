@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { loadMediaRatio } from '@/features/projector/utils/media-ratio'
+import { loadSlideMedia } from '@/features/projector/utils/slide-media'
 
 import type { Slide } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
@@ -29,8 +29,10 @@ export function useReadySlide(
   useEffect(() => {
     if (!post) return
     let isCurrent = true
-    void loadMediaRatio(post).then((ratio) => {
-      if (isCurrent) setLoaded({ post, ratio })
+    void loadSlideMedia(post).then((media) => {
+      if (!isCurrent) return
+      // A refresh brings the same post again; its media must not change
+      setLoaded((prev) => (prev?.post.id === post.id ? prev : { post, media }))
     })
     return () => {
       isCurrent = false
@@ -38,12 +40,14 @@ export function useReadySlide(
   }, [post])
 
   useEffect(() => {
-    if (nextPost) void loadMediaRatio(nextPost)
+    if (nextPost) void loadSlideMedia(nextPost)
   }, [nextPost])
 
+  // A hidden post must not come back while the next one loads
+  if (!post && loaded) setLoaded(null)
   if (!post) return { slide: null, isReady: false }
 
   const isReady = loaded?.post.id === post.id
   if (loaded && !isReady) return { slide: loaded, isReady }
-  return { slide: { post, ratio: loaded?.ratio ?? null }, isReady }
+  return { slide: { post, media: loaded?.media ?? null }, isReady }
 }

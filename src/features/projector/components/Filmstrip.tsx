@@ -1,4 +1,3 @@
-import { SLIDE_DURATION_MS } from '@/features/projector/constants'
 import { getUpcomingPosts } from '@/features/projector/utils/projector-posts'
 import { resolvePostMediaType } from '@/utils/video'
 
@@ -13,7 +12,7 @@ interface FilmstripProps {
 
 /** Time left for the slide, its number and the posts that come next. */
 export function Filmstrip({ slideshow }: FilmstripProps) {
-  const { slides, slide, index, isRunning, showPost } = slideshow
+  const { slides, slide, index, isRunning, durationMs, showPost } = slideshow
   const upcomingPosts = getUpcomingPosts(slides, index, THUMBNAIL_COUNT)
 
   return (
@@ -22,7 +21,7 @@ export function Filmstrip({ slideshow }: FilmstripProps) {
         {isRunning && (
           <div
             key={slide?.post.id}
-            style={{ animationDuration: `${SLIDE_DURATION_MS}ms` }}
+            style={{ animationDuration: `${durationMs}ms` }}
             className="projector-progress h-full bg-gold-400"
           />
         )}
