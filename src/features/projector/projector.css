@@ -1,0 +1,433 @@
+/* Visuals of the projector. Continuous motion only animates transform and
+   opacity, so it stays smooth on the modest computers used at venues. */
+:root {
+  --projector-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --projector-ground: #0c1711;
+}
+
+.projector-ground {
+  color: #faf8f5;
+  background: radial-gradient(
+    120% 90% at 30% 20%,
+    #1d3526,
+    var(--projector-ground) 70%
+  );
+}
+
+/* Backdrop: blurred while tiny and then scaled up, which is far cheaper than
+   blurring the whole screen. */
+.projector-backdrop {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 10%;
+  height: 10%;
+  transform: scale(12);
+  transform-origin: top left;
+  will-change: opacity;
+  opacity: 0.6;
+  animation: projector-fade-in 2s ease-out;
+}
+
+.projector-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(6px) saturate(1.3);
+}
+
+.projector-backdrop-leave {
+  animation: projector-fade-out 2s ease-in-out forwards;
+}
+
+.projector-vignette {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 45%,
+      color-mix(in srgb, var(--projector-ground) 80%, transparent)
+    ),
+    color-mix(in srgb, var(--projector-ground) 50%, transparent);
+}
+
+.projector-dust {
+  position: absolute;
+  bottom: -2%;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #ecd9b8;
+  opacity: 0;
+  animation: projector-dust var(--duration) linear var(--delay) infinite;
+}
+
+/* Stage: the frame takes the exact shape of the media. */
+.projector-stage {
+  container-type: size;
+}
+
+.projector-frame {
+  position: relative;
+  width: min(100cqw, 100cqh * var(--ratio));
+  aspect-ratio: var(--ratio);
+  animation: projector-drift 10s ease-out both;
+}
+
+.projector-frame-shadow,
+.projector-frame-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
+
+.projector-frame-shadow {
+  box-shadow: 0 2.5vh 7vh rgb(0 0 0 / 55%);
+  animation: projector-fade-in 1.2s ease-out 0.4s backwards;
+}
+
+.projector-frame-glow {
+  box-shadow:
+    0 0 0 2px var(--color-gold-400),
+    0 0 9vh 1vh rgb(236 217 184 / 55%);
+  animation: projector-glow 6s ease-in-out both;
+}
+
+.projector-reveal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  animation: 1.5s var(--projector-ease) backwards;
+}
+
+.projector-reveal > * {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: projector-settle 2.2s var(--projector-ease) backwards;
+}
+
+.projector-reveal-curtain {
+  animation-name: projector-curtain;
+}
+.projector-reveal-iris {
+  animation-name: projector-iris;
+}
+.projector-reveal-rise {
+  animation-name: projector-unveil-up;
+}
+.projector-reveal-sweep {
+  animation-name: projector-sweep;
+}
+
+.projector-slide-leave {
+  animation: projector-slide-leave 0.9s ease-in-out forwards;
+}
+
+/* Text */
+.projector-rise {
+  animation: projector-rise 1.2s var(--projector-ease) 0.3s backwards;
+}
+
+.projector-word {
+  display: inline-block;
+  animation: projector-rise 1s var(--projector-ease) backwards;
+  animation-delay: calc(0.35s + var(--order) * 55ms);
+}
+
+.projector-rule {
+  transform-origin: left;
+  animation: projector-grow 1.6s var(--projector-ease) 0.5s backwards;
+}
+
+.projector-text-leave {
+  animation: projector-text-leave 0.35s ease-in forwards;
+}
+
+/* Filmstrip: thumbnails are placed by slot, so they glide when it changes. */
+.projector-filmstrip {
+  position: relative;
+  flex: 1;
+  height: clamp(3rem, 8vh, 6rem);
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, #000 55%, transparent);
+}
+
+.projector-filmstrip > li {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1;
+  transform: translateX(calc(var(--slot) * (100% + 0.75rem)));
+  transition: transform 1.2s var(--projector-ease);
+  animation: projector-fade-in 1.2s ease-out;
+}
+
+.projector-thumbnail {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.4s;
+}
+
+.projector-thumbnail:is(:hover, :focus-visible) {
+  opacity: 1;
+}
+
+.projector-thumbnail > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.projector-progress {
+  transform-origin: left;
+  animation: projector-grow linear forwards;
+}
+
+/* Arrival of a post */
+.projector-arrival {
+  position: relative;
+  max-width: 88%;
+  padding: 1.8vh 4.5vh 2.2vh;
+  border-radius: 999px;
+  text-align: center;
+  background: color-mix(in srgb, var(--projector-ground) 88%, transparent);
+  box-shadow: 0 0 6vh rgb(197 168 128 / 35%);
+  animation: projector-arrival 6s var(--projector-ease) both;
+}
+
+.projector-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f3e3c3;
+  opacity: 0;
+  animation: projector-spark 1.9s var(--projector-ease) var(--delay);
+}
+
+/* Operator */
+.projector-controls {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--projector-ground) 92%, transparent);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 40%);
+  transform: translateX(-50%);
+  transition:
+    opacity 0.5s,
+    transform 0.7s var(--projector-ease);
+}
+
+.projector-controls-hidden:not(:has(:focus-visible)) {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -1.5rem);
+}
+
+.projector-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 75%);
+  cursor: pointer;
+  transition:
+    color 0.25s,
+    background-color 0.25s;
+}
+
+.projector-control:hover {
+  color: #fff;
+  background: rgb(255 255 255 / 12%);
+}
+
+.projector-control:focus-visible {
+  outline: 2px solid var(--color-gold-400);
+}
+
+.projector-control[aria-pressed='true'] {
+  color: var(--color-sage-900);
+  background: var(--color-gold-400);
+}
+
+.projector-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--projector-ground) 94%, transparent);
+  animation: projector-fade-in 0.4s ease-out;
+}
+
+@keyframes projector-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes projector-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes projector-dust {
+  15% {
+    opacity: 0.55;
+  }
+  80% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), -105vh, 0);
+  }
+}
+@keyframes projector-drift {
+  from {
+    transform: scale(0.975);
+  }
+}
+@keyframes projector-settle {
+  from {
+    transform: scale(1.16);
+  }
+}
+@keyframes projector-curtain {
+  from {
+    clip-path: inset(0 50%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes projector-iris {
+  from {
+    clip-path: circle(0%);
+  }
+  to {
+    clip-path: circle(75%);
+  }
+}
+@keyframes projector-unveil-up {
+  from {
+    clip-path: inset(100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes projector-sweep {
+  from {
+    clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%);
+  }
+}
+@keyframes projector-slide-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@keyframes projector-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.1em);
+  }
+}
+@keyframes projector-text-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-0.8em);
+  }
+}
+@keyframes projector-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes projector-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes projector-arrival {
+  0% {
+    opacity: 0;
+    transform: translateY(4vh) scale(0.92);
+  }
+  14%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-1.5vh);
+  }
+}
+@keyframes projector-spark {
+  from {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(calc(var(--distance) * -1))
+      scale(0.3);
+  }
+}
+
+/* Plain fades. Leaving slides keep an animation because its end removes them. */
+@media (prefers-reduced-motion: reduce) {
+  .projector-dust,
+  .projector-spark {
+    display: none;
+  }
+
+  .projector-frame,
+  .projector-reveal > * {
+    animation: none;
+  }
+
+  .projector-reveal,
+  .projector-rise,
+  .projector-word,
+  .projector-rule {
+    animation-name: projector-fade-in;
+  }
+
+  .projector-slide-leave,
+  .projector-text-leave {
+    animation-name: projector-fade-out;
+  }
+
+  .projector-filmstrip > li,
+  .projector-controls {
+    transition: none;
+  }
+}

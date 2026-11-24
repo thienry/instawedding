@@ -16,7 +16,9 @@ const AdminPage = lazy(() =>
   import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage }))
 )
 const ProjectorPage = lazy(() =>
-  import('@/pages/ProjectorPage').then((m) => ({ default: m.ProjectorPage }))
+  import('@/features/projector/ProjectorPage').then((m) => ({
+    default: m.ProjectorPage,
+  }))
 )
 
 function RouteLoadingFallback() {
