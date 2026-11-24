@@ -6,6 +6,9 @@ import type {
   AdminUser,
 } from '@/services/contracts/admin-auth.contract'
 
+/** Only admin account of the mock service. */
+export const MOCK_ADMIN_EMAIL = 'admin@example.com'
+
 const STORAGE_KEY = 'instawedding_mock_admin_user'
 
 export class MockAdminAuthService implements AdminAuthService {
@@ -50,12 +53,10 @@ export class MockAdminAuthService implements AdminAuthService {
     await new Promise((resolve) => setTimeout(resolve, 300))
     const email = emailInput.trim().toLowerCase()
 
-    const masterAdminEmail = 'thmoura14@gmail.com'
-
     let role: 'admin' | 'moderator' = 'admin'
     let name = 'Administrador'
 
-    if (email === masterAdminEmail) {
+    if (email === MOCK_ADMIN_EMAIL) {
       role = 'admin'
       name = 'Thiago (Admin Master)'
     } else {

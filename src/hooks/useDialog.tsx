@@ -8,6 +8,8 @@ type DialogRequest = DialogOptions & {
   readonly resolve: (confirmed: boolean) => void
 }
 
+export type Dialog = ReturnType<typeof useDialog>
+
 /** In-app replacement for the browser alert, confirm and prompt popups. */
 export function useDialog() {
   const [queue, setQueue] = useState<readonly DialogRequest[]>([])

@@ -91,8 +91,9 @@ Structure: `src/features/<name>/{<Name>Page.tsx, components/, hooks/}`. The page
 
 **4.1 Admin** (1,523 lines)
 
-- [ ] hooks: `useAdminSession` (OTP and logout), `usePostModeration`, `useAlbumExport` (ZIP and CSV), `useChallenges`, `useCeremonialists`
-- [ ] components: `AdminLogin`, `AdminTopBar`, `MetricsCards`, `AlbumToolbar`, `ModerationGrid`, `ChallengeForm`, `ChallengeList`, `CeremonialistPanel`
+- [x] hooks: `useAdminData` (joint load), `useAdminSession`, `useOtpLogin`, `usePostModeration`, `useAlbumExport` (ZIP and CSV), `useChallenges`, `useCeremonialists`
+- [x] components: `AdminLogin` (`OtpEmailForm`, `OtpCodeForm`, `MockLoginShortcuts`), `AdminTopBar`, `AdminTabs`, `MetricsCards`, `AlbumToolbar`, `ModerationGrid`, `ModerationCard`, `ChallengeForm`, `ChallengeList`, `ChallengeCard`, `CeremonialistForm`, `CeremonialistList`
+- [ ] check on mobile and desktop (author)
 
 **4.2 Feed** (1,469 lines)
 
