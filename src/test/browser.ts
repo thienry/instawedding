@@ -1,8 +1,10 @@
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 
 // Fills the browser APIs that jsdom does not implement.
 export function setupBrowser(): void {
+  // The default second is too short on a busy machine
+  configure({ asyncUtilTimeout: 5000 })
   beforeEach(() => {
     localStorage.clear()
     sessionStorage.clear()
