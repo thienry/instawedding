@@ -11,10 +11,15 @@ interface Contributor {
   readonly likes: number
 }
 
-/** Identifies who made the post, by account or else by name. */
-export function getAuthorKey({ authorName, clientSessionId }: Post): string {
-  if (clientSessionId && clientSessionId !== 'anonymous') return clientSessionId
-  return authorName.trim().toLowerCase()
+/** Whether the post tells who made it. Some old ones only have a name. */
+export function hasAuthorId({ clientSessionId }: Post): boolean {
+  return Boolean(clientSessionId) && clientSessionId !== 'anonymous'
+}
+
+/** Identifies who made the post, by id or else by name. */
+export function getAuthorKey(post: Post): string {
+  if (post.clientSessionId && hasAuthorId(post)) return post.clientSessionId
+  return post.authorName.trim().toLowerCase()
 }
 
 /** Adds up the likes of every post. */

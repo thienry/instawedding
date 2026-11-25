@@ -148,10 +148,13 @@ it('reports a failed load and recovers when the network returns', async () => {
   const getPosts = vi.spyOn(getPostRepository(), 'getPosts').mockRejectedValue(new Error('offline'))
   open(1)
   await screen.findByText('Não foi possível carregar os posts')
+  localStorage.setItem('instawedding_last_seen_post_at', '2025-01-01T00:00:00Z')
   expect(screen.queryByText('Nenhum post ainda')).toBeNull()
   getPosts.mockRestore()
   fireEvent(window, new Event('online'))
   await screen.findByTitle('Curtir post')
+  // Nobody asked for them, so they are still new
+  screen.getByText('1 novo post desde sua última visita')
 })
 
 it('keeps a post published while the feed was loading', async () => {

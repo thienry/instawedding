@@ -6,6 +6,7 @@ import { getChallengeRepository } from '@/services/repositories.factory'
 import type { AdminData } from '@/features/admin/hooks/useAdminData'
 import type { ChallengeDraft } from '@/features/admin/types'
 import type { Dialog } from '@/hooks/useDialog'
+import type { Challenge } from '@/types/domain'
 
 const DEFAULT_ICON = '✨'
 const INITIAL_DRAFT: ChallengeDraft = { icon: '🥂', title: '', description: '' }
@@ -18,7 +19,7 @@ export interface ChallengeAdmin {
   readonly isCreating: boolean
   /** Saves the draft and resets the form. Does nothing if a text is blank. */
   readonly createChallenge: () => Promise<void>
-  readonly toggleChallenge: (id: number) => Promise<void>
+  readonly toggleChallenge: (challenge: Challenge) => Promise<void>
   /** Deletes a challenge after confirmation. */
   readonly deleteChallenge: (id: number) => Promise<void>
 }
@@ -59,9 +60,10 @@ export function useChallenges(
     }
   }
 
-  const toggleChallenge = async (id: number) => {
+  const toggleChallenge = async ({ id, isActive: wasActive }: Challenge) => {
+    const isActive = !wasActive
     try {
-      const isActive = await challengeRepository.toggleChallengeActive(id)
+      await challengeRepository.setChallengeActive(id, isActive)
       setChallenges((prev) =>
         prev.map((challenge) => (challenge.id === id ? { ...challenge, isActive } : challenge))
       )

@@ -112,3 +112,8 @@ it('reports a failed load and tries again', async () => {
   expect(await screen.findAllByTitle('Cumprir Desafio')).toHaveLength(5)
   expect(screen.queryByText(/Não foi possível carregar/)).toBeNull()
 })
+
+it('does not count the post of another guest with the same name', async () => {
+  await open([{ challengeId: 1, authorName: 'Ana', clientSessionId: 'other' }])
+  expect(screen.queryByText('Concluído')).toBeNull()
+})

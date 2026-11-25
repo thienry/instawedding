@@ -1,4 +1,5 @@
 import { getGuestAuthService } from '@/services/guest-auth.factory'
+import { hasAuthorId } from '@/utils/post-stats'
 import { getGuestSession } from '@/utils/session'
 
 import type { Post } from '@/types/domain'
@@ -16,7 +17,7 @@ export function isOwnPost(post: Post): boolean {
     return true
   }
 
-  if (post.clientSessionId && post.clientSessionId !== 'anonymous') return false
+  if (hasAuthorId(post)) return false
   if (guestUser && post.authorName.trim().toLowerCase() === guestUser.name.trim().toLowerCase()) {
     return true
   }

@@ -19,7 +19,7 @@ export function ChallengeList({ challenges, challengeAdmin, isAdmin }: Challenge
         <ChallengeCard
           key={challenge.id}
           challenge={challenge}
-          onToggle={() => void toggleChallenge(challenge.id)}
+          onToggle={() => void toggleChallenge(challenge)}
           onDelete={isAdmin ? () => void deleteChallenge(challenge.id) : undefined}
         />
       ))}

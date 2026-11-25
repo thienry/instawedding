@@ -1,5 +1,6 @@
 import { isAuthRetryableFetchError } from '@supabase/supabase-js'
 
+import { signOutLocally } from '@/services/supabase/supabase-sign-out'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { setGuestName } from '@/utils/session'
 
@@ -119,9 +120,7 @@ export class SupabaseGuestAuthService implements GuestAuthService {
   }
 
   async logout(): Promise<void> {
-    const supabase = getSupabaseClient()
-    // The default would also end the sessions of the other devices
-    await supabase.auth.signOut({ scope: 'local' })
+    await signOutLocally()
     this.writeCachedUser(null)
     this.notifyListeners(null)
   }

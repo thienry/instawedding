@@ -1,3 +1,9 @@
+import {
+  clearPendingLogout,
+  finishPendingLogout,
+  markLogoutPending,
+} from '@/services/api/pending-logout'
+import { signOutLocally } from '@/services/supabase/supabase-sign-out'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
 import type {
@@ -101,6 +107,7 @@ export class ApiAdminAuthService implements AdminAuthService {
       }
 
       if (response.ok && data.success && data.user) {
+        clearPendingLogout()
         this.authSource = 'cookie'
         this.setCurrentUser(data.user)
         return { success: true, user: data.user }
@@ -121,22 +128,14 @@ export class ApiAdminAuthService implements AdminAuthService {
   async logout(): Promise<void> {
     if (this.authSource === 'oauth') {
       try {
-        const supabase = getSupabaseClient()
-        // The default would also end the sessions of the other devices
-        await supabase.auth.signOut({ scope: 'local' })
+        await signOutLocally()
       } catch {
         // Ignore Supabase signout error
       }
     }
 
-    try {
-      await fetch('/api/admin/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-    } catch {
-      // Ignore API logout error
-    }
+    markLogoutPending()
+    await finishPendingLogout()
 
     this.authSource = null
     this.setCurrentUser(null)
@@ -187,6 +186,8 @@ export class ApiAdminAuthService implements AdminAuthService {
   /** Resolves to `undefined` when the server could not tell. */
   private async fetchIdentity(session: Session | null): Promise<AdminUser | null | undefined> {
     try {
+      // The cookie left by a logout without network must not count
+      if (!(await finishPendingLogout())) return undefined
       const response = await fetch('/api/admin/auth', {
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         credentials: 'include',

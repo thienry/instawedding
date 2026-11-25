@@ -1,3 +1,5 @@
+import { hasAuthorId } from '@/utils/post-stats'
+
 import type { FeedTab } from '@/features/feed/types'
 import type { GuestUser, Post } from '@/types/domain'
 
@@ -22,8 +24,7 @@ export function isOwnPost(post: Post, { guestUser, sessionId }: GuestIdentity): 
 }
 
 function hasGuestName(post: Post, guestUser: GuestUser | null): boolean {
-  const hasAccount = post.clientSessionId && post.clientSessionId !== 'anonymous'
-  if (!guestUser || hasAccount) return false
+  if (!guestUser || hasAuthorId(post)) return false
   const normalize = (name: string) => name.trim().toLowerCase()
   return normalize(post.authorName) === normalize(guestUser.name)
 }
