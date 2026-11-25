@@ -17,13 +17,13 @@ export function CaptureChoices({
   onOpenGuestbook,
 }: CaptureChoicesProps) {
   return (
-    <div className="bg-white rounded-3xl p-8 sm:p-10 border border-sage-200/90 text-center space-y-5 shadow-xs">
-      <div className="w-20 h-20 rounded-full bg-sage-100 text-sage-900 flex items-center justify-center mx-auto shadow-2xs">
+    <div className="bg-white rounded-3xl p-5 sm:p-10 border border-sage-200/90 text-center space-y-4 sm:space-y-5 shadow-xs">
+      <div className="hidden sm:flex w-20 h-20 rounded-full bg-sage-100 text-sage-900 items-center justify-center mx-auto shadow-2xs">
         <Camera className="w-9 h-9" />
       </div>
       <div className="space-y-2">
         <h3 className="font-serif text-2xl font-bold text-sage-900">Registre o Momento</h3>
-        <p className="text-sm text-sage-700 max-w-md mx-auto leading-relaxed">
+        <p className="hidden sm:block text-sm text-sage-700 max-w-md mx-auto leading-relaxed">
           Tire uma foto, grave um vídeo curto (5s) ou escolha fotos e vídeos da sua galeria (até
           25MB)!
         </p>
@@ -36,11 +36,11 @@ export function CaptureChoices({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3.5 pt-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-3.5 sm:pt-2">
         <button
           type="button"
           onClick={onOpenCamera}
-          className="flex flex-col items-center justify-center p-5 rounded-2xl bg-sage-900 text-white hover:bg-sage-800 active:scale-95 transition-all shadow-md space-y-2">
+          className="flex flex-col items-center justify-center px-3 py-5 sm:p-5 rounded-2xl bg-sage-900 text-white hover:bg-sage-800 active:scale-95 transition-all shadow-md space-y-2">
           <Camera className="w-7 h-7 text-gold-400" />
           <span className="text-sm font-bold">Tirar Foto</span>
         </button>
@@ -48,7 +48,7 @@ export function CaptureChoices({
         <button
           type="button"
           onClick={onOpenRecorder}
-          className="flex flex-col items-center justify-center p-5 rounded-2xl bg-gradient-to-br from-sage-900 to-sage-800 text-white hover:from-sage-800 hover:to-sage-700 active:scale-95 transition-all shadow-md border border-gold-400/40 space-y-2">
+          className="flex flex-col items-center justify-center px-3 py-5 sm:p-5 rounded-2xl bg-gradient-to-br from-sage-900 to-sage-800 text-white hover:from-sage-800 hover:to-sage-700 active:scale-95 transition-all shadow-md border border-gold-400/40 space-y-2">
           <Film className="w-7 h-7 text-gold-400" />
           <span className="text-sm font-bold">Vídeo curto (5s)</span>
         </button>

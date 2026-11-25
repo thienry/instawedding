@@ -35,7 +35,7 @@ export function ModerationGrid({ moderation, isLoading, isAdmin }: ModerationGri
 
   return (
     <>
-      <div ref={gridRef} className="grid grid-cols-1 xl:grid-cols-2 gap-4 scroll-mt-24">
+      <div ref={gridRef} className="grid grid-cols-1 xl:grid-cols-2 gap-2.5 sm:gap-4 scroll-mt-24">
         {pagePosts.map((post) => (
           <ModerationCard
             key={post.id}

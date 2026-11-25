@@ -53,21 +53,23 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
   }
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-sage-200 space-y-3 sm:space-y-4 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <p className="text-sm text-sage-700 font-medium">Exportação &amp; Moderação de Mídias</p>
-          <h3 className="font-serif text-2xl font-bold text-sage-900 mt-0.5">
+          <p className="hidden sm:block text-sm text-sage-700 font-medium">
+            Exportação &amp; Moderação de Mídias
+          </p>
+          <h3 className="font-serif text-lg sm:text-2xl font-bold text-sage-900 sm:mt-0.5">
             Galeria do Casamento ({approvedPosts} aprovadas)
           </h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5">
           <button
             type="button"
             disabled={progress !== null || isEmpty}
             onClick={() => void downloadAlbum()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors shadow-xs">
+            className="col-span-2 min-h-11 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-sm font-semibold transition-colors shadow-xs">
             {progress ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -86,8 +88,8 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
             disabled={isEmpty}
             onClick={exportCsv}
             title="Exportar planilha CSV com links e metadados das fotos"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-sm font-semibold transition-colors border border-sage-200/80 shadow-2xs">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+            className="last:col-span-2 min-h-11 flex items-center justify-center gap-2 px-2 sm:px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-xs min-[360px]:text-sm whitespace-nowrap font-semibold transition-colors border border-sage-200/80 shadow-2xs">
+            <FileSpreadsheet className="hidden min-[360px]:block shrink-0 w-4 h-4 text-emerald-700" />
             <span>Relatório (.CSV)</span>
           </button>
 
@@ -96,21 +98,21 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
               type="button"
               onClick={() => void clearFeed()}
               title="Apenas Admin: apaga todos os posts e arquivos"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold border border-rose-200 transition-colors shadow-2xs">
-              <RotateCcw className="w-4 h-4" />
+              className="min-h-11 flex items-center justify-center gap-2 px-2 sm:px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs min-[360px]:text-sm whitespace-nowrap font-semibold border border-rose-200 transition-colors shadow-2xs">
+              <RotateCcw className="shrink-0 w-4 h-4" />
               <span>Zerar Feed</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-sage-100">
+      <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 pt-3 border-t border-sage-100">
         {FILTERS.map(({ id, label, activeClass, idleClass }) => (
           <button
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={`min-h-11 px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+            className={`min-h-11 px-0.5 sm:px-3.5 rounded-xl text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-colors ${
               filter === id ? activeClass : idleClass
             }`}>
             {label} ({counts[id]})

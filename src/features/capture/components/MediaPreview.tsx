@@ -45,12 +45,12 @@ export function MediaPreview({ media, previewUrl, isSubmitting, onReset }: Media
 
           {!isVideo && <FrameOverlay frameId={frameId} />}
 
-          {/* Change Media Button */}
+          {/* On small screens the header has this action */}
           <button
             type="button"
             onClick={onReset}
             disabled={isSubmitting}
-            className="absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold min-h-11 px-4 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm">
+            className="hidden lg:block absolute top-3 right-3 bg-black/65 hover:bg-black/85 text-white text-xs font-semibold min-h-11 px-4 rounded-full backdrop-blur-xs transition-colors z-10 shadow-sm">
             {isVideo ? 'Trocar Vídeo' : 'Trocar Foto'}
           </button>
 

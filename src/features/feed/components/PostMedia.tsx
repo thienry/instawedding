@@ -38,7 +38,9 @@ export function PostMedia({
         <FeedVideoPlayer
           src={post.mediaUrl}
           cacheKey={post.id}
-          containerClassName={isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'}
+          containerClassName={
+            isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[200px] sm:min-h-[260px]'
+          }
           className={
             isGrid ? 'w-full aspect-4/3 object-contain' : 'w-full max-h-[75vh] object-contain'
           }
@@ -49,7 +51,9 @@ export function PostMedia({
           alt={post.caption || `Foto por ${post.authorName}`}
           cacheKey={post.id}
           priority={isPriority}
-          containerClassName={isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[260px]'}
+          containerClassName={
+            isGrid ? 'w-full aspect-4/3' : 'w-full min-h-[200px] sm:min-h-[260px]'
+          }
           className={
             isGrid ? 'w-full aspect-4/3 object-contain' : 'w-full max-h-[75vh] object-contain'
           }

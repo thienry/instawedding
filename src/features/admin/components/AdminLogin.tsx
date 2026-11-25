@@ -21,7 +21,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
   }
 
   return (
-    <div className="p-6 flex flex-col items-center justify-center min-h-[75vh] text-center space-y-5 animate-in fade-in duration-200">
+    <div className="p-6 flex flex-col items-center justify-center min-h-[70dvh] text-center space-y-5 animate-in fade-in duration-200">
       <div className="w-16 h-16 rounded-full bg-sage-100 text-sage-900 flex items-center justify-center mx-auto shadow-xs">
         <Lock className="w-7 h-7 text-sage-800" />
       </div>
@@ -76,7 +76,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
           <button
             type="button"
             onClick={() => void handleClearSessions()}
-            className="text-[11px] text-sage-700 hover:text-rose-600 transition-colors inline-flex items-center gap-1.5"
+            className="text-[11px] text-sage-700 hover:text-rose-600 transition-colors inline-flex items-center min-h-11 gap-1.5"
             title="Limpar qualquer resquício de sessão antiga do navegador">
             <RefreshCw className="w-3 h-3" />
             <span>Limpar sessões salvas / Deslogar tudo</span>

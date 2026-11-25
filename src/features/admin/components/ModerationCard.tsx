@@ -21,7 +21,7 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
       className={`p-3 sm:p-4 rounded-3xl border transition-all flex items-center gap-3 sm:gap-4 bg-white shadow-2xs ${
         isApproved ? 'border-sage-200' : 'border-rose-300 bg-rose-50/25'
       }`}>
-      <div className="w-18 h-18 rounded-2xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200 relative">
+      <div className="w-14 h-14 min-[360px]:w-18 min-[360px]:h-18 rounded-2xl overflow-hidden bg-sage-100 shrink-0 border border-sage-200 relative">
         {isVideo ? (
           <video
             src={post.mediaUrl}
@@ -66,7 +66,7 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
         </p>
       </div>
 
-      <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+      <div className="flex items-center -mr-1.5 sm:mr-0 sm:gap-1.5 shrink-0">
         <button
           type="button"
           onClick={onToggleApproval}

@@ -82,7 +82,7 @@ export function CapturePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="px-4 py-3 sm:p-6 lg:p-8 space-y-3 sm:space-y-6">
       {/* Always mounted, so the file survives a login change behind the camera */}
       <input
         ref={cameraInputRef}
@@ -109,7 +109,7 @@ export function CapturePage() {
           onSignIn={() => void handleSignIn()}
         />
       ) : !previewUrl ? (
-        <div className="max-w-xl mx-auto space-y-5 pt-2">
+        <div className="max-w-xl mx-auto space-y-3 sm:space-y-5">
           <GuestProfileBar guestUser={guestUser} onSignOut={() => void signOut()} />
           <CaptureChoices
             errorMessage={errorMessage}
@@ -123,14 +123,14 @@ export function CapturePage() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="lg:grid lg:grid-cols-2 lg:gap-8 items-start space-y-5 lg:space-y-0 pb-20 lg:pb-0">
+          className="lg:grid lg:grid-cols-2 lg:gap-8 items-start space-y-3 sm:space-y-5 lg:space-y-0">
           <MediaPreview
             media={media}
             previewUrl={previewUrl}
             isSubmitting={isSubmitting}
             onReset={handleReset}
           />
-          <div className="min-w-0 space-y-5">
+          <div className="min-w-0 space-y-3 sm:space-y-5">
             {isVideo ? (
               <VideoSummary durationSeconds={media.videoDuration} />
             ) : (

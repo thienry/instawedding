@@ -47,13 +47,13 @@ export function AdminTabs({ activeTab, onChange, counts, isAdmin }: AdminTabsPro
     <div
       className={`grid ${
         isAdmin ? 'grid-cols-3 max-w-xl' : 'grid-cols-2 max-w-md'
-      } gap-1 sm:gap-2.5 bg-sage-200/70 p-1.5 rounded-2xl`}>
+      } gap-1 sm:gap-2.5 bg-sage-200/70 p-1 sm:p-1.5 rounded-2xl`}>
       {tabs.map(({ id, label, Icon, iconClass }) => (
         <button
           key={id}
           type="button"
           onClick={() => onChange(id)}
-          className={`flex items-center justify-center gap-1.5 min-h-11 px-1 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          className={`flex items-center justify-center gap-1.5 min-h-11 px-0.5 rounded-xl whitespace-nowrap text-[11px] min-[360px]:text-xs sm:text-sm font-bold transition-all ${
             activeTab === id
               ? 'bg-white text-sage-900 shadow-xs'
               : 'text-sage-800 hover:text-sage-900'

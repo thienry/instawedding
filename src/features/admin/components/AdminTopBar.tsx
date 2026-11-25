@@ -15,7 +15,7 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
 
   return (
     <>
-      <div className="bg-white rounded-3xl p-5 border border-sage-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl p-3 sm:p-5 border border-sage-200 shadow-xs flex items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center space-x-3.5 min-w-0">
           {currentUser.avatarUrl ? (
             <img
@@ -51,13 +51,15 @@ export function AdminTopBar({ currentUser, onSignOut }: AdminTopBarProps) {
           type="button"
           onClick={() => void onSignOut()}
           title="Encerrar sessão e deslogar"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition-colors shadow-2xs shrink-0">
+          aria-label="Sair da Conta"
+          className="flex items-center justify-center gap-2 min-w-11 min-h-11 sm:px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition-colors shadow-2xs shrink-0">
           <LogOut className="w-4 h-4" />
-          <span>Sair da Conta</span>
+          <span className="hidden sm:inline">Sair da Conta</span>
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* On small screens the header and the bottom navigation have these links */}
+      <div className="hidden lg:flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <button
             type="button"

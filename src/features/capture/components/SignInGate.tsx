@@ -9,8 +9,8 @@ interface SignInGateProps {
 /** Login required before posting. */
 export function SignInGate({ isSigningIn, errorMessage, onSignIn }: SignInGateProps) {
   return (
-    <div className="max-w-xl mx-auto space-y-5 pt-2">
-      <div className="bg-white rounded-3xl p-8 sm:p-10 border border-sage-200/90 text-center space-y-5 shadow-xs">
+    <div className="max-w-xl mx-auto space-y-5">
+      <div className="bg-white rounded-3xl p-6 sm:p-10 border border-sage-200/90 text-center space-y-5 shadow-xs">
         <img
           src="/favicon.svg"
           alt="Logo Thiago & Priscila"

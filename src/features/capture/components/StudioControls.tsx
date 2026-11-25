@@ -16,9 +16,9 @@ export function StudioControls({ media, previewUrl }: StudioControlsProps) {
   const [studioTab, setStudioTab] = useState<'filters' | 'frames'>('filters')
 
   return (
-    <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs space-y-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-sage-100 pb-3">
-        <div className="flex items-center gap-2 text-sm font-bold text-sage-900">
+    <div className="bg-white rounded-3xl p-3 sm:p-5 border border-sage-200/80 shadow-xs space-y-2 sm:space-y-3.5">
+      <div className="sm:flex items-center justify-between gap-2 sm:border-b border-sage-100 sm:pb-3">
+        <div className="hidden sm:flex items-center gap-2 text-sm font-bold text-sage-900">
           <Sparkles className="w-4 h-4 text-gold-600" />
           <span>Efeitos &amp; Molduras</span>
         </div>
@@ -27,7 +27,7 @@ export function StudioControls({ media, previewUrl }: StudioControlsProps) {
           <button
             type="button"
             onClick={() => setStudioTab('filters')}
-            className={`min-h-10 px-3.5 rounded-lg transition-all ${
+            className={`flex-1 sm:flex-none min-h-10 px-3.5 rounded-lg transition-all ${
               studioTab === 'filters'
                 ? 'bg-white text-sage-900 shadow-xs font-bold'
                 : 'text-sage-700 hover:text-sage-900'
@@ -37,7 +37,7 @@ export function StudioControls({ media, previewUrl }: StudioControlsProps) {
           <button
             type="button"
             onClick={() => setStudioTab('frames')}
-            className={`min-h-10 px-3.5 rounded-lg transition-all ${
+            className={`flex-1 sm:flex-none min-h-10 px-3.5 rounded-lg transition-all ${
               studioTab === 'frames'
                 ? 'bg-white text-sage-900 shadow-xs font-bold'
                 : 'text-sage-700 hover:text-sage-900'

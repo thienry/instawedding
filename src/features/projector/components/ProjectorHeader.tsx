@@ -14,12 +14,12 @@ export function ProjectorHeader({ posts }: ProjectorHeaderProps) {
   const likesCount = useMemo(() => countLikes(posts), [posts])
 
   return (
-    <header className="projector-rise flex lg:block items-baseline justify-between gap-4">
+    <header className="projector-rise flex lg:block items-baseline justify-between gap-x-4 gap-y-1 flex-wrap">
       <h1 className="font-serif text-2xl lg:text-[clamp(1.75rem,5vh,3.5rem)] leading-[1.05] tracking-tight">
         Thiago <span className="italic text-gold-400">&amp;</span>{' '}
         <span className="lg:block">Priscila</span>
       </h1>
-      <p className="lg:mt-[1.8vh] flex items-center gap-4 text-xs lg:text-[clamp(0.75rem,1.6vh,1.125rem)] text-white/65">
+      <p className="lg:mt-[1.8vh] flex items-center gap-4 whitespace-nowrap text-xs lg:text-[clamp(0.75rem,1.6vh,1.125rem)] text-white/65">
         <span className="inline-flex items-center gap-2">
           <span className="relative flex w-2 h-2">
             <span className="absolute inset-0 rounded-full bg-gold-400 animate-ping opacity-60" />

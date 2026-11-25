@@ -51,7 +51,7 @@ export function AdminPage() {
   if (!currentUser) return <AdminLogin onClearSessions={signOut} />
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="px-4 py-3 sm:p-6 lg:p-8 space-y-3 sm:space-y-6">
       <AdminTopBar currentUser={currentUser} onSignOut={signOut} />
       <AdminTabs
         activeTab={activeTab}
@@ -80,7 +80,7 @@ export function AdminPage() {
       )}
 
       {activeTab === 'challenges' && (
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           <ChallengeForm challengeAdmin={challengeAdmin} />
           <ChallengeList
             challenges={data.challenges}
@@ -91,7 +91,7 @@ export function AdminPage() {
       )}
 
       {activeTab === 'ceremonial' && isAdmin && (
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           <CeremonialistForm ceremonialistAdmin={ceremonialistAdmin} />
           <CeremonialistList ceremonialistAdmin={ceremonialistAdmin} />
         </div>

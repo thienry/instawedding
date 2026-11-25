@@ -20,7 +20,7 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
       }}
       className="space-y-3">
       <div className="relative">
-        <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-700" />
+        <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-700" />
         <input
           type="email"
           required
@@ -28,7 +28,7 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="seu-email@gmail.com"
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-sage-200 bg-white text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30 transition-all shadow-xs"
+          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-sage-200 bg-white text-base sm:text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30 transition-all shadow-xs"
         />
       </div>
 

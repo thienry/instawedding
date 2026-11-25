@@ -19,7 +19,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
           className="w-9 h-9 rounded-xl shadow-2xs group-hover:scale-105 transition-transform"
         />
         <div className="min-w-0">
-          <h1 className="font-serif text-lg truncate font-bold tracking-tight text-sage-900 leading-none">
+          <h1 className="font-serif text-base min-[360px]:text-lg truncate font-bold tracking-tight text-sage-900 leading-none">
             Thiago &amp; Priscila
           </h1>
           <span className="text-xs text-sage-700 font-medium hidden min-[360px]:block truncate">
@@ -40,12 +40,13 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
               </span>
             </Link>
 
+            {/* On narrow phones, only the dashboard signs out */}
             <button
               type="button"
               onClick={onSignOut}
               title="Encerrar sessão administrativa"
               aria-label="Encerrar sessão administrativa"
-              className="w-11 h-11 flex items-center justify-center rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
+              className="w-11 h-11 hidden min-[430px]:flex items-center justify-center rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
           </div>

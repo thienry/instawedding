@@ -11,7 +11,7 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
   const { ceremonialists, removeCeremonialist } = ceremonialistAdmin
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-serif text-lg font-bold text-sage-900">
@@ -41,8 +41,8 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
                   {(ceremonialist.name || ceremonialist.email).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-sage-900 truncate">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <p className="text-sm font-bold text-sage-900 truncate max-w-full">
                       {ceremonialist.name || ceremonialist.email}
                     </p>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sage-200 text-sage-800 shrink-0">
@@ -57,7 +57,7 @@ export function CeremonialistList({ ceremonialistAdmin }: CeremonialistListProps
                 type="button"
                 onClick={() => void removeCeremonialist(ceremonialist)}
                 title="Revogar Acesso"
-                className="p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors shrink-0">
+                className="w-11 h-11 flex items-center justify-center rounded-xl text-rose-600 hover:bg-rose-50 transition-colors shrink-0">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
