@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { FloatingEmojiLayer } from '@/components/common/FloatingEmojiLayer'
 import { Backdrop } from '@/features/projector/components/Backdrop'
 import { EmptyStage } from '@/features/projector/components/EmptyStage'
 import { Filmstrip } from '@/features/projector/components/Filmstrip'
@@ -15,6 +16,7 @@ import { Spotlight } from '@/features/projector/components/Spotlight'
 import { useAutoHideControls } from '@/features/projector/hooks/useAutoHideControls'
 import { useFullscreen } from '@/features/projector/hooks/useFullscreen'
 import { useProjectorFeed } from '@/features/projector/hooks/useProjectorFeed'
+import { useProjectorReactions } from '@/features/projector/hooks/useProjectorReactions'
 import { useProjectorShortcuts } from '@/features/projector/hooks/useProjectorShortcuts'
 import { useSlideshow } from '@/features/projector/hooks/useSlideshow'
 import { useWakeLock } from '@/hooks/useWakeLock'
@@ -25,6 +27,7 @@ export function ProjectorShow() {
   const { posts, newPost } = useProjectorFeed()
   const slideshow = useSlideshow(posts, newPost)
   const fullscreen = useFullscreen()
+  const reactions = useProjectorReactions()
   const controls = useAutoHideControls()
   const { slide } = slideshow
 
@@ -55,6 +58,7 @@ export function ProjectorShow() {
         postCount={posts.length}
         slideshow={slideshow}
         fullscreen={fullscreen}
+        reactions={reactions}
         onOpenQr={openQr}
       />
 
@@ -80,6 +84,11 @@ export function ProjectorShow() {
       ) : (
         <EmptyStage />
       )}
+
+      <FloatingEmojiLayer
+        emojis={reactions.emojis}
+        className="floating-emoji-area absolute left-[1vw] bottom-[14vh] w-[16vw] min-w-24 h-[72vh] z-20 text-[7vh]"
+      />
 
       {isQrOpen && <QrModal onClose={closeQr} />}
     </div>

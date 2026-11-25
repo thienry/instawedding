@@ -14,6 +14,7 @@ import { FilterTabs } from '@/features/feed/components/FilterTabs'
 import { NewPostsPill } from '@/features/feed/components/NewPostsPill'
 import { PostGrid } from '@/features/feed/components/PostGrid'
 import { PullIndicator } from '@/features/feed/components/PullIndicator'
+import { ReactionBar } from '@/features/feed/components/ReactionBar'
 import { ShareToast } from '@/features/feed/components/ShareToast'
 import { UploadCard } from '@/features/feed/components/UploadCard'
 import { useFeedFilter } from '@/features/feed/hooks/useFeedFilter'
@@ -121,6 +122,7 @@ export function FeedPage() {
         <FeedSidebar posts={posts} />
       </div>
 
+      <ReactionBar guest={guest} />
       <DeletePostModal deletion={deletion} />
       <PhotoLightboxModal
         post={lightboxPost}
