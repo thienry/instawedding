@@ -5,12 +5,6 @@ import '@/index.css'
 
 import App from '@/App'
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault()
-  })
-}
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
