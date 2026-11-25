@@ -3,7 +3,7 @@ import { getGuestSession } from '@/utils/session'
 
 import type { Post } from '@/types/domain'
 
-/** Whether the guest of this device made the post, by id or by name. */
+/** Whether the guest of this device made the post, by id or, without one, by name. */
 export function isOwnPost(post: Post): boolean {
   const guestUser = getGuestAuthService().getCurrentGuest()
   const session = getGuestSession()
@@ -16,6 +16,7 @@ export function isOwnPost(post: Post): boolean {
     return true
   }
 
+  if (post.clientSessionId && post.clientSessionId !== 'anonymous') return false
   if (guestUser && post.authorName.trim().toLowerCase() === guestUser.name.trim().toLowerCase()) {
     return true
   }

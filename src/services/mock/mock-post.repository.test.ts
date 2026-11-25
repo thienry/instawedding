@@ -53,11 +53,12 @@ describe('MockPostRepository', () => {
 
   it('hides unapproved posts from the feed but not from moderation', async () => {
     const { id } = await create()
-    expect(await repo.togglePostApproval(id)).toBe(false)
+    await repo.setPostApproval(id, false)
     const ids = (posts: { id: string }[]) => posts.map((p) => p.id)
     expect(ids(await repo.getPosts())).not.toContain(id)
     expect(ids(await repo.getAllPostsForModeration())).toContain(id)
-    expect(await repo.togglePostApproval(id)).toBe(true)
+    await repo.setPostApproval(id, true)
+    expect(ids(await repo.getPosts())).toContain(id)
   })
 
   it('deletes one post and clears all', async () => {

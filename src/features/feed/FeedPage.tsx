@@ -6,6 +6,7 @@ import { TermsModal } from '@/components/common/TermsModal'
 import { ChallengeFilterPill } from '@/features/feed/components/ChallengeFilterPill'
 import { DeletePostModal } from '@/features/feed/components/DeletePostModal'
 import { EmptyFeed } from '@/features/feed/components/EmptyFeed'
+import { FeedError } from '@/features/feed/components/FeedError'
 import { FeedFooter } from '@/features/feed/components/FeedFooter'
 import { FeedSidebar } from '@/features/feed/components/FeedSidebar'
 import { FeedSkeleton } from '@/features/feed/components/FeedSkeleton'
@@ -103,6 +104,8 @@ export function FeedPage() {
 
           {isLoading ? (
             <FeedSkeleton />
+          ) : feed.hasError && posts.length === 0 ? (
+            <FeedError isRetrying={isRefreshing} onRetry={() => void refresh()} />
           ) : filter.filteredPosts.length === 0 ? (
             <EmptyFeed hasPosts={posts.length > 0} challengeId={filter.challengeId} />
           ) : (

@@ -22,11 +22,15 @@ export function useLightbox(): Lightbox {
 
   const close = useCallback(
     () =>
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev)
-        next.delete('photoId')
-        return next
-      }),
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.delete('photoId')
+          return next
+          // Otherwise, going back would open it again
+        },
+        { replace: true }
+      ),
     [setSearchParams]
   )
 

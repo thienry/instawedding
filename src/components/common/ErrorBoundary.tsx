@@ -27,6 +27,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('InstaWedding Runtime Error:', error, errorInfo)
   }
 
+  componentDidMount() {
+    window.addEventListener('online', this.handleOnline)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('online', this.handleOnline)
+  }
+
+  // A page that failed to download never recovers without a reload
+  handleOnline = () => {
+    if (this.state.hasError) this.handleReload()
+  }
+
   handleReload = () => {
     window.location.reload()
   }

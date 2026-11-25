@@ -244,3 +244,45 @@ it('waits for the guest after a refusal', async () => {
   await queue.retryTask(id)
   expect(queue.getTasksSnapshot()).toEqual([])
 })
+
+it('leaves to the other tab what it is sending or has sent', async () => {
+  network.onLine = false
+  await submit(await loadApp())
+  const first = await loadApp()
+  const second = await loadApp()
+  await first.hydrateFromIdb()
+  await second.hydrateFromIdb()
+
+  const held = new Set<string>()
+  const request = async (
+    name: string,
+    _options: unknown,
+    run: (lock: object | null) => Promise<void>
+  ) => {
+    if (held.has(name)) return run(null)
+    held.add(name)
+    await run({}).finally(() => held.delete(name))
+  }
+  Object.assign(network, { onLine: true, locks: { request } })
+  try {
+    expect(await Promise.all([first.flush(), second.flush()])).toEqual([1, 0])
+    expect(await second.flush()).toBe(0)
+  } finally {
+    Object.assign(network, { locks: undefined })
+  }
+  expect(uploadFile).toHaveBeenCalledOnce()
+  expect(second.getTasksSnapshot()).toEqual([])
+})
+
+it('warns when the device cannot store the post', async () => {
+  network.onLine = false
+  vi.stubGlobal('indexedDB', undefined)
+  const queue = await loadApp()
+  await submit(queue)
+  expect(queue.getTasksSnapshot()[0]?.isUnsaved).toBe(true)
+
+  vi.stubGlobal('indexedDB', new IDBFactory())
+  const working = await loadApp()
+  await submit(working)
+  expect(working.getTasksSnapshot()[0]?.isUnsaved).toBe(false)
+})

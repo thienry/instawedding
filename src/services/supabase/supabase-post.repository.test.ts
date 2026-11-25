@@ -60,7 +60,7 @@ describe('admin actions', () => {
     })
     for (const run of [
       () => repo.getAllPostsForModeration(),
-      () => repo.togglePostApproval(ID),
+      () => repo.setPostApproval(ID, false),
       () => repo.deletePostAsAdmin(ID),
       () => repo.clearAllPosts(),
     ]) {
@@ -68,7 +68,7 @@ describe('admin actions', () => {
     }
     expect(calls).toEqual([
       ['/api/admin/moderate', { action: 'list_posts' }],
-      ['/api/admin/moderate', { action: 'toggle_approval', postId: ID }],
+      ['/api/admin/moderate', { action: 'set_approval', postId: ID, isApproved: false }],
       ['/api/admin/moderate', { action: 'delete_post', postId: ID }],
       ['/api/admin/moderate', { action: 'clear_all' }],
     ])
@@ -163,5 +163,16 @@ describe('getVisiblePostIds', () => {
     })
     expect([...(await repo.getVisiblePostIds())]).toEqual(['a', 'b', 'c'])
     expect(urls[1]).toContain('id=gt.b')
+  })
+})
+
+describe('getPosts', () => {
+  it('reads every page without repeating posts', async () => {
+    const rows = (from: number, count: number) =>
+      Array.from({ length: count }, (_, i) => ({ id: `p${from + i}`, media_url: '/a.webp' }))
+    const pages = [rows(0, 1000), rows(999, 3)]
+    vi.stubGlobal('fetch', async () => Response.json(pages.shift()))
+    expect(await repo.getPosts()).toHaveLength(1002)
+    expect(pages).toEqual([])
   })
 })

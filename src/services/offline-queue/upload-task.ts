@@ -29,6 +29,8 @@ export interface BackgroundUploadTask extends UploadDetails {
   readonly mediaType: PostMediaType
   readonly previewUrl: string
   readonly progress: number
+  /** The device could not store it, so closing the app loses it. */
+  readonly isUnsaved?: boolean
 }
 
 /** Upload as stored in IndexedDB. Older versions did not set `mediaType`. */
@@ -49,6 +51,10 @@ export interface UploadRequest {
   readonly challenge?: Challenge
   readonly clientSessionId: string
   readonly showOnProjector?: boolean
+}
+
+export function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && !navigator.onLine
 }
 
 function getMediaType(file: File): PostMediaType {
@@ -86,7 +92,12 @@ export async function createUploadTask(
 }
 
 export function toStoredUpload(
-  { previewUrl: _previewUrl, progress: _progress, ...details }: BackgroundUploadTask,
+  {
+    previewUrl: _previewUrl,
+    progress: _progress,
+    isUnsaved: _isUnsaved,
+    ...details
+  }: BackgroundUploadTask,
   file: File
 ): StoredUpload {
   return {

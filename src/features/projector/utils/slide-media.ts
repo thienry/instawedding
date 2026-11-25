@@ -8,6 +8,8 @@ import type { Post } from '@/types/domain'
 const FALLBACK_RATIO = 4 / 3
 /** Slower media is shown before it finishes loading. */
 const TIMEOUT_MS = 4000
+/** Videos that the browser cannot play pass quickly. */
+const UNPLAYABLE_VIDEO_MS = 1500
 const MAX_VIDEO_DURATION_MS = MAX_VIDEO_DURATION_TOLERANCE_SECONDS * 1000
 
 /** Lets a video play to the end, within the limits of the slideshow. */
@@ -48,7 +50,9 @@ function loadVideo(url: string): Promise<SlideMedia> {
     video.onloadedmetadata = () => {
       const media = {
         ratio: normalizeRatio(video.videoWidth, video.videoHeight),
-        durationMs: getVideoDurationMs(video.duration),
+        // An unknown codec may still have sound, but no picture
+        durationMs:
+          video.videoWidth === 0 ? UNPLAYABLE_VIDEO_MS : getVideoDurationMs(video.duration),
       }
       release()
       resolve(media)
@@ -84,7 +88,7 @@ export async function loadSlideMedia(post: Post): Promise<SlideMedia> {
       timeout,
     ])
   } catch {
-    return fallback
+    return isVideo ? { ...fallback, durationMs: UNPLAYABLE_VIDEO_MS } : fallback
   } finally {
     window.clearTimeout(timeoutId)
   }

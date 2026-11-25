@@ -1,9 +1,21 @@
+import { Emitter } from '@/services/offline-queue/emitter'
 import { flushLegacyQueue } from '@/services/offline-queue/legacy-queue'
-import { describeUploadFailure, withTimeout } from '@/services/offline-queue/upload-failure'
-import { deleteUpload, loadUploads, saveUpload } from '@/services/offline-queue/upload-store'
+import {
+  describeUploadFailure,
+  toFailedStatus,
+  withTimeout,
+} from '@/services/offline-queue/upload-failure'
+import { runInOneTab } from '@/services/offline-queue/upload-lock'
+import {
+  deleteUpload,
+  isUploadGone,
+  loadUploads,
+  saveUpload,
+} from '@/services/offline-queue/upload-store'
 import {
   createUploadTask,
   fromStoredUpload,
+  isOffline,
   toStoredUpload,
 } from '@/services/offline-queue/upload-task'
 import { getPostRepository } from '@/services/repositories.factory'
@@ -16,13 +28,6 @@ import type { Post } from '@/types/domain'
 const MAX_ATTEMPTS = 2
 const RETRY_DELAY_MS = 900
 const CREATE_TIMEOUT_MS = 30_000
-
-type QueueChangeListener = (tasks: BackgroundUploadTask[]) => void
-type PostPublishedListener = (post: Post, taskId: string) => void
-
-function isOffline(): boolean {
-  return typeof navigator !== 'undefined' && !navigator.onLine
-}
 
 /**
  * Uploads posts in the background, keeping them on the device until published.
@@ -37,26 +42,23 @@ export class OfflineQueueService {
   private static inFlight = new Map<string, AbortController>()
   /** Media already sent, so a retry does not send it again. */
   private static mediaUrls = new Map<string, string>()
+  /** Uploads found on the device, which another tab may also have. */
+  private static restoredIds = new Set<string>()
   private static flushing: Promise<number> | null = null
-  private static changeListeners = new Set<QueueChangeListener>()
-  private static publishedListeners = new Set<PostPublishedListener>()
+  private static changeListeners = new Emitter<[tasks: BackgroundUploadTask[]]>()
+  private static publishedListeners = new Emitter<[post: Post, taskId: string]>()
   private static hydration: Promise<void> | null = null
 
-  static subscribe(listener: QueueChangeListener): () => void {
-    this.changeListeners.add(listener)
+  static subscribe(listener: (tasks: BackgroundUploadTask[]) => void): () => void {
+    const unsubscribe = this.changeListeners.add(listener)
     void this.hydrateFromIdb().then(() => {
       listener(this.getTasksSnapshot())
     })
-    return () => {
-      this.changeListeners.delete(listener)
-    }
+    return unsubscribe
   }
 
-  static onPostPublished(listener: PostPublishedListener): () => void {
-    this.publishedListeners.add(listener)
-    return () => {
-      this.publishedListeners.delete(listener)
-    }
+  static onPostPublished(listener: (post: Post, taskId: string) => void): () => void {
+    return this.publishedListeners.add(listener)
   }
 
   /** Tasks in the queue, newest first. */
@@ -79,6 +81,7 @@ export class OfflineQueueService {
       const { task, file } = fromStoredUpload(upload, isOffline())
       this.files.set(task.id, file)
       this.tasks.set(task.id, task)
+      this.restoredIds.add(task.id)
     }
 
     if (uploads.length > 0) this.notifyChange()
@@ -98,7 +101,7 @@ export class OfflineQueueService {
     this.tasks.set(id, task)
     this.notifyChange()
 
-    await saveUpload(toStoredUpload(task, file))
+    await this.storeTask(task, file)
     if (task.status === 'uploading') void this.executeTask(id)
     return id
   }
@@ -148,8 +151,20 @@ export class OfflineQueueService {
     return publishedCount + (await flushLegacyQueue())
   }
 
-  /** Uploads a task, trying again once. Resolves to whether it was published. */
+  /** Uploads a task, unless another tab is doing it or has done it. */
   private static async executeTask(id: string): Promise<boolean> {
+    const isPublished = await runInOneTab(id, async () => {
+      if (this.restoredIds.has(id) && !this.inFlight.has(id) && (await isUploadGone(id))) {
+        await this.cancelTask(id)
+        return false
+      }
+      return this.uploadTask(id)
+    })
+    return isPublished ?? false
+  }
+
+  /** Uploads a task, trying again once. Resolves to whether it was published. */
+  private static async uploadTask(id: string): Promise<boolean> {
     const task = this.tasks.get(id)
     const file = this.files.get(id)
     if (!task || !file || this.inFlight.has(id)) return false
@@ -226,14 +241,14 @@ export class OfflineQueueService {
         await postRepo.deletePost(post.id)
       } catch {
         // Still published: show it so the guest can delete it
-        this.notifyPublished(post, id)
+        this.publishedListeners.emit(post, id)
       }
       return false
     }
 
     if (task.blurDataUrl) cacheBlurPlaceholder(post.id, task.blurDataUrl)
     await this.removeTask(id)
-    this.notifyPublished(post, id)
+    this.publishedListeners.emit(post, id)
     this.notifyChange()
     return true
   }
@@ -241,20 +256,19 @@ export class OfflineQueueService {
   /** Keeps a task that could not be uploaded, so it can be retried. */
   private static async failTask(id: string, file: File, error: unknown): Promise<void> {
     this.inFlight.delete(id)
-    const isQueued = isOffline()
-    const failure = describeUploadFailure(error)
-    const failed = this.updateTask(id, {
-      status: isQueued ? 'queued-offline' : 'failed',
-      progress: 0,
-      errorMessage: isQueued
-        ? 'Sem sinal no momento. Será enviado automaticamente quando a internet voltar.'
-        : failure.message,
-      isPermanentFailure: !isQueued && failure.isPermanent,
-    })
+    const failed = this.updateTask(id, toFailedStatus(error, isOffline()))
     if (!failed) return
 
-    await saveUpload(toStoredUpload(failed, file))
+    await this.storeTask(failed, file)
     this.notifyChange()
+  }
+
+  private static async storeTask(task: BackgroundUploadTask, file: File): Promise<void> {
+    const isSaved = await saveUpload(toStoredUpload(task, file))
+    // Cancelled while it was being stored
+    if (!this.tasks.has(task.id)) await deleteUpload(task.id)
+    this.updateTask(task.id, { isUnsaved: !isSaved })
+    if (!isSaved) this.notifyChange()
   }
 
   private static updateTask(
@@ -274,21 +288,13 @@ export class OfflineQueueService {
     this.tasks.delete(id)
     this.files.delete(id)
     this.mediaUrls.delete(id)
+    this.restoredIds.delete(id)
     this.inFlight.get(id)?.abort()
     this.inFlight.delete(id)
     await deleteUpload(id)
   }
 
   private static notifyChange(): void {
-    const snapshot = this.getTasksSnapshot()
-    for (const listener of this.changeListeners) {
-      listener(snapshot)
-    }
-  }
-
-  private static notifyPublished(post: Post, taskId: string): void {
-    for (const listener of this.publishedListeners) {
-      listener(post, taskId)
-    }
+    this.changeListeners.emit(this.getTasksSnapshot())
   }
 }

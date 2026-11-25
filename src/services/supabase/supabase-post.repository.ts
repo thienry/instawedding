@@ -1,4 +1,4 @@
-import { adminRequest, deleteOwnPost } from '@/services/api/api.client'
+import { adminRequest, deleteOwnPost, getAuthHeaders } from '@/services/api/api.client'
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { isVideoUrl } from '@/utils/video'
 
@@ -37,18 +37,25 @@ const UNIQUE_VIOLATION = '23505'
 
 export class SupabasePostRepository implements PostRepository {
   async getPosts(): Promise<Post[]> {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase
-      .from('posts')
-      .select(POST_SELECT_QUERY)
-      .eq('is_approved', true)
-      .order('created_at', { ascending: false })
+    // By id, since a new post meanwhile repeats the last one of the page before
+    const rows = new Map<string, SupabasePostRow>()
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await getSupabaseClient()
+        .from('posts')
+        .select(POST_SELECT_QUERY)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, from + PAGE_SIZE - 1)
 
-    if (error) {
-      throw new Error(`Failed to fetch posts from Supabase: ${error.message}`)
+      if (error) {
+        throw new Error(`Failed to fetch posts from Supabase: ${error.message}`)
+      }
+
+      const page = data as unknown as SupabasePostRow[]
+      for (const row of page) rows.set(row.id, row)
+      if (page.length < PAGE_SIZE) return [...rows.values()].map(this.mapRowToPost)
     }
-
-    return (data as unknown as SupabasePostRow[]).map(this.mapRowToPost)
   }
 
   async getVisiblePostIds(): Promise<ReadonlySet<string>> {
@@ -75,6 +82,8 @@ export class SupabasePostRepository implements PostRepository {
 
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const supabase = getSupabaseClient()
+    // Without a renewed session the insert would go as anonymous and be refused
+    await getAuthHeaders()
     const showOnProjector = dto.showOnProjector ?? true
     const basePayload = {
       ...(dto.id && { id: dto.id }),
@@ -166,12 +175,8 @@ export class SupabasePostRepository implements PostRepository {
     return posts.map(this.mapRowToPost)
   }
 
-  async togglePostApproval(postId: string): Promise<boolean> {
-    const { isApproved } = await adminRequest<{ isApproved: boolean }>('moderate', {
-      action: 'toggle_approval',
-      postId,
-    })
-    return isApproved
+  async setPostApproval(postId: string, isApproved: boolean): Promise<void> {
+    await adminRequest('moderate', { action: 'set_approval', postId, isApproved })
   }
 
   async deletePost(postId: string): Promise<void> {

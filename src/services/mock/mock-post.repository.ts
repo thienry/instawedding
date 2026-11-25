@@ -197,26 +197,16 @@ export class MockPostRepository implements PostRepository {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
-  async togglePostApproval(postId: string): Promise<boolean> {
+  async setPostApproval(postId: string, isApproved: boolean): Promise<void> {
     const posts: Post[] =
       typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
         : []
 
-    let newStatus = false
-    const updated = posts.map((p) => {
-      if (p.id === postId) {
-        newStatus = !p.isApproved
-        return { ...p, isApproved: newStatus }
-      }
-      return p
-    })
-
+    const updated = posts.map((p) => (p.id === postId ? { ...p, isApproved } : p))
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated))
     }
-
-    return newStatus
   }
 
   async deletePost(postId: string): Promise<void> {

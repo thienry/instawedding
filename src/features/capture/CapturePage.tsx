@@ -111,17 +111,21 @@ export function CapturePage() {
           onSignIn={() => void handleSignIn()}
         />
       ) : !previewUrl ? (
-        <div className="w-full max-w-xl m-auto space-y-3 sm:space-y-5">
-          <GuestProfileBar guestUser={guestUser} onSignOut={() => void signOut()} />
-          <CaptureChoices
-            errorMessage={errorMessage}
-            onOpenCamera={() => cameraInputRef.current?.click()}
-            onOpenRecorder={() => setOpenModal('recorder')}
-            onOpenGallery={() => galleryInputRef.current?.click()}
-            onOpenGuestbook={() => setOpenModal('guestbook')}
-          />
-          {preselectedChallengeId && <ChallengeHint />}
-        </div>
+        <>
+          <div className="w-full max-w-xl mx-auto">
+            <GuestProfileBar guestUser={guestUser} onSignOut={() => void signOut()} />
+          </div>
+          <div className="w-full max-w-xl m-auto space-y-3 sm:space-y-5">
+            <CaptureChoices
+              errorMessage={errorMessage}
+              onOpenCamera={() => cameraInputRef.current?.click()}
+              onOpenRecorder={() => setOpenModal('recorder')}
+              onOpenGallery={() => galleryInputRef.current?.click()}
+              onOpenGuestbook={() => setOpenModal('guestbook')}
+            />
+            {preselectedChallengeId && <ChallengeHint />}
+          </div>
+        </>
       ) : (
         <form
           onSubmit={handleSubmit}

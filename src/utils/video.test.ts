@@ -6,6 +6,7 @@ import {
   normalizeMimeType,
   normalizeVideoFile,
   resolvePostMediaType,
+  validateVideoFile,
 } from '@/utils/video'
 
 it('normalizes MIME types', () => {
@@ -44,4 +45,12 @@ describe('normalizeVideoFile', () => {
     const file = new File(['x'], 'clip.mp4', { type: 'video/mp4' })
     expect(normalizeVideoFile(file)).toBe(file)
   })
+})
+
+it('refuses formats that the server does not accept', async () => {
+  const isValid = async (type: string) =>
+    (await validateVideoFile(new File(['x'], 'a', { type }))).valid
+  expect(await isValid('video/3gpp')).toBe(false)
+  expect(await isValid('video/quicktime')).toBe(true)
+  expect(await isValid('video/x-m4v')).toBe(true)
 })

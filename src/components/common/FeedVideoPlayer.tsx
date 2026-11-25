@@ -21,6 +21,7 @@ export function FeedVideoPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [isMuted, setIsMuted] = useState(true)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   const posterUrl =
     getCachedBlurPlaceholder(cacheKey ?? '') ?? getCachedBlurPlaceholder(src) ?? undefined
@@ -96,9 +97,20 @@ export function FeedVideoPlayer({
         loop
         playsInline
         preload="metadata"
-        onLoadedData={() => setIsLoaded(true)}
+        onLoadedData={(event) => {
+          setIsLoaded(true)
+          // An unknown codec may still play the sound
+          setHasError(event.currentTarget.videoWidth === 0)
+        }}
+        onError={() => setHasError(true)}
         className={`relative z-[2] ${className}`}
       />
+
+      {hasError && (
+        <p className="absolute inset-0 z-[3] flex items-center justify-center p-6 text-center text-sm text-white bg-black/60 pointer-events-none">
+          Este vídeo não abre neste aparelho. Baixe o arquivo para assistir.
+        </p>
+      )}
 
       {showControlsOverlay && (
         <>

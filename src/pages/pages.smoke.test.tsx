@@ -151,7 +151,7 @@ it('admin: hides a photo', async () => {
 })
 
 it.each([
-  ['togglePostApproval', 'Ocultar', null, /Não foi possível alterar/],
+  ['setPostApproval', 'Ocultar', null, /Não foi possível alterar/],
   ['deletePostAsAdmin', /^Excluir Definitivamente/, 'Excluir Post', /Não foi possível excluir/],
   ['clearAllPosts', /apaga todos/, 'Zerar Feed', /Não foi possível zerar/],
 ] as const)(

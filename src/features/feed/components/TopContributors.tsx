@@ -34,7 +34,7 @@ export function TopContributors({ posts }: TopContributorsProps) {
       <div className="space-y-2.5">
         {contributors.map((person, index) => (
           <div
-            key={person.name}
+            key={person.key}
             className="flex items-center justify-between p-3 rounded-2xl bg-sage-50/80 border border-sage-200/60">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="text-lg leading-none shrink-0">{MEDALS[index]}</span>

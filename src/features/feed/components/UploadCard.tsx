@@ -60,7 +60,9 @@ export function UploadCard({ task }: UploadCardProps) {
               {isRefused
                 ? task.errorMessage
                 : isPaused
-                  ? 'Salvo no aparelho. Enviaremos automaticamente com o app aberto.'
+                  ? task.isUnsaved
+                    ? 'Não feche o app: não foi possível salvar no aparelho.'
+                    : 'Salvo no aparelho. Enviaremos automaticamente com o app aberto.'
                   : `${task.progress}% enviado`}
             </p>
           </div>
