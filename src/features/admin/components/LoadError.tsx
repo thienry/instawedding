@@ -10,7 +10,7 @@ export function LoadError({ onRetry }: LoadErrorProps) {
     <div
       role="alert"
       className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-sm text-amber-900">
-      <span>Não foi possível atualizar o painel. As fotos podem estar desatualizadas.</span>
+      <span>Não foi possível atualizar o painel. Os posts podem estar desatualizados.</span>
       <button
         type="button"
         onClick={onRetry}

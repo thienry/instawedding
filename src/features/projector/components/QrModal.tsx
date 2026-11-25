@@ -22,7 +22,7 @@ export function QrModal({ onClose }: QrModalProps) {
         <h2
           id="qr-modal-title"
           className="font-serif text-[clamp(1.75rem,6vh,4.5rem)] leading-tight text-balance">
-          Envie sua foto para o telão
+          Envie seu post para o telão
         </h2>
         <div className="p-4 bg-white rounded-2xl">
           <QrCodeSvg value={CAPTURE_URL} className="w-[min(78vw,54vh)] h-auto" />

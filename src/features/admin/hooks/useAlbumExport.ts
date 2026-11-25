@@ -54,7 +54,7 @@ export function useAlbumExport(posts: readonly Post[], { notify }: Dialog): Albu
     const approvedPosts = posts.filter((post) => post.isApproved)
     const total = approvedPosts.length
     if (total === 0) {
-      void notify('Não há fotos aprovadas para baixar.')
+      void notify('Não há posts aprovados para baixar.')
       return
     }
 

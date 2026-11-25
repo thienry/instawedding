@@ -5,7 +5,7 @@ const DEFAULT_TITLE = 'Casamento de Thiago & Priscila — Álbum & Mural'
 
 const ROUTE_TITLES: Record<string, string> = {
   '/': DEFAULT_TITLE,
-  '/capture': 'Postar Foto | Casamento de Thiago & Priscila',
+  '/capture': 'Postar | Casamento de Thiago & Priscila',
   '/challenges': 'Desafios da Festa | Casamento de Thiago & Priscila',
   '/admin': 'Painel de Moderação | Casamento de Thiago & Priscila',
 }

@@ -16,7 +16,7 @@ export function EmptyStage() {
           Aguardando o primeiro clique da noite!
         </h2>
         <p className="mt-[1.5vh] mx-auto max-w-[36em] text-[clamp(0.9rem,2vh,1.4rem)] text-white/65 text-balance">
-          Aponte a câmera do seu celular para o QR Code e envie a foto que vai estrear o telão.
+          Aponte a câmera do seu celular para o QR Code e envie o post que vai estrear o telão.
         </p>
       </div>
     </main>

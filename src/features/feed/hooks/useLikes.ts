@@ -8,7 +8,7 @@ import type { FeedPosts } from '@/features/feed/hooks/useFeedPosts'
 
 const DOUBLE_TAP_MS = 320
 const HEART_BURST_MS = 750
-const LOGIN_REASON = 'Conecte sua conta Google para curtir as fotos da festa.'
+const LOGIN_REASON = 'Conecte sua conta Google para curtir os posts da festa.'
 
 /** Like actions, as returned by {@link useLikes}. */
 export interface Likes {

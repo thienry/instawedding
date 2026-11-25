@@ -27,7 +27,7 @@ export function PostFooter({
           <button
             type="button"
             onClick={onToggleLike}
-            title={isSignedIn ? 'Curtir foto' : 'Entre com Google para curtir'}
+            title={isSignedIn ? 'Curtir post' : 'Entre com Google para curtir'}
             className="inline-flex items-center gap-2 min-h-11 px-3 -ml-2 rounded-full text-base font-bold text-sage-900 hover:bg-rose-50/70 active:scale-95 transition-all">
             <Heart
               className={`w-6 h-6 transition-colors ${
@@ -40,8 +40,8 @@ export function PostFooter({
           <button
             type="button"
             onClick={onShare}
-            title="Compartilhar foto"
-            aria-label="Compartilhar foto"
+            title="Compartilhar post"
+            aria-label="Compartilhar post"
             className="w-11 h-11 flex items-center justify-center rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all">
             <Share2 className="w-5 h-5" />
           </button>
@@ -49,8 +49,8 @@ export function PostFooter({
           <button
             type="button"
             onClick={onDownload}
-            title="Baixar foto"
-            aria-label="Baixar foto"
+            title="Baixar mídia"
+            aria-label="Baixar mídia"
             className="w-11 h-11 flex items-center justify-center rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 active:scale-95 transition-all">
             <Download className="w-5 h-5" />
           </button>

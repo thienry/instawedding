@@ -24,7 +24,7 @@ export function DeletePostModal({ deletion }: DeletePostModalProps) {
         <div className="text-center space-y-1.5">
           <h3 className="font-serif text-lg font-bold text-sage-900">Excluir post?</h3>
           <p className="text-sm text-sage-700 leading-relaxed">
-            Esta foto será removida permanentemente do feed e do telão da festa (Direito de
+            Este post será removido permanentemente do feed e do telão da festa (Direito de
             eliminação - LGPD Art. 18).
           </p>
         </div>
@@ -47,7 +47,7 @@ export function DeletePostModal({ deletion }: DeletePostModalProps) {
                 <span>Excluindo...</span>
               </>
             ) : (
-              <span>Excluir Foto</span>
+              <span>Excluir Post</span>
             )}
           </button>
         </div>

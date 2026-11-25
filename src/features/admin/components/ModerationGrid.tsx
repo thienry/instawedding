@@ -23,7 +23,7 @@ export function ModerationGrid({ moderation, isLoading, isAdmin }: ModerationGri
   if (pagePosts.length === 0) {
     return (
       <div className="p-10 text-center text-sm text-sage-700 bg-white rounded-3xl border border-sage-200 shadow-xs">
-        Nenhuma foto encontrada neste filtro.
+        Nenhum post encontrado neste filtro.
       </div>
     )
   }

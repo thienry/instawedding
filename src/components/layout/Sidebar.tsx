@@ -54,12 +54,12 @@ export function Sidebar({
         {/* Primary Action Button */}
         <Link
           to="/capture"
-          title="Postar Nova Foto"
-          className={`flex items-center justify-center w-full rounded-2xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-900 text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all duration-300 ease-in-out ${
-            isCollapsed ? 'py-3.5 px-0' : 'gap-2.5 py-3.5 px-4'
+          title="Fazer Novo Post"
+          className={`flex items-center w-full rounded-2xl bg-gradient-to-r from-sage-900 to-sage-800 hover:from-sage-800 hover:to-sage-900 text-white font-semibold text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all duration-300 ease-in-out ${
+            isCollapsed ? 'justify-center py-3.5 px-0' : 'gap-3.5 py-3.5 px-4'
           }`}>
           <Camera className="w-5 h-5 text-gold-400 shrink-0" />
-          <span className={labelTransitionClass}>Postar Nova Foto</span>
+          <span className={labelTransitionClass}>Fazer Novo Post</span>
         </Link>
 
         <SidebarNav

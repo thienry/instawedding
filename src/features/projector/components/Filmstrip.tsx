@@ -38,7 +38,7 @@ export function Filmstrip({ slideshow }: FilmstripProps) {
               <button
                 type="button"
                 onClick={() => showPost(post)}
-                title={`Foto de ${post.authorName}`}
+                title={`Post de ${post.authorName}`}
                 className="projector-thumbnail">
                 {resolvePostMediaType(post) === 'video' ? (
                   <video src={post.mediaUrl} muted playsInline preload="metadata" />

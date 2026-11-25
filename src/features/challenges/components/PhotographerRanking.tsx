@@ -53,7 +53,7 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
               </div>
               <div className="flex items-center justify-center gap-3 text-xs sm:text-sm text-sage-800/85 font-semibold shrink-0">
                 <span>
-                  📷 {person.postCount} {person.postCount === 1 ? 'foto' : 'fotos'}
+                  📷 {person.postCount} {person.postCount === 1 ? 'post' : 'posts'}
                 </span>
                 <span className="inline-flex items-center gap-1 text-rose-600">
                   <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />

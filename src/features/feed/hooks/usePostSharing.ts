@@ -27,8 +27,8 @@ function downloadName(post: Post): string {
 async function shareNatively(post: Post, url: string): Promise<boolean> {
   if (!navigator.share) return false
   const text = post.caption
-    ? `Foto de ${post.authorName}: "${post.caption}"`
-    : `Foto de ${post.authorName} no casamento de Thiago & Priscila!`
+    ? `Post de ${post.authorName}: "${post.caption}"`
+    : `Post de ${post.authorName} no casamento de Thiago & Priscila!`
   try {
     await navigator.share({ title: SHARE_TITLE, text, url })
     return true
@@ -65,7 +65,7 @@ export function usePostSharing(): PostSharing {
     if (await shareNatively(post, url)) return
 
     if (await copyToClipboard(url)) {
-      setToastMessage('Link da foto copiado!')
+      setToastMessage('Link do post copiado!')
       window.setTimeout(() => setToastMessage(null), TOAST_MS)
       return
     }

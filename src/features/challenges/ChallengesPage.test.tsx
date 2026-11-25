@@ -85,13 +85,13 @@ it('ranks the three guests who posted the most', async () => {
     .getAllByText(/^(Um|Dois|Três|Fora)$/)
     .map((element) => element.textContent)
   expect(text).toEqual(['Três', 'Dois', 'Um'])
-  within(ranking).getByText('📷 2 fotos')
+  within(ranking).getByText('📷 2 posts')
 })
 
 it('opens the photos of a challenge', async () => {
   await open([{ challengeId: 2 }, { challengeId: 2 }, { challengeId: 3 }])
-  screen.getByText('Ver 1 foto postada')
-  fireEvent.click(screen.getByText('Ver 2 fotos postadas'))
+  screen.getByText('Ver 1 post')
+  fireEvent.click(screen.getByText('Ver 2 posts'))
   expect(screen.getByRole('status').textContent).toBe('/?challengeId=2')
 })
 

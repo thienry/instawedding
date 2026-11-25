@@ -95,7 +95,7 @@ it('filters and opens the clicked thumbnail', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Destaques' }))
   await wait(10)
   expect(shown()).toBe('Foto por Author 2')
-  fireEvent.click(screen.getByTitle('Foto de Author 3'))
+  fireEvent.click(screen.getByTitle('Post de Author 3'))
   await wait(10)
   expect(shown()).toBe('Foto por Author 3')
 })
@@ -105,16 +105,16 @@ it('shows a new post at once and announces it for 6 seconds', async () => {
   await wait(8100)
   await announce(post('0'))
   expect(shown()).toBe('Foto por Author 0')
-  screen.getByText('Nova foto ao vivo')
+  screen.getByText('Novo post ao vivo')
   await wait(6100)
-  expect(screen.queryByText('Nova foto ao vivo')).toBeNull()
+  expect(screen.queryByText('Novo post ao vivo')).toBeNull()
 })
 
 it('ignores a new post that opted out', async () => {
   const announce = await open(posts)
   await announce(post('0', { showOnProjector: false }))
   expect(shown()).toBe('Foto por Author 1')
-  expect(screen.queryByText('Nova foto ao vivo')).toBeNull()
+  expect(screen.queryByText('Novo post ao vivo')).toBeNull()
 })
 
 it('skips broken media instead of stopping', async () => {
@@ -176,6 +176,6 @@ it('leaves browser shortcuts and focused buttons alone', async () => {
   fireEvent.keyDown(window, { key: 'f' })
   expect(requestFullscreen).toHaveBeenCalledOnce()
   // A prevented event returns false
-  const button = screen.getByTitle(/Próxima foto/)
+  const button = screen.getByTitle(/Próximo post/)
   expect(fireEvent.keyUp(button, { key: ' ' })).toBe(false)
 })

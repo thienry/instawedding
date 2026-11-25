@@ -6,11 +6,11 @@ import type { FeedNotificationState } from '@/services/feed-notification/notific
 
 function describeUnread(count: number, isLive: boolean): string {
   if (isLive) {
-    return count === 1 ? '1 nova foto postada' : `${count} novas fotos postadas`
+    return count === 1 ? '1 novo post' : `${count} novos posts`
   }
   return count === 1
-    ? '1 nova foto desde sua última visita'
-    : `${count} novas fotos desde sua última visita`
+    ? '1 novo post desde sua última visita'
+    : `${count} novos posts desde sua última visita`
 }
 
 interface NewPostsPillProps {
@@ -64,8 +64,8 @@ export function NewPostsPill({ notifications, onReveal, onDismiss }: NewPostsPil
         <button
           type="button"
           onClick={onDismiss}
-          title="Marcar como vistas"
-          aria-label="Marcar novas fotos como vistas"
+          title="Marcar como vistos"
+          aria-label="Marcar novos posts como vistos"
           className="touch-target p-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors">
           <X className="w-3.5 h-3.5" />
         </button>

@@ -79,7 +79,7 @@ export function PostGrid({
           ref={sentinelRef}
           className="py-6 flex items-center justify-center text-xs text-sage-700 gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-sage-800" />
-          <span>Carregando mais fotos...</span>
+          <span>Carregando mais posts...</span>
         </div>
       )}
     </>

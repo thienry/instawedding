@@ -61,26 +61,26 @@ it('reveals more posts on scroll and starts over on another tab', async () => {
   open(30)
   const countPosts = () => screen.queryAllByRole('article').length
   await waitFor(() => expect(countPosts()).toBe(12))
-  await screen.findByText('Carregando mais fotos...')
+  await screen.findByText('Carregando mais posts...')
   act(() => reachEnd())
   expect(countPosts()).toBe(22)
-  fireEvent.click(screen.getByRole('button', { name: 'Mais Curtidas' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Mais Curtidos' }))
   expect(countPosts()).toBe(12)
 })
 
 it('likes on double tap', async () => {
   const { container } = open(1)
-  await screen.findByTitle('Curtir foto')
+  await screen.findByTitle('Curtir post')
   const media = container.querySelector('article .cursor-pointer')!
   fireEvent.click(media)
-  expect(screen.getByTitle('Curtir foto').textContent).toBe('0')
+  expect(screen.getByTitle('Curtir post').textContent).toBe('0')
   fireEvent.click(media)
-  await waitFor(() => expect(screen.getByTitle('Curtir foto').textContent).toBe('1'))
+  await waitFor(() => expect(screen.getByTitle('Curtir post').textContent).toBe('1'))
 })
 
 it('refreshes only when pulled past the threshold', async () => {
   const { container } = open(1)
-  await screen.findByTitle('Curtir foto')
+  await screen.findByTitle('Curtir post')
   const getPosts = vi.spyOn(getPostRepository(), 'getPosts')
   const page = container.firstElementChild!
   const pull = (distance: number) => {
@@ -97,7 +97,7 @@ it('refreshes only when pulled past the threshold', async () => {
 
 it('restores the count when a like fails', async () => {
   open(1)
-  const button = await screen.findByTitle('Curtir foto')
+  const button = await screen.findByTitle('Curtir post')
   let rejectLike = () => {}
   vi.spyOn(getPostRepository(), 'toggleLike').mockReturnValue(
     new Promise((_, reject) => {
@@ -119,6 +119,6 @@ it('downloads with an ASCII name', async () => {
   ) {
     fileName = this.download
   })
-  fireEvent.click(await screen.findByTitle('Baixar foto'))
+  fireEvent.click(await screen.findByTitle('Baixar mídia'))
   await waitFor(() => expect(fileName).toBe('casamento-thiago-e-priscila-jose-avila-p0.webp'))
 })

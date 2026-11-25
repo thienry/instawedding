@@ -30,20 +30,20 @@ interface FilterOption {
 const FILTERS: readonly FilterOption[] = [
   {
     mode: 'all',
-    label: 'Todas',
-    title: 'Todas as fotos e vídeos em ordem cronológica',
+    label: 'Todos',
+    title: 'Todos os posts em ordem cronológica',
     Icon: Images,
   },
   {
     mode: 'highlights',
     label: 'Destaques',
-    title: 'Fotos e vídeos mais curtidos da noite',
+    title: 'Posts mais curtidos da noite',
     Icon: Sparkles,
   },
   {
     mode: 'challenges',
     label: 'Desafios',
-    title: 'Apenas fotos de desafios cumpridos',
+    title: 'Apenas posts de desafios cumpridos',
     Icon: Trophy,
   },
 ]
@@ -117,7 +117,7 @@ export function OperatorControls({
       {slides.length > 1 && (
         <>
           <ControlButton
-            title="Foto anterior (←)"
+            title="Post anterior (←)"
             Icon={ChevronLeft}
             onClick={slideshow.showPrevious}
           />
@@ -127,7 +127,7 @@ export function OperatorControls({
             onClick={slideshow.togglePause}
           />
           <ControlButton
-            title="Próxima foto (→)"
+            title="Próximo post (→)"
             Icon={ChevronRight}
             onClick={slideshow.showNext}
           />

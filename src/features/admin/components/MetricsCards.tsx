@@ -81,7 +81,8 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
           {topAuthor?.name ?? 'Nenhum ainda'}
         </h4>
         <p className="text-xs text-sage-800/80 font-medium mt-1.5">
-          {topAuthor?.postCount ?? 0} fotos enviadas
+          {topAuthor?.postCount ?? 0}{' '}
+          {topAuthor?.postCount === 1 ? 'post enviado' : 'posts enviados'}
         </p>
       </MetricCard>
 
