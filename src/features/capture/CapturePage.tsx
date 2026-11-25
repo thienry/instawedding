@@ -53,7 +53,9 @@ export function CapturePage() {
   }
 
   const handleSendCard = async (file: File, showOnProjector: boolean) => {
-    if (guestUser) await submitCard(guestUser, file, showOnProjector)
+    // Signed out in another tab: the rejection keeps the message on screen
+    if (!guestUser) throw new Error('Not signed in')
+    await submitCard(guestUser, file, showOnProjector)
   }
 
   const handleReset = () => {

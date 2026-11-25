@@ -5,6 +5,8 @@ import { DeleteObjectsCommand, S3Client } from '@aws-sdk/client-s3'
 import { createServiceClient } from './supabase.js'
 
 const MAX_KEYS_PER_REQUEST = 1000
+/** Filters go in the address, which cannot be too long. */
+const URLS_PER_QUERY = 50
 
 /** R2 client, or `null` when the storage is not configured. */
 export function createR2(): { client: S3Client; bucket: string } | null {
@@ -38,17 +40,17 @@ export async function deleteMedia(mediaUrls: readonly string[]): Promise<void> {
   try {
     const storage = createR2()
     if (!storage) return
+    const urls = [...new Set(mediaUrls)].filter(getMediaKey)
     const keys: string[] = []
-    for (const url of new Set(mediaUrls)) {
-      const key = getMediaKey(url)
-      if (!key) continue
+    for (let i = 0; i < urls.length; i += URLS_PER_QUERY) {
+      const batch = urls.slice(i, i + URLS_PER_QUERY)
       const { data, error } = await createServiceClient()
         .from('posts')
-        .select('id')
-        .eq('media_url', url)
-        .limit(1)
+        .select('media_url')
+        .in('media_url', batch)
       if (error) throw error
-      if (data.length === 0) keys.push(key)
+      const used = new Set(data.map((post) => post.media_url as string))
+      keys.push(...batch.filter((url) => !used.has(url)).map((url) => getMediaKey(url)!))
     }
     for (let i = 0; i < keys.length; i += MAX_KEYS_PER_REQUEST) {
       const Objects = keys.slice(i, i + MAX_KEYS_PER_REQUEST).map((Key) => ({ Key }))

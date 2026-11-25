@@ -68,12 +68,8 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
     return this.mapRowToChallenge(challenge)
   }
 
-  async toggleChallengeActive(id: number): Promise<boolean> {
-    const { isActive } = await adminRequest<{ isActive: boolean }>('challenges', {
-      action: 'toggle',
-      id,
-    })
-    return isActive
+  async setChallengeActive(id: number, isActive: boolean): Promise<void> {
+    await adminRequest('challenges', { action: 'set_active', id, isActive })
   }
 
   async deleteChallenge(id: number): Promise<void> {

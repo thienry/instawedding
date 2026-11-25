@@ -10,6 +10,7 @@ interface ModerateBody {
 }
 
 const PAGE_SIZE = 1000
+const CLEAR_BATCH_SIZE = 100
 
 export async function POST(req: Request): Promise<Response> {
   const user = await requireIdentity(req)
@@ -68,13 +69,26 @@ export async function POST(req: Request): Promise<Response> {
         return json({ success: true })
       }
       case 'clear_all': {
-        const { data, error } = await posts()
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000')
-          .select('media_url')
-        if (error) throw error
-        await deleteMedia(data.map((post) => post.media_url as string))
-        return json({ success: true })
+        // In batches with their media, so a timeout leaves the rest for later
+        for (;;) {
+          const { data: batch, error: readError } = await posts()
+            .select('id')
+            .order('id')
+            .limit(CLEAR_BATCH_SIZE)
+          if (readError) throw readError
+          if (batch.length === 0) return json({ success: true })
+
+          const { data, error } = await posts()
+            .delete()
+            .in(
+              'id',
+              batch.map(({ id }) => id as string)
+            )
+            .select('media_url')
+          if (error) throw error
+          await deleteMedia(data.map((post) => post.media_url as string))
+          if (batch.length < CLEAR_BATCH_SIZE) return json({ success: true })
+        }
       }
       default:
         return fail(400, 'Ação desconhecida')

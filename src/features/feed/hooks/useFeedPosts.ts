@@ -103,12 +103,11 @@ export function useFeedPosts({
   const addRevealedIds = (ids: ReadonlySet<string>) =>
     setRevealedPostIds((prev) => new Set([...prev, ...ids]))
 
-  const refresh = async () => {
+  const reload = async (onLoaded: (posts: readonly Post[]) => void) => {
     setIsRefreshing(true)
     try {
       const [fetchedPosts, likedIds] = await fetchFeed()
-      const revealed = FeedNotificationService.consumeStagedAndMarkSeen(fetchedPosts)
-      addRevealedIds(revealed.revealedPostIds)
+      onLoaded(fetchedPosts)
       setPosts(fetchedPosts)
       setLikedPostIds(likedIds)
       setHasError(false)
@@ -120,8 +119,16 @@ export function useFeedPosts({
     }
   }
 
+  const refresh = () =>
+    reload((fetchedPosts) => {
+      const revealed = FeedNotificationService.consumeStagedAndMarkSeen(fetchedPosts)
+      addRevealedIds(revealed.revealedPostIds)
+    })
+
+  // The guest may not be looking, so nothing is marked as seen
   const retry = () => {
-    if (hasError && !isRefreshing) void refresh()
+    if (!hasError || isRefreshing) return
+    void reload((fetchedPosts) => FeedNotificationService.syncWithFetchedPosts(fetchedPosts))
   }
   useVisibleInterval(retry, RETRY_MS)
   const retryOnline = useEffectEvent(retry)

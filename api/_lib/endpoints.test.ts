@@ -43,7 +43,7 @@ vi.mock('./supabase.js', () => {
       single: async () => result(),
       then: (resolve: (value: unknown) => void) => resolve(rows()),
     }
-    for (const read of ['select', 'order', 'neq', 'range']) builder[read] = () => builder
+    for (const read of ['select', 'order', 'in', 'limit', 'range']) builder[read] = () => builder
     for (const write of ['insert', 'update', 'delete']) {
       builder[write] = () => {
         db.writes.push(`${table}.${write}`)
@@ -164,7 +164,7 @@ const CASES: Case[] = [
   ['moderate', { action: 'delete_post', postId: '1' }, 403],
   ['moderate', { action: 'clear_all' }, 403],
   ['challenges', { action: 'create', title: 'a', description: 'b' }, 200],
-  ['challenges', { action: 'toggle', id: 1 }, 200],
+  ['challenges', { action: 'set_active', id: 1, isActive: false }, 200],
   ['challenges', { action: 'delete', id: 1 }, 403],
   ['ceremonialists', { action: 'list' }, 403],
   ['ceremonialists', { action: 'add', email: 'n@x.test' }, 403],
@@ -193,6 +193,7 @@ it.each([
   ['moderate', { action: 'nope' }],
   ['moderate', { action: 'set_approval', postId: '1' }],
   ['challenges', { action: 'delete', id: '1 or 1=1' }],
+  ['challenges', { action: 'set_active', id: 1 }],
   ['challenges', { action: 'create', title: ' ', description: 'b' }],
   ['ceremonialists', { action: 'add', email: 'invalid' }],
   ['ceremonialists', null],

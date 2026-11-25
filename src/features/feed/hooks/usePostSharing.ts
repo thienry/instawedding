@@ -54,6 +54,7 @@ export function usePostSharing(): PostSharing {
   const downloadPost = async (post: Post) => {
     try {
       const response = await fetch(post.mediaUrl)
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`)
       downloadBlob(await response.blob(), downloadName(post))
     } catch {
       window.open(post.mediaUrl, '_blank', 'noopener,noreferrer')

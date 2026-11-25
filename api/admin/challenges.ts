@@ -3,8 +3,9 @@ import { fail, json, readJson } from '../_lib/http.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
 interface ChallengeBody {
-  action: 'create' | 'toggle' | 'delete'
+  action: 'create' | 'set_active' | 'delete'
   id: number
+  isActive: boolean
   title: string
   description: string
   icon: string
@@ -19,13 +20,17 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = await readJson<ChallengeBody>(req)
   if (!body) return fail(400, 'Corpo da requisição inválido.')
-  const { action, id } = body
+  const { action, id, isActive } = body
 
   if (action === 'delete' && user.role !== 'admin') {
     return fail(403, 'Apenas administradores podem excluir desafios.')
   }
-  if ((action === 'toggle' || action === 'delete') && !Number.isInteger(id)) {
+  if ((action === 'set_active' || action === 'delete') && !Number.isInteger(id)) {
     return fail(400, 'id é obrigatório')
+  }
+
+  if (action === 'set_active' && typeof isActive !== 'boolean') {
+    return fail(400, 'isActive é obrigatório')
   }
 
   try {
@@ -50,18 +55,14 @@ export async function POST(req: Request): Promise<Response> {
         if (error) throw error
         return json({ challenge: data })
       }
-      case 'toggle': {
-        const { data: current, error: readError } = await challenges()
-          .select('is_active')
+      case 'set_active': {
+        const { data, error } = await challenges()
+          .update({ is_active: isActive })
           .eq('id', id!)
-          .maybeSingle()
-        if (readError) throw readError
-        if (!current) return fail(404, 'Desafio não encontrado.')
-
-        const isActive = !current.is_active
-        const { error } = await challenges().update({ is_active: isActive }).eq('id', id!)
+          .select('id')
         if (error) throw error
-        return json({ isActive })
+        if (data.length === 0) return fail(404, 'Desafio não encontrado.')
+        return json({ success: true })
       }
       case 'delete': {
         const { error } = await challenges().delete().eq('id', id!)

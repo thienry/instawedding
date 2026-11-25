@@ -1,10 +1,12 @@
+import { hasAuthorId } from '@/utils/post-stats'
+
 import type { GuestSession, GuestUser, Post } from '@/types/domain'
 
 /**
  * Finds the challenges the guest has completed.
  *
- * A post belongs to the guest when it has their user or session id, or their
- * name, ignoring case and surrounding spaces.
+ * A post belongs to the guest when it has their user or session id. One without
+ * any id is matched by name, ignoring case and surrounding spaces.
  */
 export function findCompletedChallenges(
   posts: readonly Post[],
@@ -18,7 +20,8 @@ export function findCompletedChallenges(
     const isMineById =
       Boolean(post.clientSessionId) &&
       (post.clientSessionId === guestUser?.id || post.clientSessionId === session.sessionId)
-    const isMineByName = Boolean(guestName) && post.authorName.trim().toLowerCase() === guestName
+    const isMineByName =
+      Boolean(guestName) && !hasAuthorId(post) && post.authorName.trim().toLowerCase() === guestName
     if (isMineById || isMineByName) completed.add(post.challengeId)
   }
   return completed

@@ -1,3 +1,5 @@
+const REVOKE_DELAY_MS = 60_000
+
 /** Makes the browser download a blob as `fileName`. */
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob)
@@ -7,5 +9,6 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   document.body.appendChild(link)
   link.click()
   link.remove()
-  URL.revokeObjectURL(url)
+  // Safari may still be reading it
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS)
 }

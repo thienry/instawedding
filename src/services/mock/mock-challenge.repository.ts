@@ -107,18 +107,8 @@ export class MockChallengeRepository implements ChallengeRepository {
     return created
   }
 
-  async toggleChallengeActive(id: number): Promise<boolean> {
-    const all = this.readAll()
-    let newStatus = false
-    const updated = all.map((c) => {
-      if (c.id === id) {
-        newStatus = !c.isActive
-        return { ...c, isActive: newStatus }
-      }
-      return c
-    })
-    this.saveAll(updated)
-    return newStatus
+  async setChallengeActive(id: number, isActive: boolean): Promise<void> {
+    this.saveAll(this.readAll().map((c) => (c.id === id ? { ...c, isActive } : c)))
   }
 
   async deleteChallenge(id: number): Promise<void> {
