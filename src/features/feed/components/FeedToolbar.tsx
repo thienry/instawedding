@@ -47,20 +47,25 @@ export function FeedToolbar({
   const { guestUser, isSigningIn, signIn, openAuthPrompt } = guest
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="shrink-0 flex flex-wrap items-center justify-between gap-3">
       <button
         type="button"
         disabled={isSigningIn}
+        aria-label={guestUser ? `Conta de ${guestUser.name}` : undefined}
         onClick={() => {
           if (guestUser) openAuthPrompt()
           else void signIn()
         }}
-        className="inline-flex items-center gap-2.5 min-h-11 px-3.5 rounded-2xl bg-white border border-sage-200/90 text-sm text-sage-900 hover:bg-sage-100 disabled:opacity-60 font-semibold transition-colors shadow-2xs">
+        className={`inline-flex items-center justify-center gap-2 sm:gap-2.5 min-h-11 min-w-11 rounded-full sm:rounded-2xl sm:px-3.5 bg-white border border-sage-200/90 text-sm text-sage-900 hover:bg-sage-100 disabled:opacity-60 font-semibold transition-colors shadow-2xs ${
+          guestUser ? '' : 'px-3.5'
+        }`}>
         {guestUser ? (
           <>
             <AuthorAvatar name={guestUser.name} avatarUrl={guestUser.avatarUrl} size="sm" />
-            <span className="truncate max-w-44">Olá, {guestUser.name.split(' ')[0]}</span>
-            <ChevronDown className="w-4 h-4 text-sage-700" />
+            <span className="hidden sm:inline truncate max-w-44">
+              Olá, {guestUser.name.split(' ')[0]}
+            </span>
+            <ChevronDown className="hidden sm:block w-4 h-4 text-sage-700" />
           </>
         ) : (
           <>
@@ -69,12 +74,20 @@ export function FeedToolbar({
             ) : (
               <User className="w-4 h-4 text-sage-800" />
             )}
-            <span>{isSigningIn ? 'Conectando...' : 'Entrar com Google'}</span>
+            <span>
+              {isSigningIn ? (
+                'Conectando...'
+              ) : (
+                <>
+                  Entrar<span className="hidden sm:inline"> com Google</span>
+                </>
+              )}
+            </span>
           </>
         )}
       </button>
 
-      <div className="flex items-center gap-2">
+      <div className="hidden sm:flex items-center gap-2">
         <div className="hidden sm:flex items-center bg-white border border-sage-200/90 rounded-2xl p-1 shadow-2xs">
           {VIEW_MODES.map(({ id, label, title, Icon }) => (
             <button

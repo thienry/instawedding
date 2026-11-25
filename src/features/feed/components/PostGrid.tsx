@@ -48,7 +48,9 @@ export function PostGrid({
 
   return (
     <>
-      <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'space-y-6'}>
+      {/* Edge to edge on phones */}
+      <div
+        className={`-mx-4 sm:mx-0 ${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6' : 'space-y-3 sm:space-y-6'}`}>
         {visibleItems.map((post, index) => (
           <PostCard
             key={post.id}

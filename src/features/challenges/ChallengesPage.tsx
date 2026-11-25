@@ -27,7 +27,7 @@ export function ChallengesPage() {
   const completedCount = challenges.filter(({ id }) => completedIds.has(id)).length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="px-4 py-3 sm:p-6 lg:p-8 space-y-3 sm:space-y-6">
       <ChallengesBanner completedCount={completedCount} totalChallenges={challenges.length} />
       <PhotographerRanking posts={posts} />
       {isLoading ? (
@@ -35,7 +35,7 @@ export function ChallengesPage() {
       ) : hasError ? (
         <ChallengesError onRetry={retry} />
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-6">
           {challenges.map((challenge) => (
             <ChallengeCard
               key={challenge.id}

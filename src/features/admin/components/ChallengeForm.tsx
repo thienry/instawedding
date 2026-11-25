@@ -18,7 +18,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
         event.preventDefault()
         void createChallenge()
       }}
-      className="w-full bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 shadow-xs space-y-4">
+      className="w-full bg-white rounded-3xl p-4 sm:p-6 border border-sage-200 shadow-xs space-y-4">
       <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
         <Plus className="w-4 h-4 text-gold-600" />
         <span>Criar Novo Desafio</span>
@@ -50,7 +50,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
             value={draft.title}
             onChange={(event) => updateDraft({ title: event.target.value })}
             placeholder="Ex: Selfie com os Noivos"
-            className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-sm bg-white"
+            className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-base sm:text-sm bg-white"
           />
         </div>
         <div className="col-span-4 lg:col-span-6">
@@ -66,7 +66,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
             value={draft.description}
             onChange={(event) => updateDraft({ description: event.target.value })}
             placeholder="Ex: Tire uma selfie divertida ao lado de Thiago & Priscila!"
-            className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-sm bg-white"
+            className="w-full h-11 px-3.5 rounded-xl border border-sage-200 text-base sm:text-sm bg-white"
           />
         </div>
       </div>

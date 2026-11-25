@@ -10,12 +10,12 @@ export function ChallengesBanner({ completedCount, totalChallenges }: Challenges
   const progressPct = totalChallenges > 0 ? Math.round((completedCount / totalChallenges) * 100) : 0
 
   return (
-    <div className="bg-gradient-to-br from-sage-900 to-sage-800 text-white rounded-3xl p-6 sm:p-8 shadow-md space-y-4 relative overflow-hidden">
+    <div className="bg-gradient-to-br from-sage-900 to-sage-800 text-white rounded-3xl p-4 sm:p-8 shadow-md space-y-3 sm:space-y-4 relative overflow-hidden">
       <div className="absolute top-3 right-4 opacity-10 pointer-events-none">
         <Trophy className="w-32 h-32" />
       </div>
-      <div className="space-y-2 max-w-2xl">
-        <div className="flex items-center gap-2 text-gold-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
+      <div className="space-y-1 sm:space-y-2 max-w-2xl">
+        <div className="hidden sm:flex items-center gap-2 text-gold-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
           <Sparkles className="w-4 h-4" />
           <span>Caça ao Tesouro Fotográfico</span>
         </div>
@@ -30,12 +30,13 @@ export function ChallengesBanner({ completedCount, totalChallenges }: Challenges
 
       {/* Personal Progress Bar */}
       {totalChallenges > 0 && (
-        <div className="pt-3 space-y-2 border-t border-white/15 max-w-xl">
-          <div className="flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-semibold text-white/90">Seu Progresso na Festa</span>
+        <div className="pt-2.5 sm:pt-3 space-y-2 border-t border-white/15 max-w-xl">
+          <div className="flex items-center justify-between gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <span className="font-semibold text-white/90">
+              Seu Progresso<span className="hidden sm:inline"> na Festa</span>
+            </span>
             <span className="font-bold text-gold-400">
-              {completedCount} de {totalChallenges} concluídos ({progressPct}
-              %)
+              {completedCount} de {totalChallenges} concluídos ({progressPct}%)
             </span>
           </div>
           <div className="w-full h-3 rounded-full bg-white/15 overflow-hidden">

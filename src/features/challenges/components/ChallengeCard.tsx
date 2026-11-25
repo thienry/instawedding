@@ -17,16 +17,16 @@ export function ChallengeCard({ challenge, isCompleted, communityCount }: Challe
 
   return (
     <div
-      className={`bg-white rounded-3xl p-5 border shadow-xs flex items-center justify-between gap-4 transition-all ${
+      className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs flex items-center justify-between gap-3 sm:gap-4 transition-all ${
         isCompleted
           ? 'border-emerald-300/90 bg-emerald-50/25'
           : 'border-sage-200/80 hover:border-sage-300 hover:shadow-md'
       }`}>
-      <div className="flex items-start gap-4 min-w-0">
-        <div className="w-14 h-14 rounded-2xl bg-sage-50 border border-sage-200/90 flex items-center justify-center text-3xl shrink-0 shadow-2xs">
+      <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+        <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-sage-50 border border-sage-200/90 flex items-center justify-center text-2xl sm:text-3xl shrink-0 shadow-2xs">
           {challenge.icon}
         </div>
-        <div className="space-y-1.5 min-w-0">
+        <div className="space-y-1 sm:space-y-1.5 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-serif text-base sm:text-lg font-bold text-sage-900 leading-snug">
               {challenge.title}
@@ -44,8 +44,8 @@ export function ChallengeCard({ challenge, isCompleted, communityCount }: Challe
             <button
               type="button"
               onClick={() => navigate(`/?challengeId=${challenge.id}`)}
-              className="inline-flex items-center gap-1.5 min-h-11 text-sm font-bold text-gold-600 hover:underline">
-              <Eye className="w-3.5 h-3.5" />
+              className="inline-flex items-center gap-1.5 min-h-11 text-left text-sm font-bold text-gold-600 hover:underline">
+              <Eye className="shrink-0 w-3.5 h-3.5" />
               <span>
                 Ver {communityCount} {communityCount === 1 ? 'foto postada' : 'fotos postadas'}
               </span>

@@ -48,7 +48,7 @@ interface FilterTabsProps {
 /** Feed filters. */
 export function FilterTabs({ activeTab, onChange, postCount }: FilterTabsProps) {
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 scrollbar-none">
+    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-x-auto -mr-4 pr-4 sm:mr-0 sm:pr-0 py-1 scrollbar-none">
       <button
         type="button"
         onClick={() => onChange('all')}

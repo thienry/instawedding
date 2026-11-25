@@ -248,6 +248,13 @@
     background-color 0.25s;
 }
 
+/* Every control fits on the narrowest phones */
+@media (max-width: 359px) {
+  .projector-control {
+    padding: 0.375rem;
+  }
+}
+
 .projector-control:hover {
   color: #fff;
   background: rgb(255 255 255 / 12%);

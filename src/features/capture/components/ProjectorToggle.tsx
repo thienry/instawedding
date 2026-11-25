@@ -11,13 +11,13 @@ export function ProjectorToggle({ draft }: ProjectorToggleProps) {
   return (
     <div className="p-3.5 sm:p-4 rounded-2xl border border-sage-200 bg-sage-50/70 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="p-2 sm:p-2.5 rounded-xl bg-gold-400/20 text-sage-900 shrink-0">
+        <div className="hidden sm:block p-2 sm:p-2.5 rounded-xl bg-gold-400/20 text-sage-900 shrink-0">
           <Tv className="w-5 h-5 text-gold-600" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-sage-900">Exibir no Telão da Festa</span>
-            <span className="text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
+            <span className="hidden sm:inline text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
               Ao vivo
             </span>
           </div>

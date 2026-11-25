@@ -29,7 +29,7 @@ export function PostDetailsForm({
   onOpenTerms,
 }: PostDetailsFormProps) {
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200/80 shadow-xs space-y-4">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-sage-200/80 shadow-xs space-y-4">
       <AuthorSummary guestUser={guestUser} onSignOut={onSignOut} />
 
       <div className="space-y-1.5">
@@ -74,7 +74,7 @@ export function PostDetailsForm({
       {/* Replaces the bottom navigation on small screens */}
       <div
         data-post-bar
-        className="fixed lg:static bottom-0 inset-x-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-0 bg-white/95 lg:bg-transparent border-t border-sage-200 lg:border-0">
+        className="fixed lg:static bottom-0 inset-x-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-0 bg-white lg:bg-transparent border-t border-sage-200 lg:border-0">
         <button
           type="submit"
           disabled={isSubmitting || media.isProcessing}

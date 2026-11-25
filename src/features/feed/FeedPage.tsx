@@ -62,19 +62,22 @@ export function FeedPage() {
   const lightboxPost = posts.find((post) => post.id === lightbox.postId) ?? null
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8" {...pull.touchHandlers}>
+    <div className="px-4 py-3 sm:p-6 lg:p-8" {...pull.touchHandlers}>
       <PullIndicator pull={pull} isRefreshing={isRefreshing} />
 
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
-        <div className="lg:col-span-8 space-y-6">
-          <FeedToolbar
-            guest={guest}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            isRefreshing={isRefreshing}
-            onRefresh={() => void refresh()}
-          />
-          <FilterTabs activeTab={filter.tab} onChange={filter.setTab} postCount={posts.length} />
+        <div className="lg:col-span-8 space-y-3 sm:space-y-6">
+          {/* A single row on phones */}
+          <div className="flex items-center gap-2 sm:block sm:space-y-6">
+            <FeedToolbar
+              guest={guest}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              isRefreshing={isRefreshing}
+              onRefresh={() => void refresh()}
+            />
+            <FilterTabs activeTab={filter.tab} onChange={filter.setTab} postCount={posts.length} />
+          </div>
 
           {filter.challengeId !== null && (
             <ChallengeFilterPill

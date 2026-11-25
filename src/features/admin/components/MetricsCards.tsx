@@ -13,12 +13,14 @@ interface MetricCardProps {
 
 function MetricCard({ title, titleClass, icon, iconClass, children }: MetricCardProps) {
   return (
-    <div className="bg-white rounded-3xl p-5 border border-sage-200/80 shadow-xs flex flex-col justify-between">
+    <div className="bg-white min-w-0 rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-sage-200/80 shadow-xs flex flex-col sm:justify-between">
       <div className="flex items-center justify-between">
-        <span className={`text-xs font-bold uppercase tracking-wider ${titleClass}`}>{title}</span>
-        <span className={`p-2 rounded-xl ${iconClass}`}>{icon}</span>
+        <span className={`text-xs font-bold sm:uppercase sm:tracking-wider ${titleClass}`}>
+          {title}
+        </span>
+        <span className={`hidden sm:block p-2 rounded-xl ${iconClass}`}>{icon}</span>
       </div>
-      <div className="mt-3">{children}</div>
+      <div className="mt-1.5 sm:mt-3">{children}</div>
     </div>
   )
 }
@@ -30,7 +32,7 @@ interface MetricValueProps {
 
 function MetricValue({ value, unit }: MetricValueProps) {
   return (
-    <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
+    <h4 className="font-serif text-2xl sm:text-3xl font-bold text-sage-900 leading-none">
       {value} <span className="text-sm font-sans font-semibold text-sage-800">{unit}</span>
     </h4>
   )
@@ -45,13 +47,13 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
   const { topLikedPost, topAuthor } = stats
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3.5">
       <MetricCard
         title="Mídias do Evento"
         titleClass="text-sage-800"
         icon={<Camera className="w-4 h-4" />}
         iconClass="bg-sage-100 text-sage-800">
-        <h4 className="font-serif text-3xl font-bold text-sage-900 leading-none">
+        <h4 className="font-serif text-2xl sm:text-3xl font-bold text-sage-900 leading-none">
           {stats.totalPosts}
         </h4>
         <p className="text-xs text-sage-800/80 font-medium mt-1.5">
@@ -75,7 +77,7 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
         titleClass="text-gold-600"
         icon={<Trophy className="w-4 h-4 text-gold-600" />}
         iconClass="bg-gold-400/20 text-gold-600">
-        <h4 className="font-serif text-xl sm:text-2xl font-bold text-sage-900 leading-tight truncate">
+        <h4 className="font-serif text-lg sm:text-2xl font-bold text-sage-900 leading-tight truncate">
           {topAuthor?.name ?? 'Nenhum ainda'}
         </h4>
         <p className="text-xs text-sage-800/80 font-medium mt-1.5">

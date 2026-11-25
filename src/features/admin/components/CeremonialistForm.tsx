@@ -13,7 +13,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
   const id = useId()
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-sage-200 space-y-4 shadow-xs">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
           <UserPlus className="w-5 h-5" />
@@ -48,7 +48,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
           event.preventDefault()
           void addCeremonialist()
         }}
-        className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
+        className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:pt-2">
         <div className="sm:col-span-6">
           <label
             htmlFor={`${id}-email`}
@@ -56,7 +56,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
             E-mail do Cerimonialista *
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-sage-700" />
+            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-sage-700" />
             <input
               type="email"
               required
@@ -64,7 +64,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
               value={draft.email}
               onChange={(event) => updateDraft({ email: event.target.value })}
               placeholder="cerimonial@assessoria.com.br"
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-sage-200 text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-sage-200 text-base sm:text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
             />
           </div>
         </div>
@@ -81,7 +81,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
             value={draft.name}
             onChange={(event) => updateDraft({ name: event.target.value })}
             placeholder="Ex: Equipe de Cerimonial"
-            className="w-full px-4 py-2.5 rounded-2xl border border-sage-200 text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
+            className="w-full px-4 py-2.5 rounded-2xl border border-sage-200 text-base sm:text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30"
           />
         </div>
 
@@ -89,7 +89,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
           <button
             type="submit"
             disabled={isAdding || !draft.email.trim()}
-            className="w-full py-2.5 px-4 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs h-[42px]">
+            className="w-full py-2.5 px-4 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs h-11">
             {isAdding ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (

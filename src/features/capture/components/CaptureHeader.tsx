@@ -12,7 +12,11 @@ export function CaptureHeader({ canPost, onReset }: CaptureHeaderProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div
+      className={`items-center justify-between gap-3 ${
+        // The bottom navigation already leads back to the feed
+        canPost ? 'flex' : 'hidden lg:flex'
+      }`}>
       {canPost ? (
         <>
           <button
