@@ -58,8 +58,9 @@ it('reveals more posts on scroll and starts over on another tab', async () => {
       disconnect() {}
     }
   )
-  open(30)
-  const countPosts = () => screen.queryAllByRole('article').length
+  const { container } = open(30)
+  // Role queries are slow in jsdom
+  const countPosts = () => container.querySelectorAll('article').length
   await waitFor(() => expect(countPosts()).toBe(12))
   await screen.findByText('Carregando mais posts...')
   act(() => reachEnd())

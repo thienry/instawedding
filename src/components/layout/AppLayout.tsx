@@ -56,7 +56,7 @@ export function AppLayout() {
         }`}>
         <MobileHeader adminUser={currentUser} onSignOut={() => void handleSignOut()} />
         {!isOnline && <OfflineBanner />}
-        <main className="flex-1 w-full pb-28 lg:pb-12 max-w-[90rem] mx-auto">
+        <main className="flex-1 w-full has-[>[data-fill-height]]:flex flex-col pb-28 lg:pb-12 max-w-[90rem] mx-auto">
           <Outlet />
         </main>
         <BottomNavigation />

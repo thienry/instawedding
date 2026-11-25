@@ -38,12 +38,12 @@ class LoadedImage {
 }
 
 const wait = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms))
+// Role queries are slow in jsdom
 const shown = () =>
   screen
-    .getAllByRole('img')
-    .map((image) => image.getAttribute('alt'))
-    .filter((alt) => alt?.startsWith('Foto por'))
+    .queryAllByAltText(/^Foto por/)
     .at(-1)
+    ?.getAttribute('alt')
 
 async function open(posts: readonly Post[]) {
   vi.useFakeTimers()
@@ -92,7 +92,7 @@ it('advances, pauses and wraps around', async () => {
 
 it('filters and opens the clicked thumbnail', async () => {
   await open(posts)
-  fireEvent.click(screen.getByRole('button', { name: 'Destaques' }))
+  fireEvent.click(screen.getByText('Destaques', { selector: 'button, button *' }))
   await wait(10)
   expect(shown()).toBe('Foto por Author 2')
   fireEvent.click(screen.getByTitle('Post de Author 3'))

@@ -17,6 +17,8 @@ export default defineConfig({
       'scripts/**/*.test.mjs',
     ],
     environment: 'node',
+    // A test that times out keeps running and breaks the next ones
+    testTimeout: 20_000,
     setupFiles: ['src/test/setup.ts'],
     restoreMocks: true,
     unstubGlobals: true,
