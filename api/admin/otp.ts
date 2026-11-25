@@ -133,7 +133,9 @@ export async function POST(req: Request): Promise<Response> {
   if (action === 'request') {
     const allowed =
       (await checkLimit('otp-ip', getClientIp(req), 10)) &&
-      (await checkLimit('otp-email', normalizedEmail, 5))
+      (await checkLimit('otp-email-ip', `${normalizedEmail}|${getClientIp(req)}`, 5)) &&
+      // Higher, so one person cannot block the codes of another
+      (await checkLimit('otp-email', normalizedEmail, 15))
     if (!allowed) return tooManyAttempts()
 
     let userRoleInfo
@@ -144,28 +146,22 @@ export async function POST(req: Request): Promise<Response> {
       return fail(503, 'Serviço indisponível no momento. Tente novamente.')
     }
 
-    if (!userRoleInfo) {
-      return new Response(
-        JSON.stringify({
-          error:
-            'Acesso negado: este e-mail não possui permissão pré-cadastrada no painel administrativo.',
-        }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
     // Generate secure 6-digit cryptographic code
     const code = crypto.randomInt(100000, 1000000).toString()
 
+    // The same answer for every email, so nobody learns which ones have access.
+    // Anyone can read the token, so the role is only resolved on verification.
     const challengeToken = createOtpChallengeToken(
       normalizedEmail,
       code,
-      userRoleInfo.role,
-      userRoleInfo.name,
+      'moderator',
+      'Cerimonial',
       600
     )
 
-    const dispatchResult = await sendEmailViaResend(normalizedEmail, code)
+    const dispatchResult = userRoleInfo
+      ? await sendEmailViaResend(normalizedEmail, code)
+      : { ok: true }
     if (!dispatchResult.ok) {
       return new Response(
         JSON.stringify({
@@ -180,8 +176,9 @@ export async function POST(req: Request): Promise<Response> {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Código de 6 dígitos enviado com sucesso para seu e-mail.',
-        debugCode: isDeployed() ? undefined : code,
+        message:
+          'Se este e-mail tiver acesso ao painel, o código de 6 dígitos chegará em instantes.',
+        debugCode: isDeployed() || !userRoleInfo ? undefined : code,
       }),
       {
         status: 200,
@@ -226,7 +223,7 @@ export async function POST(req: Request): Promise<Response> {
 
     const verification = verifyOtpChallenge(challengeToken, normalizedEmail, code.trim())
 
-    if (!verification.valid || !verification.role || !verification.name) {
+    if (!verification.valid) {
       return new Response(
         JSON.stringify({
           error: verification.error || 'Código incorreto ou expirado.',
@@ -240,8 +237,17 @@ export async function POST(req: Request): Promise<Response> {
       return tooManyAttempts()
     }
 
+    let user
+    try {
+      user = await resolveUserRole(normalizedEmail)
+    } catch (error) {
+      console.error('[otp]', error)
+      return fail(503, 'Serviço indisponível no momento. Solicite um novo código.')
+    }
+    if (!user) return fail(401, 'Código incorreto ou expirado.')
+
     // Create session token (valid for 24 hours)
-    const adminToken = createAdminToken(verification.role, normalizedEmail, verification.name)
+    const adminToken = createAdminToken(user.role, normalizedEmail, user.name)
 
     const sessionCookie = buildSetCookieHeader(adminToken)
     const clearOtpCookie = buildClearOtpCookieHeader()
@@ -256,8 +262,8 @@ export async function POST(req: Request): Promise<Response> {
         success: true,
         user: {
           email: normalizedEmail,
-          name: verification.name,
-          role: verification.role,
+          name: user.name,
+          role: user.role,
         },
       }),
       {

@@ -18,13 +18,15 @@ const normalize = (email: string) => email.toLowerCase().trim()
 export async function resolveUserRole(email: string): Promise<AdminIdentity | null> {
   const normalized = normalize(email)
   const fallback = 'thmoura14@gmail.com'
-  const master = normalize(
-    (process.env.ADMIN_EMAILS || process.env.VITE_ADMIN_EMAILS || fallback).split(',')[0] ||
-      fallback
-  )
+  const admins = (process.env.ADMIN_EMAILS || process.env.VITE_ADMIN_EMAILS || fallback)
+    .split(',')
+    .map(normalize)
+    .filter(Boolean)
+  if (admins.length === 0) admins.push(fallback)
 
-  if (normalized === master) {
-    return { email: normalized, role: 'admin', name: 'Thiago (Admin Master)' }
+  if (admins.includes(normalized)) {
+    const name = normalized === admins[0] ? 'Thiago (Admin Master)' : 'Administrador'
+    return { email: normalized, role: 'admin', name }
   }
 
   let failure: unknown = null

@@ -141,6 +141,7 @@ it.each([
   const media = HTMLMediaElement.prototype
   vi.spyOn(media, 'load').mockImplementation(() => {})
   vi.spyOn(media, 'duration', 'get').mockReturnValue(seconds)
+  vi.spyOn(HTMLVideoElement.prototype, 'videoWidth', 'get').mockReturnValue(4)
   vi.spyOn(media, 'src', 'set').mockImplementation(function (this: HTMLMediaElement) {
     queueMicrotask(() => this.onloadedmetadata?.(new Event('loadedmetadata')))
   })

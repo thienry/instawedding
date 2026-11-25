@@ -34,7 +34,7 @@ export function PhotographerRanking({ posts }: PhotographerRankingProps) {
         {ranking.map((person, index) => {
           return (
             <div
-              key={person.name}
+              key={person.key}
               className={`rounded-2xl px-3 py-2 sm:p-4 border min-w-0 flex sm:flex-col items-center justify-between sm:justify-center sm:text-center gap-3 ${
                 index === 0
                   ? 'bg-gold-400/10 border-gold-400/45 shadow-2xs'

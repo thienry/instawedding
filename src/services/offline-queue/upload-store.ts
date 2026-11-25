@@ -51,8 +51,15 @@ async function runRequest<T>(
   })
 }
 
-export async function saveUpload(upload: StoredUpload): Promise<void> {
-  await runRequest('readwrite', (store) => store.put(upload))
+/** Resolves to whether the upload is safe on the device. */
+export async function saveUpload(upload: StoredUpload): Promise<boolean> {
+  return (await runRequest('readwrite', (store) => store.put(upload))) !== null
+}
+
+/** Whether the upload is known to be gone, such as sent by another tab. */
+export async function isUploadGone(id: string): Promise<boolean> {
+  // `null` means that the storage could not be read
+  return (await runRequest('readonly', (store) => store.getKey(id))) === undefined
 }
 
 export async function deleteUpload(id: string): Promise<void> {

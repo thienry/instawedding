@@ -21,6 +21,7 @@ export function VideoRecorderModal({
     facingMode,
     includeAudio,
     isInitializing,
+    isCameraReady,
     isRecording,
     elapsedMs,
     errorMessage,
@@ -137,7 +138,7 @@ export function VideoRecorderModal({
           {/* Main Shutter Button */}
           <button
             type="button"
-            disabled={isInitializing || Boolean(errorMessage)}
+            disabled={isInitializing || !isCameraReady}
             onClick={isRecording ? stopRecording : startRecording}
             aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação'}
             className="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40">

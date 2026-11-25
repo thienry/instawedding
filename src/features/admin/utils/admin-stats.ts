@@ -1,3 +1,4 @@
+import { getAuthorKey } from '@/utils/post-stats'
 import { resolvePostMediaType } from '@/utils/video'
 
 import type { Post } from '@/types/domain'
@@ -32,14 +33,19 @@ function findTopLikedPost(posts: readonly Post[]): Post | null {
 }
 
 function findTopAuthor(posts: readonly Post[]): TopAuthor | null {
-  const counts = new Map<string, number>()
-  for (const { authorName } of posts) {
-    counts.set(authorName, (counts.get(authorName) ?? 0) + 1)
+  const authors = new Map<string, TopAuthor>()
+  for (const post of posts) {
+    const key = getAuthorKey(post)
+    const current = authors.get(key)
+    authors.set(key, {
+      name: current?.name ?? post.authorName,
+      postCount: (current?.postCount ?? 0) + 1,
+    })
   }
 
   let top: TopAuthor | null = null
-  for (const [name, postCount] of counts) {
-    if (!top || postCount > top.postCount) top = { name, postCount }
+  for (const author of authors.values()) {
+    if (!top || author.postCount > top.postCount) top = author
   }
   return top
 }

@@ -10,7 +10,8 @@ export interface PostRepository {
   toggleLike(postId: string, sessionId: string): Promise<ToggleLikeResult>
   hasUserLiked(postId: string, sessionId: string): Promise<boolean>
   getLikedPostIds(sessionId: string): Promise<Set<string>>
-  togglePostApproval(postId: string): Promise<boolean>
+  /** Shows or hides a post. */
+  setPostApproval(postId: string, isApproved: boolean): Promise<void>
   /** Deletes a post of the current guest. */
   deletePost(postId: string): Promise<void>
   deletePostAsAdmin(postId: string): Promise<void>

@@ -111,3 +111,18 @@ it('reports a denied camera', async () => {
   await open()
   screen.getByText(/Permissão de câmera negada/)
 })
+
+it('lets the guest try again after an empty clip', async () => {
+  class EmptyRecorder extends FakeRecorder {
+    stop() {
+      this.state = 'inactive'
+      this.onstop?.()
+    }
+  }
+  vi.stubGlobal('MediaRecorder', EmptyRecorder)
+  await open()
+  fireEvent.click(screen.getByLabelText('Iniciar gravação'))
+  await act(async () => fireEvent.click(screen.getByLabelText('Parar gravação')))
+  screen.getByText(/Não foi possível capturar/)
+  expect(screen.getByLabelText<HTMLButtonElement>('Iniciar gravação').disabled).toBe(false)
+})

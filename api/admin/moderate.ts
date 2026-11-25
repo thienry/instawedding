@@ -4,9 +4,12 @@ import { deleteMedia } from '../_lib/media.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
 interface ModerateBody {
-  action: 'list_posts' | 'toggle_approval' | 'delete_post' | 'clear_all'
+  action: 'list_posts' | 'set_approval' | 'delete_post' | 'clear_all'
   postId: string
+  isApproved: boolean
 }
+
+const PAGE_SIZE = 1000
 
 export async function POST(req: Request): Promise<Response> {
   const user = await requireIdentity(req)
@@ -14,16 +17,21 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = await readJson<ModerateBody>(req)
   if (!body) return fail(400, 'Corpo da requisição inválido.')
-  const { action, postId } = body
+  const { action, postId, isApproved } = body
 
   if ((action === 'delete_post' || action === 'clear_all') && user.role !== 'admin') {
     return fail(403, 'Acesso negado. Apenas administradores podem excluir fotos ou zerar o feed.')
   }
   if (
-    (action === 'delete_post' || action === 'toggle_approval') &&
+    (action === 'delete_post' || action === 'set_approval') &&
     (typeof postId !== 'string' || !postId)
   ) {
     return fail(400, 'postId é obrigatório')
+  }
+
+  // A toggle would show again a post hidden by two people at once
+  if (action === 'set_approval' && typeof isApproved !== 'boolean') {
+    return fail(400, 'isApproved é obrigatório')
   }
 
   try {
@@ -31,21 +39,20 @@ export async function POST(req: Request): Promise<Response> {
 
     switch (action) {
       case 'list_posts': {
-        const { data, error } = await posts()
-          .select('*, challenges(id, title, description, icon, is_active, created_at)')
-          .order('created_at', { ascending: false })
-        if (error) throw error
-        return json({ posts: data })
+        // The database returns at most 1000 rows at a time
+        const rows = new Map<string, unknown>()
+        for (let from = 0; ; from += PAGE_SIZE) {
+          const { data, error } = await posts()
+            .select('*, challenges(id, title, description, icon, is_active, created_at)')
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(from, from + PAGE_SIZE - 1)
+          if (error) throw error
+          for (const row of data) rows.set(row.id as string, row)
+          if (data.length < PAGE_SIZE) return json({ posts: [...rows.values()] })
+        }
       }
-      case 'toggle_approval': {
-        const { data: post, error: readError } = await posts()
-          .select('is_approved')
-          .eq('id', postId!)
-          .maybeSingle()
-        if (readError) throw readError
-        if (!post) return fail(404, 'Publicação não encontrada')
-
-        const isApproved = !post.is_approved
+      case 'set_approval': {
         const { data: updated, error } = await posts()
           .update({ is_approved: isApproved })
           .eq('id', postId!)

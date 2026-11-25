@@ -1,13 +1,32 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { expect, it, vi } from 'vitest'
 
 import { FeedPage } from '@/features/feed/FeedPage'
+import { OfflineQueueService } from '@/services/offline-queue.service'
 import { getPostRepository } from '@/services/repositories.factory'
 import { setupBrowser } from '@/test/browser'
 
+import type { Post } from '@/types/domain'
+
 setupBrowser()
+
+const newPost: Post = {
+  id: 'new',
+  authorName: 'Ana',
+  mediaUrl: '/media/n.webp',
+  caption: null,
+  challengeId: null,
+  likesCount: 0,
+  isApproved: true,
+  createdAt: '2026-01-01T13:00:00Z',
+}
+
+function BackButton() {
+  const navigate = useNavigate()
+  return <button onClick={() => void navigate(-1)}>back</button>
+}
 
 function open(postCount: number, authorName = 'Bia') {
   localStorage.setItem(
@@ -37,6 +56,7 @@ function open(postCount: number, authorName = 'Bia') {
   return render(
     <MemoryRouter>
       <FeedPage />
+      <BackButton />
     </MemoryRouter>
   )
 }
@@ -122,4 +142,45 @@ it('downloads with an ASCII name', async () => {
   })
   fireEvent.click(await screen.findByTitle('Baixar mídia'))
   await waitFor(() => expect(fileName).toBe('casamento-thiago-e-priscila-jose-avila-p0.webp'))
+})
+
+it('reports a failed load and recovers when the network returns', async () => {
+  const getPosts = vi.spyOn(getPostRepository(), 'getPosts').mockRejectedValue(new Error('offline'))
+  open(1)
+  await screen.findByText('Não foi possível carregar os posts')
+  expect(screen.queryByText('Nenhum post ainda')).toBeNull()
+  getPosts.mockRestore()
+  fireEvent(window, new Event('online'))
+  await screen.findByTitle('Curtir post')
+})
+
+it('keeps a post published while the feed was loading', async () => {
+  let load = (_posts: Post[]) => {}
+  vi.spyOn(getPostRepository(), 'getPosts').mockReturnValue(
+    new Promise((resolve) => (load = resolve))
+  )
+  let publish = (_post: Post, _taskId: string) => {}
+  vi.spyOn(OfflineQueueService, 'onPostPublished').mockImplementation((listener) => {
+    publish = listener
+    return () => {}
+  })
+  const { container } = open(0)
+  act(() => publish(newPost, 't'))
+  await act(async () => load([]))
+  expect(container.querySelectorAll('article')).toHaveLength(1)
+})
+
+it('does not open the photo again when going back', async () => {
+  const { container } = open(1)
+  fireEvent.click(await screen.findByLabelText('Ver em tela cheia'))
+  const getPosts = vi.spyOn(getPostRepository(), 'getPosts')
+  const dialog = screen.getByRole('dialog')
+  fireEvent.touchStart(dialog, { touches: [{ clientY: 0 }] })
+  fireEvent.touchMove(dialog, { touches: [{ clientY: 300 }] })
+  fireEvent.touchEnd(dialog)
+  expect(getPosts).not.toHaveBeenCalled()
+
+  fireEvent.click(screen.getByLabelText('Fechar visualização'))
+  fireEvent.click(screen.getByText('back'))
+  expect(container.querySelector('[role=dialog]')).toBeNull()
 })

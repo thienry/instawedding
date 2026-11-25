@@ -1,18 +1,29 @@
+import { isAuthRetryableFetchError } from '@supabase/supabase-js'
+
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
-/** Authorization header of the signed-in Google guest, if any. */
+/**
+ * Authorization header of the signed-in Google guest, if any.
+ *
+ * @throws When an expired session could not be renewed because of the network.
+ */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
-  const { data } = await getSupabaseClient().auth.getSession()
+  const { data, error } = await getSupabaseClient().auth.getSession()
+  if (error && isAuthRetryableFetchError(error)) throw error
   const token = data.session?.access_token
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-async function request<T>(path: string, body: Record<string, unknown>): Promise<T> {
+async function request<T>(
+  path: string,
+  body: Record<string, unknown>,
+  authHeaders: Record<string, string>
+): Promise<T> {
   const response = await fetch(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(await getAuthHeaders()),
+      ...authHeaders,
     },
     body: JSON.stringify(body),
     credentials: 'include',
@@ -26,14 +37,16 @@ async function request<T>(path: string, body: Record<string, unknown>): Promise<
 }
 
 /** Calls an admin endpoint with the OTP cookie and the Google session. */
-export function adminRequest<T>(
+export async function adminRequest<T>(
   endpoint: 'moderate' | 'challenges' | 'ceremonialists',
   body: { readonly action: string } & Record<string, unknown>
 ): Promise<T> {
-  return request(`/api/admin/${endpoint}`, body)
+  // The OTP cookie may be enough
+  const authHeaders = await getAuthHeaders().catch(() => ({}))
+  return request(`/api/admin/${endpoint}`, body, authHeaders)
 }
 
 /** Deletes a post of the signed-in guest. */
 export async function deleteOwnPost(postId: string): Promise<void> {
-  await request('/api/delete-post', { postId })
+  await request('/api/delete-post', { postId }, await getAuthHeaders())
 }

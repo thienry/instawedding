@@ -42,7 +42,10 @@ export function usePullToRefresh(
   const startYRef = useRef<number | null>(null)
 
   const handleStart = (event: TouchEvent) => {
-    if (window.scrollY > TOP_TOLERANCE_PX || isRefreshing) {
+    // Dialogs cover the page but are inside it
+    const isInDialog =
+      event.target instanceof Element && event.target.closest('[aria-modal=true]') !== null
+    if (isInDialog || window.scrollY > TOP_TOLERANCE_PX || isRefreshing) {
       startYRef.current = null
       return
     }

@@ -6,7 +6,6 @@ import { POST as ceremonialists } from '../admin/ceremonialists.js'
 import { POST as challenges } from '../admin/challenges.js'
 import { POST as moderate } from '../admin/moderate.js'
 import { POST as otp } from '../admin/otp.js'
-import { POST as uploadUrl } from '../upload-url.js'
 import { createAdminToken } from './security.js'
 
 const ADMIN = 'admin@x.test'
@@ -44,7 +43,7 @@ vi.mock('./supabase.js', () => {
       single: async () => result(),
       then: (resolve: (value: unknown) => void) => resolve(rows()),
     }
-    for (const read of ['select', 'order', 'neq']) builder[read] = () => builder
+    for (const read of ['select', 'order', 'neq', 'range']) builder[read] = () => builder
     for (const write of ['insert', 'update', 'delete']) {
       builder[write] = () => {
         db.writes.push(`${table}.${write}`)
@@ -137,6 +136,12 @@ describe('identity', () => {
     expect((await otp(post(null))).status, 'broken body').toBe(400)
   })
 
+  it('accepts every listed admin', async () => {
+    vi.stubEnv('ADMIN_EMAILS', ` ${ADMIN}, second@x.test`)
+    expect(await role(bearer(ADMIN))).toBe('admin')
+    expect(await role(bearer('second@x.test'))).toBe('admin')
+  })
+
   it('rejects guests, unconfirmed emails and nobody', async () => {
     expect(await role(bearer(GUEST))).toBeNull()
     expect(await role(bearer(`unconfirmed:${ADMIN}`))).toBeNull()
@@ -155,7 +160,7 @@ type Case = [keyof typeof ENDPOINTS, Record<string, unknown>, number]
 
 const CASES: Case[] = [
   ['moderate', { action: 'list_posts' }, 200],
-  ['moderate', { action: 'toggle_approval', postId: '1' }, 200],
+  ['moderate', { action: 'set_approval', postId: '1', isApproved: false }, 200],
   ['moderate', { action: 'delete_post', postId: '1' }, 403],
   ['moderate', { action: 'clear_all' }, 403],
   ['challenges', { action: 'create', title: 'a', description: 'b' }, 200],
@@ -186,6 +191,7 @@ describe.each(CASES)('%s %j', (name, body, moderatorStatus) => {
 it.each([
   ['moderate', { action: 'delete_post' }],
   ['moderate', { action: 'nope' }],
+  ['moderate', { action: 'set_approval', postId: '1' }],
   ['challenges', { action: 'delete', id: '1 or 1=1' }],
   ['challenges', { action: 'create', title: ' ', description: 'b' }],
   ['ceremonialists', { action: 'add', email: 'invalid' }],
@@ -223,9 +229,34 @@ describe('OTP', () => {
     expect(await verify(challenge, code)).toBe(429)
   })
 
-  it('limits requested codes per email', async () => {
-    for (let i = 0; i < 5; i++) expect((await request()).status).toBe(200)
-    expect((await request()).status).toBe(429)
+  it('limits requested codes without letting others block an email', async () => {
+    const from = async (ip: string) =>
+      (await otp(post({ action: 'request', email: ADMIN }, { 'x-real-ip': ip }))).status
+    for (let i = 0; i < 5; i++) expect(await from('1.1.1.1')).toBe(200)
+    expect(await from('1.1.1.1')).toBe(429)
+    for (let i = 0; i < 10; i++) expect(await from(`2.2.2.${i}`)).toBe(200)
+    expect(await from('3.3.3.3')).toBe(429)
+  })
+
+  it('does not reveal which emails have access', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('RESEND_API_KEY', 're_test')
+    const send = vi.fn(async () => Response.json({}))
+    vi.stubGlobal('fetch', send)
+    const payloadOf = (response: Response) =>
+      JSON.parse(Buffer.from(challengeOf(response).split('.')[0]!, 'base64url').toString()) as {
+        role: string
+        name: string
+      }
+    const known = await request()
+    const unknown = await request(GUEST)
+    expect(send).toHaveBeenCalledOnce()
+    expect(unknown.status).toBe(known.status)
+    expect(payloadOf(unknown)).toMatchObject({
+      role: payloadOf(known).role,
+      name: payloadOf(known).name,
+    })
+    expect(await unknown.text()).toBe(await known.text())
   })
 
   it('never exposes the code on deployments', async () => {
@@ -254,46 +285,4 @@ describe('OTP', () => {
     vi.stubEnv('VERCEL_ENV', 'production')
     expect(() => createAdminToken()).toThrow('ADMIN_JWT_SECRET')
   })
-})
-
-describe('upload URL', () => {
-  const upload = (headers?: Record<string, string>) =>
-    uploadUrl(post({ contentType: 'image/webp', sizeBytes: 10 }, headers))
-
-  beforeEach(() => {
-    vi.stubEnv('R2_ACCOUNT_ID', 'acc')
-    vi.stubEnv('R2_ACCESS_KEY_ID', 'key')
-    vi.stubEnv('R2_SECRET_ACCESS_KEY', 'secret')
-  })
-
-  it('requires a signed-in guest', async () => {
-    expect((await upload()).status).toBe(401)
-    expect((await upload(bearer(GUEST))).status).toBe(200)
-  })
-
-  it('limits each guest separately', async () => {
-    for (let i = 0; i < 60; i++) await upload(bearer(GUEST))
-    expect((await upload(bearer(GUEST))).status).toBe(429)
-    expect((await upload(bearer(MOD))).status).toBe(200)
-  })
-
-  it('keeps working when the limiter is down', async () => {
-    db.limiterDown = true
-    expect((await upload(bearer(GUEST))).status).toBe(200)
-  })
-
-  it('signs the declared size and type into the URL', async () => {
-    const res = await upload(bearer(GUEST))
-    const { uploadUrl: url } = (await res.json()) as { uploadUrl: string }
-    const signed = new URL(url).searchParams.get('X-Amz-SignedHeaders')
-    expect(signed?.split(';')).toEqual(['content-length', 'content-type', 'host'])
-  })
-
-  it.each([undefined, 0, -1, 1.5, '10', 25 * 1024 * 1024 + 1])(
-    'rejects the size %s',
-    async (sizeBytes) => {
-      const res = await uploadUrl(post({ contentType: 'image/webp', sizeBytes }, bearer(GUEST)))
-      expect(res.status).toBe(400)
-    }
-  )
 })

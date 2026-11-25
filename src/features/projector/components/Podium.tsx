@@ -22,7 +22,7 @@ export function Podium({ posts }: PodiumProps) {
       <h2 className="text-[clamp(0.75rem,1.6vh,1.125rem)] text-gold-400">Top fotógrafos</h2>
       <ol className="mt-[1.4vh] grid grid-cols-3 gap-4">
         {contributors.map((person, index) => (
-          <li key={person.name} className="projector-rise min-w-0 flex items-center gap-2.5">
+          <li key={person.key} className="projector-rise min-w-0 flex items-center gap-2.5">
             <div className="relative shrink-0">
               <AuthorAvatar
                 name={person.name}

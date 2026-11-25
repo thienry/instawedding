@@ -76,8 +76,19 @@ it('ranks contributors by posts, then likes', () => {
     2
   )
   expect(ranking).toEqual([
-    { name: 'Ana', avatarUrl: '/a.png', postCount: 2, likes: 1 },
-    { name: 'Caio', avatarUrl: null, postCount: 1, likes: 8 },
+    { key: 'ana', name: 'Ana', avatarUrl: '/a.png', postCount: 2, likes: 1 },
+    { key: 'caio', name: 'Caio', avatarUrl: null, postCount: 1, likes: 8 },
   ])
   expect(countLikes(posts)).toBe(14)
+})
+
+it('tells apart guests with the same name', () => {
+  const ranking = rankContributors(
+    [post('1', { clientSessionId: 'a' }), post('2', { clientSessionId: 'b' })],
+    3
+  )
+  expect(ranking.map(({ postCount }) => postCount)).toEqual([1, 1])
+  const other = post('1', { authorName: 'Ana', clientSessionId: 'other' })
+  const mine = filterFeedPosts([other], { tab: 'mine', challengeId: null, ...guest })
+  expect(mine).toEqual([])
 })

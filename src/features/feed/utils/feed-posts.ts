@@ -22,7 +22,8 @@ export function isOwnPost(post: Post, { guestUser, sessionId }: GuestIdentity): 
 }
 
 function hasGuestName(post: Post, guestUser: GuestUser | null): boolean {
-  if (!guestUser) return false
+  const hasAccount = post.clientSessionId && post.clientSessionId !== 'anonymous'
+  if (!guestUser || hasAccount) return false
   const normalize = (name: string) => name.trim().toLowerCase()
   return normalize(post.authorName) === normalize(guestUser.name)
 }
@@ -39,7 +40,7 @@ export function filterFeedPosts(posts: readonly Post[], filter: FeedFilter): rea
     case 'challenges':
       return list.filter((post) => Boolean(post.challengeId))
     case 'mine':
-      // Older posts may only be matched by the author's name
+      // Older posts without an account only have the name
       return list.filter((post) => isOwnPost(post, filter) || hasGuestName(post, guestUser))
     case 'most-liked':
       return [...list].sort((a, b) => b.likesCount - a.likesCount)

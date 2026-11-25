@@ -6,6 +6,13 @@ export const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024 // 25 MB
 
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.m4v']
 
+/** Formats accepted by the upload endpoint. */
+const VIDEO_EXTENSION_BY_MIME: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+}
+
 export class VideoValidationError extends Error {
   constructor(message: string) {
     super(message)
@@ -71,6 +78,14 @@ export interface VideoValidationResult {
  * Validates that a video file respects maximum file size (25 MB).
  */
 export async function validateVideoFile(file: File): Promise<VideoValidationResult> {
+  if (!(normalizeVideoFile(file).type in VIDEO_EXTENSION_BY_MIME)) {
+    return {
+      valid: false,
+      durationSeconds: 0,
+      errorMessage: 'Este formato de vídeo não é aceito. Use MP4, MOV ou WebM.',
+    }
+  }
+
   if (file.size > MAX_VIDEO_SIZE_BYTES) {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
     return {
@@ -231,13 +246,10 @@ export function extractVideoPoster(file: Blob, maxWidth: number = 360): Promise<
  * and its filename extension matches the container format.
  */
 export function normalizeVideoFile(file: File): File {
-  const cleanMime = normalizeMimeType(file.type) || 'video/mp4'
-  const extMap: Record<string, string> = {
-    'video/mp4': 'mp4',
-    'video/webm': 'webm',
-    'video/quicktime': 'mov',
-  }
-  const targetExt = extMap[cleanMime] ?? 'mp4'
+  const mime = normalizeMimeType(file.type) || 'video/mp4'
+  // The same container under another name
+  const cleanMime = mime === 'video/x-m4v' ? 'video/mp4' : mime
+  const targetExt = VIDEO_EXTENSION_BY_MIME[cleanMime] ?? 'mp4'
   const baseName = file.name.replace(/\.[^/.]+$/, '') || 'wedding-video'
   const normalizedName = `${baseName}.${targetExt}`
 

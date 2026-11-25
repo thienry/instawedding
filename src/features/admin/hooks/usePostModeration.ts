@@ -23,7 +23,7 @@ export interface PostModeration {
   readonly filter: PhotoModerationFilter
   /** Selects a filter and goes back to its first page. */
   readonly setFilter: (filter: PhotoModerationFilter) => void
-  readonly toggleApproval: (postId: string) => Promise<void>
+  readonly toggleApproval: (post: Post) => Promise<void>
   /** Deletes a post after confirmation. */
   readonly deletePost: (postId: string) => Promise<void>
   /** Deletes every post after the admin types the confirmation word. */
@@ -50,10 +50,11 @@ export function usePostModeration(
     setPage(1)
   }
 
-  const toggleApproval = async (postId: string) => {
+  const toggleApproval = async ({ id, isApproved: wasApproved }: Post) => {
+    const isApproved = !wasApproved
     try {
-      const isApproved = await postRepository.togglePostApproval(postId)
-      setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, isApproved } : post)))
+      await postRepository.setPostApproval(id, isApproved)
+      setPosts((prev) => prev.map((post) => (post.id === id ? { ...post, isApproved } : post)))
     } catch {
       void notify('Não foi possível alterar a visibilidade do post.')
     }

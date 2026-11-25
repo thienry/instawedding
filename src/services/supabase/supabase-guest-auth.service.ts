@@ -1,3 +1,5 @@
+import { isAuthRetryableFetchError } from '@supabase/supabase-js'
+
 import { getSupabaseClient } from '@/services/supabase/supabase.client'
 import { setGuestName } from '@/utils/session'
 
@@ -62,17 +64,24 @@ export class SupabaseGuestAuthService implements GuestAuthService {
   private initAuthSubscription(): void {
     const supabase = getSupabaseClient()
 
-    void supabase.auth.getSession().then(({ data }) => {
-      const mapped = mapSupabaseUserToGuest(data.session?.user)
-      this.writeCachedUser(mapped)
-      this.notifyListeners(mapped)
+    void supabase.auth.getSession().then(({ data, error }) => {
+      // The session is still stored, only its renewal could not be made
+      if (error && isAuthRetryableFetchError(error)) return
+      this.updateUser(mapSupabaseUserToGuest(data.session?.user))
     })
 
-    supabase.auth.onAuthStateChange((_event, session) => {
-      const mapped = mapSupabaseUserToGuest(session?.user)
-      this.writeCachedUser(mapped)
-      this.notifyListeners(mapped)
+    supabase.auth.onAuthStateChange((event, session) => {
+      // Without a session, only this event means that the guest left
+      if (!session && event !== 'SIGNED_OUT') return
+      this.updateUser(mapSupabaseUserToGuest(session?.user))
     })
+  }
+
+  /** Ignores an unchanged user: Supabase repeats it whenever the app regains focus. */
+  private updateUser(user: GuestUser | null): void {
+    if (JSON.stringify(user) === JSON.stringify(this.currentUser)) return
+    this.writeCachedUser(user)
+    this.notifyListeners(user)
   }
 
   getCurrentGuest(): GuestUser | null {

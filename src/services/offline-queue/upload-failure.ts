@@ -1,5 +1,7 @@
 import { StorageUploadError } from '@/services/r2/r2-storage.service'
 
+import type { BackgroundUploadTask } from '@/services/offline-queue/upload-task'
+
 const GENERIC_MESSAGE = 'Oscilação na rede. Vamos tentar de novo automaticamente.'
 
 const ROW_LEVEL_SECURITY = '42501'
@@ -41,6 +43,19 @@ export function describeUploadFailure(error: unknown): UploadFailure {
       }
   }
   return { message: GENERIC_MESSAGE, isPermanent: false }
+}
+
+/** Changes to a task that could not be uploaded. */
+export function toFailedStatus(error: unknown, isQueued: boolean): Partial<BackgroundUploadTask> {
+  const failure = describeUploadFailure(error)
+  return {
+    status: isQueued ? 'queued-offline' : 'failed',
+    progress: 0,
+    errorMessage: isQueued
+      ? 'Sem sinal no momento. Será enviado automaticamente quando a internet voltar.'
+      : failure.message,
+    isPermanentFailure: !isQueued && failure.isPermanent,
+  }
 }
 
 /** Rejects when a promise takes too long, since requests may hang forever. */

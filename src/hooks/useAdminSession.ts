@@ -39,8 +39,15 @@ export function useAdminSession(): AdminSession {
       if (isMounted) setIsVerifying(false)
     })
 
+    // Opened without network, the server could not tell who this is
+    const handleOnline = () => {
+      if (!authService.getCurrentUser()) void authService.checkSession()
+    }
+    window.addEventListener('online', handleOnline)
+
     return () => {
       isMounted = false
+      window.removeEventListener('online', handleOnline)
       unsubscribe()
     }
   }, [authService])

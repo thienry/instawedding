@@ -1,29 +1,26 @@
-import { lazy, Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { FeedPage } from '@/features/feed/FeedPage'
+import { lazyPage } from '@/utils/lazy-page'
 
-// Lazy-loaded routes for 4G performance & chunk isolation
-const CapturePage = lazy(() =>
-  import('@/features/capture/CapturePage').then((m) => ({
-    default: m.CapturePage,
-  }))
+const { Page: CapturePage, preload: preloadCapture } = lazyPage(() =>
+  import('@/features/capture/CapturePage').then((m) => m.CapturePage)
 )
-const ChallengesPage = lazy(() =>
-  import('@/features/challenges/ChallengesPage').then((m) => ({
-    default: m.ChallengesPage,
-  }))
+const { Page: ChallengesPage, preload: preloadChallenges } = lazyPage(() =>
+  import('@/features/challenges/ChallengesPage').then((m) => m.ChallengesPage)
 )
-const AdminPage = lazy(() =>
-  import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage }))
+const { Page: AdminPage } = lazyPage(() =>
+  import('@/features/admin/AdminPage').then((m) => m.AdminPage)
 )
-const ProjectorPage = lazy(() =>
-  import('@/features/projector/ProjectorPage').then((m) => ({
-    default: m.ProjectorPage,
-  }))
+const { Page: ProjectorPage } = lazyPage(() =>
+  import('@/features/projector/ProjectorPage').then((m) => m.ProjectorPage)
 )
+
+/** Leaves the network to the feed first. */
+const PRELOAD_DELAY_MS = 3000
 
 function RouteLoadingFallback() {
   return (
@@ -35,6 +32,15 @@ function RouteLoadingFallback() {
 }
 
 export function App() {
+  // Guests must be able to post after losing the signal
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      preloadCapture()
+      preloadChallenges()
+    }, PRELOAD_DELAY_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [])
+
   return (
     <ErrorBoundary>
       <BrowserRouter>

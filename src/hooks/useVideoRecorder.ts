@@ -37,6 +37,8 @@ interface VideoRecorder {
   readonly facingMode: 'environment' | 'user'
   readonly includeAudio: boolean
   readonly isInitializing: boolean
+  /** Whether the camera is on. */
+  readonly isCameraReady: boolean
   readonly isRecording: boolean
   readonly elapsedMs: number
   readonly errorMessage: string | null
@@ -66,6 +68,7 @@ export function useVideoRecorder({
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [includeAudio, setIncludeAudio] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
+  const [isCameraReady, setIsCameraReady] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [elapsedMs, setElapsedMs] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -93,6 +96,7 @@ export function useVideoRecorder({
       }
       streamRef.current = null
     }
+    setIsCameraReady(false)
     setIsRecording(false)
     setElapsedMs(0)
   }, [])
@@ -129,6 +133,7 @@ export function useVideoRecorder({
           return
         }
         streamRef.current = stream
+        setIsCameraReady(true)
         if (!audio) setIncludeAudio(false)
         if (videoPreviewRef.current) {
           videoPreviewRef.current.srcObject = stream
@@ -263,6 +268,7 @@ export function useVideoRecorder({
     facingMode,
     includeAudio,
     isInitializing,
+    isCameraReady,
     isRecording,
     elapsedMs,
     errorMessage,

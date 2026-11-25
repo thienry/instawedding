@@ -40,7 +40,7 @@ export function ModerationGrid({ moderation, isLoading, isAdmin }: ModerationGri
           <ModerationCard
             key={post.id}
             post={post}
-            onToggleApproval={() => void toggleApproval(post.id)}
+            onToggleApproval={() => void toggleApproval(post)}
             onDelete={isAdmin ? () => void deletePost(post.id) : undefined}
           />
         ))}
