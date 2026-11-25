@@ -70,8 +70,8 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
         <button
           type="button"
           onClick={onToggleApproval}
-          title={isApproved ? 'Ocultar do Telão' : 'Aprovar no Telão'}
-          aria-label={isApproved ? 'Ocultar do Telão' : 'Aprovar no Telão'}
+          title={isApproved ? 'Ocultar' : 'Mostrar'}
+          aria-label={isApproved ? 'Ocultar' : 'Mostrar'}
           className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${
             isApproved
               ? 'text-sage-800 hover:bg-sage-100'

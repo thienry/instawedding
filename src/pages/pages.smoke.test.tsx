@@ -145,13 +145,13 @@ it('admin: requires login', async () => {
 it('admin: hides a photo', async () => {
   signInAdmin()
   open(<AdminPage />)
-  fireEvent.click(await screen.findByTitle('Ocultar do Telão'))
-  await screen.findByTitle('Aprovar no Telão')
+  fireEvent.click(await screen.findByTitle('Ocultar'))
+  await screen.findByTitle('Mostrar')
   expect(await getPostRepository().getPosts()).toEqual([])
 })
 
 it.each([
-  ['togglePostApproval', 'Ocultar do Telão', null, /Não foi possível alterar/],
+  ['togglePostApproval', 'Ocultar', null, /Não foi possível alterar/],
   ['deletePostAsAdmin', /^Excluir Definitivamente/, 'Excluir Foto', /Não foi possível excluir/],
   ['clearAllPosts', /apaga todos/, 'Zerar Feed', /Não foi possível zerar/],
 ] as const)(
@@ -172,7 +172,7 @@ it.each([
     notice.getByText(message)
     fireEvent.click(notice.getByRole('button', { name: 'Entendi' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(screen.getByTitle('Ocultar do Telão')).toBeTruthy()
+    expect(screen.getByTitle('Ocultar')).toBeTruthy()
   }
 )
 

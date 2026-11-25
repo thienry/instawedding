@@ -1,3 +1,4 @@
+import { getMediaExtension } from '@/utils/media-extension'
 import { slugify } from '@/utils/slug'
 import { resolvePostMediaType } from '@/utils/video'
 
@@ -39,8 +40,7 @@ function toCsvCell(text: string | null | undefined): string {
 export function albumEntryName(post: Post, index: number): string {
   const position = String(index + 1).padStart(3, '0')
   const author = slugify(post.authorName) || 'convidado'
-  const extension = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
-  return `foto-${position}-${author}.${extension}`
+  return `foto-${position}-${author}.${getMediaExtension(post)}`
 }
 
 /**

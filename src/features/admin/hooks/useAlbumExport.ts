@@ -18,7 +18,7 @@ interface ExportProgress {
 export interface AlbumExport {
   /** Progress of the ZIP in preparation, or `null` when idle. */
   readonly progress: ExportProgress | null
-  /** Downloads the approved media as a ZIP, skipping files that fail. */
+  /** Downloads the approved media as a ZIP and reports the files that failed. */
   readonly downloadAlbum: () => Promise<void>
   /** Downloads a CSV report of every post. */
   readonly exportCsv: () => void
@@ -73,6 +73,12 @@ export function useAlbumExport(posts: readonly Post[], { notify }: Dialog): Albu
       }
 
       downloadBlob(buildZipArchive(entries), datedFileName('album-casamento', 'zip'))
+      const missing = total - entries.length
+      if (missing > 0) {
+        void notify(
+          `O álbum está incompleto: ${missing} de ${total} arquivos não puderam ser baixados. Tente baixar de novo.`
+        )
+      }
     } catch {
       void notify('Ocorreu um erro ao empacotar o álbum em ZIP.')
     } finally {

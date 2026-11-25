@@ -64,7 +64,7 @@ export function usePostModeration(
     const isConfirmed = await confirm({
       ...DESTRUCTIVE_DIALOG,
       title: 'Zerar o feed?',
-      message: `Todas as fotos serão apagadas do banco. Digite ${CLEAR_FEED_CONFIRMATION} para confirmar.`,
+      message: `Todas as publicações, com suas fotos e vídeos, serão apagadas para sempre, inclusive os arquivos. Digite ${CLEAR_FEED_CONFIRMATION} para confirmar.`,
       confirmLabel: 'Zerar Feed',
       requiredText: CLEAR_FEED_CONFIRMATION,
     })
