@@ -2,6 +2,7 @@ import { SmilePlus, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { FloatingEmojiLayer } from '@/components/common/FloatingEmojiLayer'
+import { useProjectorActive } from '@/features/feed/hooks/useProjectorActive'
 import { useReactionSender } from '@/features/feed/hooks/useReactionSender'
 import { useFloatingEmojis } from '@/hooks/useFloatingEmojis'
 import { REACTIONS } from '@/utils/reactions'
@@ -16,9 +17,10 @@ interface ReactionBarProps {
   readonly guest: Pick<FeedGuest, 'guestUser' | 'openAuthPrompt'>
 }
 
-/** Sends live reactions to the projector. */
+/** Sends live reactions to the projector. Hidden while no projector is active. */
 export function ReactionBar({ guest: { guestUser, openAuthPrompt } }: ReactionBarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const isProjectorActive = useProjectorActive()
   const { react, hasError } = useReactionSender()
   const floating = useFloatingEmojis(MAX_EMOJIS)
 
@@ -30,6 +32,8 @@ export function ReactionBar({ guest: { guestUser, openAuthPrompt } }: ReactionBa
   const handleReact = (emoji: ReactionEmoji) => {
     if (react(emoji)) floating.add([emoji])
   }
+
+  if (!isProjectorActive) return null
 
   const isBarVisible = isOpen && guestUser !== null
 

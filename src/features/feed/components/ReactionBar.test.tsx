@@ -7,10 +7,14 @@ import { getReactionService } from '@/services/reaction.factory'
 import { setupBrowser } from '@/test/browser'
 
 setupBrowser()
+
+let closeProjector: () => void
 beforeEach(() => {
+  closeProjector = getReactionService().subscribe(() => {})
   vi.useFakeTimers()
 })
 afterEach(() => {
+  closeProjector()
   vi.useRealTimers()
   vi.restoreAllMocks()
 })
@@ -32,6 +36,16 @@ it('asks a signed-out guest to log in', () => {
   tap('Reagir no telão')
   expect(openAuthPrompt).toHaveBeenCalledOnce()
   expect(screen.queryByRole('button', { name: 'Amei' })).toBeNull()
+})
+
+it('is hidden while no projector is active', () => {
+  const { view } = open()
+  act(() => closeProjector())
+  expect(view.container.innerHTML).toBe('')
+  act(() => {
+    closeProjector = getReactionService().subscribe(() => {})
+  })
+  screen.getByRole('button', { name: 'Amei' })
 })
 
 it('sends quick taps in one message, with a limit', async () => {
