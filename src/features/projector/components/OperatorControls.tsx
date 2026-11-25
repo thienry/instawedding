@@ -8,12 +8,14 @@ import {
   Pause,
   Play,
   QrCode,
+  SmilePlus,
   Sparkles,
   Trophy,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import type { useFullscreen } from '@/features/projector/hooks/useFullscreen'
+import type { ProjectorReactions } from '@/features/projector/hooks/useProjectorReactions'
 import type { Slideshow } from '@/features/projector/hooks/useSlideshow'
 import type { ProjectorFilterMode } from '@/features/projector/types'
 import type { LucideIcon } from 'lucide-react'
@@ -70,6 +72,7 @@ interface OperatorControlsProps {
   readonly postCount: number
   readonly slideshow: Slideshow
   readonly fullscreen: ReturnType<typeof useFullscreen>
+  readonly reactions: ProjectorReactions
   readonly onOpenQr: () => void
 }
 
@@ -79,6 +82,7 @@ export function OperatorControls({
   postCount,
   slideshow,
   fullscreen,
+  reactions,
   onOpenQr,
 }: OperatorControlsProps) {
   const { slides, filterMode, isPaused } = slideshow
@@ -130,6 +134,15 @@ export function OperatorControls({
         </>
       )}
 
+      <button
+        type="button"
+        onClick={reactions.toggle}
+        title={reactions.isEnabled ? 'Desligar reações' : 'Ligar reações'}
+        aria-label="Reações dos convidados"
+        aria-pressed={reactions.isEnabled}
+        className="projector-control">
+        <SmilePlus className="w-4 h-4" />
+      </button>
       <ControlButton title="Ampliar QR Code na tela" Icon={QrCode} onClick={onOpenQr} />
       <ControlButton
         title={fullscreen.isFullscreen ? 'Sair da Tela Cheia (F)' : 'Modo Tela Cheia (F)'}
