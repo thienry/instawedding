@@ -15,19 +15,19 @@ interface FilterOption {
 const FILTERS: readonly FilterOption[] = [
   {
     id: 'all',
-    label: 'Todas',
+    label: 'Todos',
     activeClass: 'bg-sage-900 text-white',
     idleClass: 'bg-sage-100 text-sage-800 hover:bg-sage-200',
   },
   {
     id: 'approved',
-    label: 'Aprovadas',
+    label: 'Aprovados',
     activeClass: 'bg-emerald-700 text-white',
     idleClass: 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100',
   },
   {
     id: 'hidden',
-    label: 'Ocultas',
+    label: 'Ocultos',
     activeClass: 'bg-rose-700 text-white',
     idleClass: 'bg-rose-50 text-rose-800 hover:bg-rose-100',
   },
@@ -60,7 +60,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
             Exportação &amp; Moderação de Mídias
           </p>
           <h3 className="font-serif text-lg sm:text-2xl font-bold text-sage-900 sm:mt-0.5">
-            Galeria do Casamento ({approvedPosts} aprovadas)
+            Galeria do Casamento ({approvedPosts} posts aprovados)
           </h3>
         </div>
 
@@ -87,7 +87,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
             type="button"
             disabled={isEmpty}
             onClick={exportCsv}
-            title="Exportar planilha CSV com links e metadados das fotos"
+            title="Exportar planilha CSV com links e metadados dos posts"
             className="last:col-span-2 min-h-11 flex items-center justify-center gap-2 px-2 sm:px-4 py-2.5 rounded-2xl bg-sage-100 hover:bg-sage-200 disabled:opacity-50 text-sage-900 text-xs min-[360px]:text-sm whitespace-nowrap font-semibold transition-colors border border-sage-200/80 shadow-2xs">
             <FileSpreadsheet className="hidden min-[360px]:block shrink-0 w-4 h-4 text-emerald-700" />
             <span>Relatório (.CSV)</span>

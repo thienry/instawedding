@@ -68,7 +68,7 @@ it('keeps the challenge draft when switching tabs', async () => {
   fireEvent.change(screen.getByLabelText('Título do Desafio'), {
     target: { value: 'Brinde' },
   })
-  fireEvent.click(screen.getByRole('button', { name: /^Fotos/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Posts/ }))
   fireEvent.click(screen.getByRole('button', { name: /^Desafios/ }))
   expect(screen.getByLabelText<HTMLInputElement>('Título do Desafio').value).toBe('Brinde')
 })

@@ -1,5 +1,6 @@
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
 
+import { formatRelativeTime } from '@/utils/relative-time'
 import { resolvePostMediaType } from '@/utils/video'
 
 import type { Post } from '@/types/domain'
@@ -58,12 +59,7 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
           <p className="text-xs sm:text-sm text-sage-800/80 truncate">{post.caption}</p>
         )}
 
-        <p className="text-xs text-sage-700">
-          {new Date(post.createdAt).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </p>
+        <p className="text-xs text-sage-700">{formatRelativeTime(post.createdAt)}</p>
       </div>
 
       <div className="flex items-center -mr-1.5 sm:mr-0 sm:gap-1.5 shrink-0">

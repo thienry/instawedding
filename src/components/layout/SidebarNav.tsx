@@ -1,4 +1,4 @@
-import { Camera, Image as ImageIcon, Sparkles, Tv } from 'lucide-react'
+import { Image as ImageIcon, Sparkles, Tv } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
 import { sidebarLabelClass } from '@/components/layout/sidebar-label'
@@ -24,7 +24,7 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
 
   return (
     <nav className="space-y-1.5">
-      <NavLink to="/" end title="Feed de Fotos" className={getSidebarLinkClass}>
+      <NavLink to="/" end title="Feed" className={getSidebarLinkClass}>
         <div className="relative shrink-0">
           <ImageIcon className="w-5 h-5" />
           {isCollapsed && unreadCount > 0 && (
@@ -33,7 +33,7 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
             </span>
           )}
         </div>
-        <span className={`flex-1 ${labelTransitionClass}`}>Feed de Fotos</span>
+        <span className={`flex-1 ${labelTransitionClass}`}>Feed</span>
         {!isCollapsed && unreadCount > 0 && (
           <span className="ml-auto px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-2xs animate-in zoom-in-50 duration-150">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -44,11 +44,6 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
       <NavLink to="/challenges" title="Desafios da Festa" className={getSidebarLinkClass}>
         <Sparkles className="w-5 h-5 shrink-0" />
         <span className={labelTransitionClass}>Desafios da Festa</span>
-      </NavLink>
-
-      <NavLink to="/capture" title="Estúdio Fotográfico" className={getSidebarLinkClass}>
-        <Camera className="w-5 h-5 shrink-0" />
-        <span className={labelTransitionClass}>Estúdio Fotográfico</span>
       </NavLink>
 
       {canAccessProjector && (

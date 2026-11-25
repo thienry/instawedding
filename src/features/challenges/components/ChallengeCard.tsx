@@ -47,7 +47,7 @@ export function ChallengeCard({ challenge, isCompleted, communityCount }: Challe
               className="inline-flex items-center gap-1.5 min-h-11 text-left text-sm font-bold text-gold-600 hover:underline">
               <Eye className="shrink-0 w-3.5 h-3.5" />
               <span>
-                Ver {communityCount} {communityCount === 1 ? 'foto postada' : 'fotos postadas'}
+                Ver {communityCount} {communityCount === 1 ? 'post' : 'posts'}
               </span>
             </button>
           )}

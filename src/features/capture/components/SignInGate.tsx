@@ -17,10 +17,10 @@ export function SignInGate({ isSigningIn, errorMessage, onSignIn }: SignInGatePr
           className="w-16 h-16 rounded-2xl mx-auto shadow-xs"
         />
         <div className="space-y-2">
-          <h3 className="font-serif text-2xl font-bold text-sage-900">Entre para Postar Fotos</h3>
+          <h3 className="font-serif text-2xl font-bold text-sage-900">Entre para Postar</h3>
           <p className="text-sm text-sage-700 max-w-md mx-auto leading-relaxed">
-            Conecte sua conta Google para enviar fotos ao mural e telão ao vivo. Sua foto de perfil
-            e nome serão usados automaticamente na assinatura!
+            Conecte sua conta Google para enviar fotos e vídeos ao mural e telão ao vivo. Sua foto
+            de perfil e nome serão usados automaticamente na assinatura!
           </p>
         </div>
 

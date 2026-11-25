@@ -78,9 +78,9 @@ function signInAdmin() {
 it('feed: likes a photo', async () => {
   signInGuest()
   open(<FeedPage />)
-  fireEvent.click(await screen.findByTitle('Curtir foto'))
+  fireEvent.click(await screen.findByTitle('Curtir post'))
   await waitFor(async () => expect(await getPostRepository().hasUserLiked('p1', 'g1')).toBe(true))
-  await waitFor(() => expect(screen.getByTitle('Curtir foto').textContent).toBe('6'))
+  await waitFor(() => expect(screen.getByTitle('Curtir post').textContent).toBe('6'))
 })
 
 it('feed: asks a signed-out guest to log in before liking', async () => {
@@ -152,7 +152,7 @@ it('admin: hides a photo', async () => {
 
 it.each([
   ['togglePostApproval', 'Ocultar', null, /Não foi possível alterar/],
-  ['deletePostAsAdmin', /^Excluir Definitivamente/, 'Excluir Foto', /Não foi possível excluir/],
+  ['deletePostAsAdmin', /^Excluir Definitivamente/, 'Excluir Post', /Não foi possível excluir/],
   ['clearAllPosts', /apaga todos/, 'Zerar Feed', /Não foi possível zerar/],
 ] as const)(
   'admin: reports a %s failure and keeps the photo',
@@ -214,7 +214,7 @@ it('feed: reports a failed deletion and keeps the photo', async () => {
   vi.spyOn(getPostRepository(), 'deletePost').mockRejectedValue(new Error('denied'))
   open(<FeedPage />, { clientSessionId: 'g1' })
   fireEvent.click(await screen.findByTitle(/Excluir/))
-  fireEvent.click(await screen.findByRole('button', { name: 'Excluir Foto' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Excluir Post' }))
   await screen.findByText(/Não foi possível excluir/)
   expect(screen.getAllByText(SEED_AUTHOR).length).toBeGreaterThan(0)
 })

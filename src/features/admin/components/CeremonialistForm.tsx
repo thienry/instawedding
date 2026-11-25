@@ -23,7 +23,7 @@ export function CeremonialistForm({ ceremonialistAdmin }: CeremonialistFormProps
             Conceder Acesso de Cerimonial
           </h3>
           <p className="text-xs text-sage-700 mt-0.5">
-            Adicione e-mails da assessoria/cerimonial para que possam moderar fotos e gerenciar
+            Adicione e-mails da assessoria/cerimonial para que possam moderar posts e gerenciar
             desafios.
           </p>
         </div>

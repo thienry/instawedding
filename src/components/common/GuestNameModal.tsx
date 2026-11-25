@@ -105,7 +105,7 @@ export function GuestNameModal({
             </div>
 
             <p className="text-xs sm:text-sm text-sage-700 text-center leading-relaxed">
-              Suas fotos e curtidas no mural aparecerão assinadas com seu nome e foto de perfil do
+              Seus posts e curtidas no mural aparecerão assinados com seu nome e foto de perfil do
               Google.
             </p>
 
@@ -145,7 +145,7 @@ export function GuestNameModal({
               </h2>
               <p className="text-xs sm:text-sm text-sage-700 leading-relaxed">
                 {reasonMessage ||
-                  'Para dar like ou postar fotos no mural dos noivos, conecte sua conta Google. Seu nome e foto de perfil serão usados automaticamente.'}
+                  'Para curtir ou postar no mural dos noivos, conecte sua conta Google. Seu nome e foto de perfil serão usados automaticamente.'}
               </p>
             </div>
 

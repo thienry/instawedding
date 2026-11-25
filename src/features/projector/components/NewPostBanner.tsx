@@ -26,7 +26,7 @@ export function NewPostBanner({ post }: NewPostBannerProps) {
           {SPARKS.map((style, index) => (
             <span key={index} aria-hidden="true" style={style} className="projector-spark" />
           ))}
-          <p className="text-[clamp(0.8rem,1.9vh,1.25rem)] text-gold-400">Nova foto ao vivo</p>
+          <p className="text-[clamp(0.8rem,1.9vh,1.25rem)] text-gold-400">Novo post ao vivo</p>
           <p className="font-serif italic text-[clamp(1.5rem,4.6vh,3.25rem)] leading-tight">
             {post.authorName}
           </p>

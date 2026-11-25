@@ -21,7 +21,7 @@ export function QrInvite({ onOpen }: QrInviteProps) {
           Apareça no telão
         </span>
         <span className="block mt-[1vh] text-[clamp(0.75rem,1.7vh,1.2rem)] text-white/65 leading-snug text-pretty">
-          Aponte a câmera, tire uma foto ou cumpra um desafio da festa.
+          Aponte a câmera, faça um post ou cumpra um desafio da festa.
         </span>
       </span>
     </button>

@@ -13,7 +13,7 @@ interface IconTab {
 const ICON_TABS: readonly IconTab[] = [
   {
     id: 'most-liked',
-    label: 'Mais Curtidas',
+    label: 'Mais Curtidos',
     Icon: Flame,
     iconClass: 'text-amber-500',
   },
@@ -25,7 +25,7 @@ const ICON_TABS: readonly IconTab[] = [
   },
   {
     id: 'mine',
-    label: 'Minhas',
+    label: 'Meus',
     Icon: Camera,
     iconClass: 'text-sage-800',
   },
@@ -53,7 +53,7 @@ export function FilterTabs({ activeTab, onChange, postCount }: FilterTabsProps) 
         type="button"
         onClick={() => onChange('all')}
         className={`shrink-0 ${tabClass(activeTab === 'all')}`}>
-        Todas ({postCount})
+        Todos ({postCount})
       </button>
       {ICON_TABS.map(({ id, label, Icon, iconClass }) => (
         <button

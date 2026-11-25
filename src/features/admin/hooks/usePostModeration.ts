@@ -55,16 +55,16 @@ export function usePostModeration(
       const isApproved = await postRepository.togglePostApproval(postId)
       setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, isApproved } : post)))
     } catch {
-      void notify('Não foi possível alterar a visibilidade da foto.')
+      void notify('Não foi possível alterar a visibilidade do post.')
     }
   }
 
   const deletePost = async (postId: string) => {
     const isConfirmed = await confirm({
       ...DESTRUCTIVE_DIALOG,
-      title: 'Excluir foto?',
-      message: 'Esta foto será removida permanentemente do feed e do telão.',
-      confirmLabel: 'Excluir Foto',
+      title: 'Excluir post?',
+      message: 'Este post será removido permanentemente do feed e do telão.',
+      confirmLabel: 'Excluir Post',
     })
     if (!isConfirmed) return
 
@@ -72,7 +72,7 @@ export function usePostModeration(
       await postRepository.deletePostAsAdmin(postId)
       setPosts((prev) => prev.filter((post) => post.id !== postId))
     } catch {
-      void notify('Não foi possível excluir a foto. Tente novamente.')
+      void notify('Não foi possível excluir o post. Tente novamente.')
     }
   }
 

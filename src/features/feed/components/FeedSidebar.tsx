@@ -37,7 +37,7 @@ export function FeedSidebar({ posts }: FeedSidebarProps) {
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div className="bg-white/10 rounded-2xl p-3 border border-white/10">
             <p className="text-2xl font-serif font-bold text-white">{posts.length}</p>
-            <p className="text-xs text-white/75 font-medium">Fotos Postadas</p>
+            <p className="text-xs text-white/75 font-medium">Posts na Festa</p>
           </div>
           <div className="bg-white/10 rounded-2xl p-3 border border-white/10">
             <p className="text-2xl font-serif font-bold text-gold-400">{countLikes(posts)}</p>

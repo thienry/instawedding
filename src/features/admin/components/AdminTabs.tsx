@@ -11,7 +11,7 @@ interface TabOption {
 }
 
 const PHOTOS_AND_CHALLENGES: readonly TabOption[] = [
-  { id: 'photos', label: 'Fotos', Icon: ImageIcon, iconClass: 'w-4 h-4' },
+  { id: 'photos', label: 'Posts', Icon: ImageIcon, iconClass: 'w-4 h-4' },
   {
     id: 'challenges',
     label: 'Desafios',
