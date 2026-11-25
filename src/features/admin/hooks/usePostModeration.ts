@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
 
-import { CLEAR_FEED_CONFIRMATION, DESTRUCTIVE_DIALOG } from '@/features/admin/constants'
+import {
+  CLEAR_FEED_CONFIRMATION,
+  DESTRUCTIVE_DIALOG,
+  POSTS_PER_PAGE,
+} from '@/features/admin/constants'
 import { getPostRepository } from '@/services/repositories.factory'
 
 import type { AdminData } from '@/features/admin/hooks/useAdminData'
@@ -10,8 +14,14 @@ import type { Post } from '@/types/domain'
 
 /** Post filter and actions, as returned by {@link usePostModeration}. */
 export interface PostModeration {
-  readonly filteredPosts: readonly Post[]
+  /** Posts of the selected filter on the current page. */
+  readonly pagePosts: readonly Post[]
+  /** Current page, starting at 1. */
+  readonly page: number
+  readonly pageCount: number
+  readonly setPage: (page: number) => void
   readonly filter: PhotoModerationFilter
+  /** Selects a filter and goes back to its first page. */
   readonly setFilter: (filter: PhotoModerationFilter) => void
   readonly toggleApproval: (postId: string) => Promise<void>
   /** Deletes a post after confirmation. */
@@ -31,8 +41,14 @@ export function usePostModeration(
   { posts, setPosts }: Pick<AdminData, 'posts' | 'setPosts'>,
   { confirm, notify }: Dialog
 ): PostModeration {
-  const [filter, setFilter] = useState<PhotoModerationFilter>('all')
+  const [filter, setFilterState] = useState<PhotoModerationFilter>('all')
+  const [requestedPage, setPage] = useState(1)
   const postRepository = getPostRepository()
+
+  const setFilter = (nextFilter: PhotoModerationFilter) => {
+    setFilterState(nextFilter)
+    setPage(1)
+  }
 
   const toggleApproval = async (postId: string) => {
     try {
@@ -83,8 +99,16 @@ export function usePostModeration(
     return posts.filter((post) => post.isApproved === (filter === 'approved'))
   }, [posts, filter])
 
+  const pageCount = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
+  // Moderating the last post of a page can leave the requested page out of range
+  const page = Math.min(requestedPage, pageCount)
+  const pagePosts = filteredPosts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE)
+
   return {
-    filteredPosts,
+    pagePosts,
+    page,
+    pageCount,
+    setPage,
     filter,
     setFilter,
     toggleApproval,
