@@ -105,23 +105,25 @@ body {
   bottom: 0;
   left: calc(var(--x) * (100% - 1.4em));
   line-height: 1.4;
-  animation: floating-emoji 3.6s ease-out backwards;
+  /* Invisible out of the animation: it stays for a moment after the end */
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: floating-emoji 3.6s linear both;
 
   /* Must end all the same: that is what removes the emoji */
   @media (prefers-reduced-motion: reduce) {
-    animation: floating-emoji-still 2s ease-out backwards;
+    animation: floating-emoji-still 2s linear both;
   }
 }
 
+/* A single stretch of movement and no scaling: more stops would make it jerk,
+   and scaling would draw the emoji again. */
 @keyframes floating-emoji {
   from {
     opacity: 0;
-    transform: scale(0.5);
+    transform: translateY(0);
   }
-  12% {
-    opacity: 1;
-    transform: translateY(-10cqh) scale(1.15);
-  }
+  12%,
   65% {
     opacity: 1;
   }
