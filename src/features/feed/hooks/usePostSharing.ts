@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
 import { downloadBlob } from '@/utils/download'
+import { getMediaExtension } from '@/utils/media-extension'
 import { slugify } from '@/utils/slug'
-import { resolvePostMediaType } from '@/utils/video'
 
 import type { Post } from '@/types/domain'
 
@@ -21,8 +21,7 @@ export interface PostSharing {
 
 function downloadName(post: Post): string {
   const author = slugify(post.authorName) || 'convidado'
-  const extension = resolvePostMediaType(post) === 'video' ? 'mp4' : 'webp'
-  return `casamento-thiago-e-priscila-${author}-${post.id.slice(0, 6)}.${extension}`
+  return `casamento-thiago-e-priscila-${author}-${post.id.slice(0, 6)}.${getMediaExtension(post)}`
 }
 
 async function shareNatively(post: Post, url: string): Promise<boolean> {
