@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 
 import { GuestbookModal } from '@/components/capture/GuestbookModal'
 import { VideoRecorderModal } from '@/components/capture/VideoRecorderModal'
+import { OnboardingSheet } from '@/components/common/OnboardingSheet'
 import { TermsModal } from '@/components/common/TermsModal'
 import { CaptureChoices } from '@/features/capture/components/CaptureChoices'
 import { CaptureHeader } from '@/features/capture/components/CaptureHeader'
@@ -17,6 +18,7 @@ import { useMediaSelection } from '@/features/capture/hooks/useMediaSelection'
 import { usePostDraft } from '@/features/capture/hooks/usePostDraft'
 import { usePostSubmit } from '@/features/capture/hooks/usePostSubmit'
 import { useGuestAuth } from '@/hooks/useGuestAuth'
+import { useOnboarding } from '@/hooks/useOnboarding'
 
 import type { ChangeEvent, FormEvent } from 'react'
 
@@ -32,6 +34,7 @@ export function CapturePage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [openModal, setOpenModal] = useState<'recorder' | 'guestbook' | 'terms' | null>(null)
   const closeModal = () => setOpenModal(null)
+  const onboarding = useOnboarding('capture', openModal !== null)
 
   const { guestUser, isSigningIn, signIn, signOut } = useGuestAuth()
   const media = useMediaSelection(setErrorMessage)
@@ -173,6 +176,7 @@ export function CapturePage() {
         onSend={handleSendCard}
       />
       <TermsModal isOpen={openModal === 'terms'} onClose={closeModal} />
+      <OnboardingSheet screen="capture" onboarding={onboarding} />
     </div>
   )
 }

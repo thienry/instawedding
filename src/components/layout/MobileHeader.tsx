@@ -1,6 +1,8 @@
 import { LogOut, Shield, Tv } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { HelpButton } from '@/components/common/HelpButton'
+
 import type { AdminUser } from '@/services/contracts/admin-auth.contract'
 
 interface MobileHeaderProps {
@@ -29,6 +31,7 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
       </Link>
 
       <div className="flex items-center gap-0.5 shrink-0">
+        <HelpButton className="w-11 h-11 flex items-center justify-center rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 transition-colors" />
         {adminUser ? (
           <div className="flex items-center gap-0.5">
             <Link
