@@ -32,6 +32,8 @@ export interface Post {
   readonly likesCount: number
   readonly isApproved: boolean
   readonly showOnProjector?: boolean
+  /** Taken off the projector by a moderator. The feed still shows it. */
+  readonly hiddenFromProjector?: boolean
   readonly createdAt: string
   readonly challenge?: Challenge
 }

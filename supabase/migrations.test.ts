@@ -4,6 +4,8 @@ import path from 'node:path'
 import { PGlite } from '@electric-sql/pglite'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { normalizeText } from '@/utils/banned-terms'
+
 const DIR = path.join(import.meta.dirname, 'migrations')
 const FILES = readdirSync(DIR).sort()
 const ANA = '11111111-1111-1111-1111-111111111111'
@@ -103,6 +105,7 @@ describe('posts', () => {
     ['likes_count', '99'],
     ['is_approved', 'false'],
     ['created_at', `'2030-01-01'`],
+    ['hidden_from_projector', 'true'],
   ])('does not let guests choose %s', async (column, value) => {
     await expect(ana(insertPost(ANA, { [column]: value }))).rejects.toThrow('permission denied')
   })
@@ -158,6 +161,28 @@ describe('moments', () => {
     await expect(live(second!)).rejects.toThrow('duplicate key')
     await db.exec('UPDATE challenges SET live_since = NULL')
   })
+})
+
+it('keeps banned terms out of reach for clients', async () => {
+  for (const run of [anon, ana]) {
+    await expect(run('SELECT * FROM banned_terms')).rejects.toThrow('permission denied')
+    await expect(run(`INSERT INTO banned_terms (term) VALUES ('x')`)).rejects.toThrow(
+      'permission denied'
+    )
+  }
+  await as('service_role', `INSERT INTO banned_terms (term) VALUES ('x')`)
+  await expect(as('service_role', `INSERT INTO banned_terms (term) VALUES ('')`)).rejects.toThrow(
+    'check constraint'
+  )
+  await db.exec(`DELETE FROM banned_terms WHERE term = 'x'`)
+})
+
+it('seeds banned terms already normalized, as the admin stores them', async () => {
+  const terms = (await as('service_role', 'SELECT term FROM banned_terms')).map(({ term }) =>
+    String(term)
+  )
+  expect(terms).toContain('faz o l')
+  expect(terms.filter((term) => term !== normalizeText(term))).toEqual([])
 })
 
 it('hides ceremonialists and blocks self-promotion', async () => {

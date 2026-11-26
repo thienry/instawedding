@@ -1,21 +1,44 @@
-import { Eye, EyeOff, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Monitor, MonitorOff, Trash2 } from 'lucide-react'
 
 import { formatRelativeTime } from '@/utils/relative-time'
 import { resolvePostMediaType } from '@/utils/video'
 
+import type { ProjectorStatus } from '@/features/admin/utils/projector-status'
 import type { Post } from '@/types/domain'
+
+const OFF_PROJECTOR_REASONS = {
+  guest: 'O convidado preferiu não mostrar no telão',
+  moderator: 'Tirado do telão pela moderação',
+} as const
 
 interface ModerationCardProps {
   readonly post: Post
+  readonly projectorStatus: ProjectorStatus
   readonly onToggleApproval: () => void
+  readonly onToggleProjector: () => void
   /** Deletes the post. Omit to hide the button. */
   readonly onDelete?: () => void
 }
 
 /** Post summary with its moderation actions. */
-export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationCardProps) {
+export function ModerationCard({
+  post,
+  projectorStatus,
+  onToggleApproval,
+  onToggleProjector,
+  onDelete,
+}: ModerationCardProps) {
   const { isApproved } = post
   const isVideo = resolvePostMediaType(post) === 'video'
+  const isOffProjector = isApproved && projectorStatus.kind !== 'shown'
+  const offProjectorReason =
+    projectorStatus.kind === 'term'
+      ? `Termo banido: “${projectorStatus.term}”`
+      : projectorStatus.kind === 'shown'
+        ? null
+        : OFF_PROJECTOR_REASONS[projectorStatus.kind]
+  const isHiddenByModerator = post.hiddenFromProjector === true
+  const projectorLabel = isHiddenByModerator ? 'Voltar ao telão' : 'Tirar do telão'
 
   return (
     <div
@@ -53,13 +76,21 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
             }`}>
             {isApproved ? 'Visível' : 'Oculto'}
           </span>
+          {isOffProjector && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 bg-gold-400/20 text-sage-900">
+              Fora do telão
+            </span>
+          )}
         </div>
 
         {post.caption && (
           <p className="text-xs sm:text-sm text-sage-800/80 truncate">{post.caption}</p>
         )}
 
-        <p className="text-xs text-sage-700">{formatRelativeTime(post.createdAt)}</p>
+        <p className="text-xs text-sage-700">
+          {formatRelativeTime(post.createdAt)}
+          {isOffProjector && offProjectorReason && ` · ${offProjectorReason}`}
+        </p>
       </div>
 
       <div className="flex items-center -mr-1.5 sm:mr-0 sm:gap-1.5 shrink-0">
@@ -75,6 +106,26 @@ export function ModerationCard({ post, onToggleApproval, onDelete }: ModerationC
           }`}>
           {isApproved ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </button>
+
+        {projectorStatus.kind !== 'guest' && (
+          <button
+            type="button"
+            onClick={onToggleProjector}
+            title={projectorLabel}
+            aria-label={projectorLabel}
+            aria-pressed={isHiddenByModerator}
+            className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${
+              isHiddenByModerator
+                ? 'text-sage-900 bg-gold-400/20 hover:bg-gold-400/30'
+                : 'text-sage-800 hover:bg-sage-100'
+            }`}>
+            {isHiddenByModerator ? (
+              <Monitor className="w-5 h-5" />
+            ) : (
+              <MonitorOff className="w-5 h-5" />
+            )}
+          </button>
+        )}
 
         {onDelete && (
           <button

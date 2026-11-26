@@ -31,6 +31,12 @@ const FILTERS: readonly FilterOption[] = [
     activeClass: 'bg-rose-700 text-white',
     idleClass: 'bg-rose-50 text-rose-800 hover:bg-rose-100',
   },
+  {
+    id: 'off-projector',
+    label: 'Fora do telão',
+    activeClass: 'bg-gold-600 text-white',
+    idleClass: 'bg-gold-400/15 text-sage-900 hover:bg-gold-400/25',
+  },
 ]
 
 interface AlbumToolbarProps {
@@ -50,6 +56,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
     all: totalPosts,
     approved: approvedPosts,
     hidden: totalPosts - approvedPosts,
+    'off-projector': moderation.offProjectorCount,
   }
 
   return (
@@ -106,7 +113,7 @@ export function AlbumToolbar({ moderation, albumExport, stats, isAdmin }: AlbumT
         </div>
       </div>
 
-      <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 pt-3 border-t border-sage-100">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 pt-3 border-t border-sage-100">
         {FILTERS.map(({ id, label, activeClass, idleClass }) => (
           <button
             key={id}

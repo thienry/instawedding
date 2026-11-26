@@ -17,6 +17,7 @@ interface SupabasePostRow {
   likes_count: number
   is_approved: boolean
   show_on_projector?: boolean | null
+  hidden_from_projector?: boolean | null
   created_at: string
   challenges?: {
     id: number
@@ -58,7 +59,15 @@ export class SupabasePostRepository implements PostRepository {
     }
   }
 
-  async getVisiblePostIds(): Promise<ReadonlySet<string>> {
+  getVisiblePostIds(): Promise<ReadonlySet<string>> {
+    return this.getApprovedPostIds(false)
+  }
+
+  getProjectorPostIds(): Promise<ReadonlySet<string>> {
+    return this.getApprovedPostIds(true)
+  }
+
+  private async getApprovedPostIds(isForProjector: boolean): Promise<ReadonlySet<string>> {
     const ids = new Set<string>()
     let lastId: string | null = null
     for (;;) {
@@ -69,6 +78,7 @@ export class SupabasePostRepository implements PostRepository {
         .eq('is_approved', true)
         .order('id')
         .limit(PAGE_SIZE)
+      if (isForProjector) query = query.eq('hidden_from_projector', false)
       if (lastId) query = query.gt('id', lastId)
       const { data, error } = await query
       if (error) throw new Error(`Failed to fetch post ids: ${error.message}`)
@@ -179,6 +189,10 @@ export class SupabasePostRepository implements PostRepository {
     await adminRequest('moderate', { action: 'set_approval', postId, isApproved })
   }
 
+  async setPostProjectorHidden(postId: string, isHidden: boolean): Promise<void> {
+    await adminRequest('moderate', { action: 'set_projector_hidden', postId, isHidden })
+  }
+
   async deletePost(postId: string): Promise<void> {
     // Through the server, which also deletes the media
     await deleteOwnPost(postId)
@@ -221,6 +235,7 @@ export class SupabasePostRepository implements PostRepository {
       likesCount: row.likes_count,
       isApproved: row.is_approved,
       showOnProjector: row.show_on_projector !== false,
+      hiddenFromProjector: row.hidden_from_projector === true,
       createdAt: row.created_at,
       challenge: row.challenges
         ? {

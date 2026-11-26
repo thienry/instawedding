@@ -4,6 +4,7 @@ import { AdminLogin } from '@/features/admin/components/AdminLogin'
 import { AdminTabs } from '@/features/admin/components/AdminTabs'
 import { AdminTopBar } from '@/features/admin/components/AdminTopBar'
 import { AlbumToolbar } from '@/features/admin/components/AlbumToolbar'
+import { BannedTermsCard } from '@/features/admin/components/BannedTermsCard'
 import { CeremonialistForm } from '@/features/admin/components/CeremonialistForm'
 import { CeremonialistList } from '@/features/admin/components/CeremonialistList'
 import { ChallengeForm } from '@/features/admin/components/ChallengeForm'
@@ -14,6 +15,7 @@ import { ModerationGrid } from '@/features/admin/components/ModerationGrid'
 import { MomentList } from '@/features/admin/components/MomentList'
 import { useAdminData } from '@/features/admin/hooks/useAdminData'
 import { useAlbumExport } from '@/features/admin/hooks/useAlbumExport'
+import { useBannedTerms } from '@/features/admin/hooks/useBannedTerms'
 import { useCeremonialists } from '@/features/admin/hooks/useCeremonialists'
 import { useChallenges } from '@/features/admin/hooks/useChallenges'
 import { usePostModeration } from '@/features/admin/hooks/usePostModeration'
@@ -34,7 +36,8 @@ export function AdminPage() {
   const dialog = useDialog()
   const { currentUser, isAdmin, isVerifying, signOut } = useAdminSession()
   const data = useAdminData(currentUser)
-  const moderation = usePostModeration(data, dialog)
+  const bannedTerms = useBannedTerms(currentUser !== null, dialog)
+  const moderation = usePostModeration(data, dialog, bannedTerms.terms)
   const albumExport = useAlbumExport(data.posts, dialog)
   const challengeAdmin = useChallenges(data, dialog)
   const ceremonialistAdmin = useCeremonialists(isAdmin, dialog)
@@ -78,7 +81,13 @@ export function AdminPage() {
             stats={stats}
             isAdmin={isAdmin}
           />
-          <ModerationGrid moderation={moderation} isLoading={data.isLoading} isAdmin={isAdmin} />
+          <ModerationGrid
+            moderation={moderation}
+            isLoading={data.isLoading}
+            isAdmin={isAdmin}
+            bannedTerms={bannedTerms.terms}
+          />
+          <BannedTermsCard bannedTerms={bannedTerms} />
         </>
       )}
 

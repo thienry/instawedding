@@ -74,6 +74,7 @@ export class SupabaseRealtimeService implements RealtimeService {
             likesCount: newRow.likes_count,
             isApproved: newRow.is_approved,
             showOnProjector: (newRow as Record<string, unknown>).show_on_projector !== false,
+            hiddenFromProjector: (newRow as Record<string, unknown>).hidden_from_projector === true,
             createdAt: newRow.created_at,
             challenge,
           }

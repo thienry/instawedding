@@ -2,7 +2,7 @@
 export type AdminTab = 'photos' | 'challenges' | 'ceremonial'
 
 /** Visibility filter of the moderation grid. */
-export type PhotoModerationFilter = 'all' | 'approved' | 'hidden'
+export type PhotoModerationFilter = 'all' | 'approved' | 'hidden' | 'off-projector'
 
 /** Outcome of an action, shown inline to the user. */
 export interface Feedback {
