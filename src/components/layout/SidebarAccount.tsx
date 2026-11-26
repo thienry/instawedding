@@ -1,7 +1,5 @@
-import { ChevronLeft, ChevronRight, Shield } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { sidebarLabelClass } from '@/components/layout/sidebar-label'
 import { SidebarAdminCard } from '@/components/layout/SidebarAdminCard'
 import { SidebarAdminIcons } from '@/components/layout/SidebarAdminIcons'
 
@@ -14,7 +12,10 @@ interface SidebarAccountProps {
   readonly onSignOut: () => void
 }
 
-/** Admin session and the button that collapses the sidebar. */
+/**
+ * Admin session and the button that collapses the sidebar. Guests get no link
+ * to the admin: the couple sends it to the ceremonial.
+ */
 export function SidebarAccount({
   adminUser,
   isCollapsed,
@@ -26,23 +27,8 @@ export function SidebarAccount({
     return <Account adminUser={adminUser} onToggle={onToggle} onSignOut={onSignOut} />
   }
 
-  const labelTransitionClass = sidebarLabelClass(isCollapsed)
-
   return (
-    <div
-      className={`flex items-center transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'flex-col gap-2' : 'justify-between gap-2'
-      }`}>
-      <Link
-        to="/admin"
-        title="Painel de Moderação"
-        className={`flex items-center rounded-xl text-xs font-semibold text-sage-700 hover:text-sage-900 hover:bg-sage-100 transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'justify-center w-11 h-10 px-0' : 'flex-1 gap-3 px-3.5 py-2.5'
-        }`}>
-        <Shield className="w-4 h-4 shrink-0" />
-        <span className={labelTransitionClass}>Painel de Moderação</span>
-      </Link>
-
+    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
       <button
         type="button"
         onClick={onToggle}

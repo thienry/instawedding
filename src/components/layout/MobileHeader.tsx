@@ -1,4 +1,4 @@
-import { LogOut, Shield, Tv } from 'lucide-react'
+import { LogOut, Tv } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { HelpButton } from '@/components/common/HelpButton'
@@ -32,7 +32,8 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
 
       <div className="flex items-center gap-0.5 shrink-0">
         <HelpButton className="w-11 h-11 flex items-center justify-center rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 transition-colors" />
-        {adminUser ? (
+        {/* Guests have no way in: the couple sends the link of /admin to the ceremonial */}
+        {adminUser && (
           <div className="flex items-center gap-0.5">
             <Link
               to="/admin"
@@ -53,13 +54,6 @@ export function MobileHeader({ adminUser, onSignOut }: MobileHeaderProps) {
               <LogOut className="w-5 h-5" />
             </button>
           </div>
-        ) : (
-          <Link
-            to="/admin"
-            title="Painel de Moderação"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-sage-700 hover:text-sage-900 hover:bg-sage-100 transition-colors">
-            <Shield className="w-5 h-5" />
-          </Link>
         )}
 
         {adminUser && adminUser.role !== 'guest' && (

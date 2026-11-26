@@ -28,14 +28,14 @@ export function OtpEmailForm({ login }: OtpEmailFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="seu-email@gmail.com"
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-sage-200 bg-white text-base sm:text-xs text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30 transition-all shadow-xs"
+          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-sage-200 bg-white text-base sm:text-sm text-sage-900 placeholder:text-sage-800/40 focus:outline-none focus:ring-2 focus:ring-sage-800/30 transition-all shadow-xs"
         />
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]">
+        className="w-full py-3.5 px-4 rounded-2xl bg-sage-800 hover:bg-sage-900 disabled:opacity-60 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99]">
         {isSubmitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />

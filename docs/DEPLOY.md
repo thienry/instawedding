@@ -137,7 +137,7 @@ CORS is required because the guest's browser sends the image `PUT` directly to C
 
 ## 5. Step 3 — Set Up OTP Email Delivery (Resend)
 
-The admin dashboard (`/admin`) authenticates the couple and ceremonialists by emailing a disposable 6-digit code through `api/admin/otp.ts`.
+The admin dashboard (`/admin`) authenticates the couple and ceremonialists by emailing a disposable 6-digit code through `api/admin/otp.ts`. Guests see no link to it, so send the `/admin` address to the ceremonial before the party.
 
 1. Open the [Resend Dashboard](https://resend.com).
 2. **Sender domain**:
