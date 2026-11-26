@@ -78,7 +78,7 @@ export class SupabasePostRepository implements PostRepository {
         .eq('is_approved', true)
         .order('id')
         .limit(PAGE_SIZE)
-      if (isForProjector) query = query.eq('hidden_from_projector', false)
+      if (isForProjector) query = query.not('hidden_from_projector', 'is', true)
       if (lastId) query = query.gt('id', lastId)
       const { data, error } = await query
       if (error) throw new Error(`Failed to fetch post ids: ${error.message}`)
@@ -189,7 +189,7 @@ export class SupabasePostRepository implements PostRepository {
     await adminRequest('moderate', { action: 'set_approval', postId, isApproved })
   }
 
-  async setPostProjectorHidden(postId: string, isHidden: boolean): Promise<void> {
+  async setPostProjectorHidden(postId: string, isHidden: boolean | null): Promise<void> {
     await adminRequest('moderate', { action: 'set_projector_hidden', postId, isHidden })
   }
 
@@ -235,7 +235,7 @@ export class SupabasePostRepository implements PostRepository {
       likesCount: row.likes_count,
       isApproved: row.is_approved,
       showOnProjector: row.show_on_projector !== false,
-      hiddenFromProjector: row.hidden_from_projector === true,
+      hiddenFromProjector: row.hidden_from_projector ?? null,
       createdAt: row.created_at,
       challenge: row.challenges
         ? {

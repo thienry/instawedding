@@ -1,9 +1,9 @@
-import { ApiBannedTermRepository } from '@/services/api/api-banned-term.repository'
 import { MockBannedTermRepository } from '@/services/mock/mock-banned-term.repository'
 import { MockCeremonialistRepository } from '@/services/mock/mock-ceremonialist.repository'
 import { MockChallengeRepository } from '@/services/mock/mock-challenge.repository'
 import { MockPostRepository } from '@/services/mock/mock-post.repository'
 import { MockRealtimeService } from '@/services/mock/mock-realtime.service'
+import { SupabaseBannedTermRepository } from '@/services/supabase/supabase-banned-term.repository'
 import { SupabaseCeremonialistRepository } from '@/services/supabase/supabase-ceremonialist.repository'
 import { SupabaseChallengeRepository } from '@/services/supabase/supabase-challenge.repository'
 import { SupabasePostRepository } from '@/services/supabase/supabase-post.repository'
@@ -27,7 +27,7 @@ export function getBannedTermRepository(): BannedTermRepository {
   if (!bannedTermRepoInstance) {
     bannedTermRepoInstance = isMockEnabled
       ? new MockBannedTermRepository()
-      : new ApiBannedTermRepository()
+      : new SupabaseBannedTermRepository()
   }
   return bannedTermRepoInstance
 }

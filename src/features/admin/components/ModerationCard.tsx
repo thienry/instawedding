@@ -30,15 +30,15 @@ export function ModerationCard({
 }: ModerationCardProps) {
   const { isApproved } = post
   const isVideo = resolvePostMediaType(post) === 'video'
-  const isOffProjector = isApproved && projectorStatus.kind !== 'shown'
-  const offProjectorReason =
+  const isOffProjector = projectorStatus.kind !== 'shown'
+  const projectorNote =
     projectorStatus.kind === 'term'
       ? `Termo banido: “${projectorStatus.term}”`
       : projectorStatus.kind === 'shown'
-        ? null
+        ? projectorStatus.releasedTerm &&
+          `Liberado no telão apesar de “${projectorStatus.releasedTerm}”`
         : OFF_PROJECTOR_REASONS[projectorStatus.kind]
-  const isHiddenByModerator = post.hiddenFromProjector === true
-  const projectorLabel = isHiddenByModerator ? 'Voltar ao telão' : 'Tirar do telão'
+  const projectorLabel = isOffProjector ? 'Voltar ao telão' : 'Tirar do telão'
 
   return (
     <div
@@ -76,7 +76,7 @@ export function ModerationCard({
             }`}>
             {isApproved ? 'Visível' : 'Oculto'}
           </span>
-          {isOffProjector && (
+          {isApproved && isOffProjector && (
             <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 bg-gold-400/20 text-sage-900">
               Fora do telão
             </span>
@@ -89,7 +89,7 @@ export function ModerationCard({
 
         <p className="text-xs text-sage-700">
           {formatRelativeTime(post.createdAt)}
-          {isOffProjector && offProjectorReason && ` · ${offProjectorReason}`}
+          {isApproved && projectorNote && ` · ${projectorNote}`}
         </p>
       </div>
 
@@ -113,17 +113,13 @@ export function ModerationCard({
             onClick={onToggleProjector}
             title={projectorLabel}
             aria-label={projectorLabel}
-            aria-pressed={isHiddenByModerator}
+            aria-pressed={isOffProjector}
             className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${
-              isHiddenByModerator
+              isOffProjector
                 ? 'text-sage-900 bg-gold-400/20 hover:bg-gold-400/30'
                 : 'text-sage-800 hover:bg-sage-100'
             }`}>
-            {isHiddenByModerator ? (
-              <Monitor className="w-5 h-5" />
-            ) : (
-              <MonitorOff className="w-5 h-5" />
-            )}
+            {isOffProjector ? <Monitor className="w-5 h-5" /> : <MonitorOff className="w-5 h-5" />}
           </button>
         )}
 

@@ -189,8 +189,10 @@ it('leaves out posts taken off by a moderator or with a banned term', async () =
     post('1', { hiddenFromProjector: true }),
     post('2', { caption: 'Que BOSTA!' }),
     post('3'),
+    post('4', { caption: 'bosta liberada', hiddenFromProjector: false }),
   ])
   expect(shown()).toBe('Foto por Author 3')
+  screen.getByTitle('Post de Author 4')
   expect(screen.queryByTitle('Post de Author 1')).toBeNull()
   expect(screen.queryByTitle('Post de Author 2')).toBeNull()
 

@@ -1,3 +1,5 @@
+import { findBannedTerm } from '@/utils/banned-terms'
+
 import type { ProjectorFilterMode } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
 
@@ -7,6 +9,11 @@ import type { Post } from '@/types/domain'
  */
 export function isShownOnProjector(post: Post): boolean {
   return post.showOnProjector !== false && post.hiddenFromProjector !== true
+}
+
+/** Whether the post has no banned term, or a moderator showed it anyway. */
+export function passesBannedTerms(post: Post, bannedTerms: readonly string[]): boolean {
+  return post.hiddenFromProjector === false || findBannedTerm(post, bannedTerms) === null
 }
 
 /**

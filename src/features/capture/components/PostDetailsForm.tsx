@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle, ExternalLink, Loader2 } from 'lucide-react'
 import { AuthorSummary } from '@/features/capture/components/AuthorSummary'
 import { ChallengeSelect } from '@/features/capture/components/ChallengeSelect'
 import { ProjectorToggle } from '@/features/capture/components/ProjectorToggle'
+import { getBannedTermMessage } from '@/utils/banned-terms'
 
 import type { MediaSelection } from '@/features/capture/hooks/useMediaSelection'
 import type { PostDraft } from '@/features/capture/hooks/usePostDraft'
@@ -43,8 +44,23 @@ export function PostDetailsForm({
           value={draft.caption}
           onChange={(e) => draft.setCaption(e.target.value)}
           placeholder="Deixe um recado carinhoso para os noivos..."
-          className="w-full px-4 py-3 rounded-xl border border-sage-200 bg-sage-50/50 text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-800/20 resize-none"
+          aria-invalid={draft.bannedTerm !== null}
+          aria-describedby={draft.bannedTerm ? 'post-caption-error' : undefined}
+          className={`w-full px-4 py-3 rounded-xl border bg-sage-50/50 text-base focus:bg-white focus:outline-none focus:ring-2 resize-none ${
+            draft.bannedTerm
+              ? 'border-rose-400 focus:ring-rose-500/25'
+              : 'border-sage-200 focus:ring-sage-800/20'
+          }`}
         />
+        {draft.bannedTerm && (
+          <p
+            id="post-caption-error"
+            role="alert"
+            className="flex items-center gap-1.5 text-sm text-rose-700">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {getBannedTermMessage(draft.bannedTerm)}
+          </p>
+        )}
       </div>
 
       <ChallengeSelect draft={draft} />
@@ -77,7 +93,7 @@ export function PostDetailsForm({
         className="fixed lg:static bottom-0 inset-x-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:p-0 bg-white lg:bg-transparent border-t border-sage-200 lg:border-0">
         <button
           type="submit"
-          disabled={isSubmitting || media.isProcessing}
+          disabled={isSubmitting || media.isProcessing || draft.bannedTerm !== null}
           className="w-full min-h-13 px-5 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-base transition-all shadow-md flex items-center justify-center gap-2">
           {isSubmitting ? (
             <>

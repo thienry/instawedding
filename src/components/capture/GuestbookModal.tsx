@@ -2,7 +2,9 @@ import { AlertCircle, Loader2, Send, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { GuestbookPreview } from '@/components/capture/GuestbookPreview'
+import { useBannedTermList } from '@/hooks/useBannedTermList'
 import { useDialog } from '@/hooks/useDialog'
+import { findBannedTermInText, getBannedTermMessage } from '@/utils/banned-terms'
 import {
   generateGuestbookCardFile,
   GUESTBOOK_THEMES,
@@ -52,7 +54,9 @@ function GuestbookEditor({ authorName, onClose, onSend }: Omit<GuestbookModalPro
   const [error, setError] = useState('')
   const { confirm, dialog } = useDialog()
   const panelRef = useRef<HTMLDivElement>(null)
+  const bannedTerms = useBannedTermList()
   const text = message.trim()
+  const bannedTerm = findBannedTermInText(text, bannedTerms)
   const isTyped = text !== '' && !SUGGESTIONS.some((suggestion) => suggestion.text === text)
 
   useEffect(() => {
@@ -96,6 +100,10 @@ function GuestbookEditor({ authorName, onClose, onSend }: Omit<GuestbookModalPro
 
   const send = async () => {
     if (isSending) return
+    if (bannedTerm) {
+      setError(getBannedTermMessage(bannedTerm))
+      return
+    }
     if (text.length < MIN_LENGTH) {
       setError('Escreva uma mensagem um pouquinho maior.')
       return
@@ -241,15 +249,15 @@ function GuestbookEditor({ authorName, onClose, onSend }: Omit<GuestbookModalPro
         </div>
 
         <footer className="px-4 sm:px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white border-t border-sage-200 space-y-2">
-          {error && (
+          {(bannedTerm || error) && (
             <p role="alert" className="flex items-center gap-2 text-sm text-rose-700">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+              {bannedTerm ? getBannedTermMessage(bannedTerm) : error}
             </p>
           )}
           <button
             type="button"
-            disabled={isSending || text === ''}
+            disabled={isSending || text === '' || bannedTerm !== null}
             onClick={() => void send()}
             className="w-full min-h-13 rounded-2xl bg-sage-900 hover:bg-sage-800 disabled:opacity-50 text-white text-base font-bold flex items-center justify-center gap-2 transition-colors">
             {isSending ? (

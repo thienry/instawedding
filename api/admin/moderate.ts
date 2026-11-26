@@ -10,12 +10,12 @@ interface ModerateBody {
     | 'set_projector_hidden'
     | 'delete_post'
     | 'clear_all'
-    | 'list_terms'
     | 'add_term'
     | 'remove_term'
   postId: string
   isApproved: boolean
-  isHidden: boolean
+  /** `null` leaves the projector to the banned terms. */
+  isHidden: boolean | null
   term: string
 }
 
@@ -57,7 +57,7 @@ export async function POST(req: Request): Promise<Response> {
   if (action === 'set_approval' && typeof isApproved !== 'boolean') {
     return fail(400, 'isApproved é obrigatório')
   }
-  if (action === 'set_projector_hidden' && typeof isHidden !== 'boolean') {
+  if (action === 'set_projector_hidden' && typeof isHidden !== 'boolean' && isHidden !== null) {
     return fail(400, 'isHidden é obrigatório')
   }
 
@@ -105,11 +105,6 @@ export async function POST(req: Request): Promise<Response> {
         if (error) throw error
         if (updated.length === 0) return fail(404, 'Publicação não encontrada')
         return json({ success: true, isHidden })
-      }
-      case 'list_terms': {
-        const { data, error } = await terms().select('term').order('term')
-        if (error) throw error
-        return json({ terms: data.map((row) => row.term as string) })
       }
       case 'add_term': {
         const { data: existing, error: readError } = await terms().select('term')

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 
+import { useBannedTermList } from '@/hooks/useBannedTermList'
 import { useLiveMoment } from '@/hooks/useLiveMoment'
 import { getChallengeRepository } from '@/services/repositories.factory'
+import { findBannedTermInText } from '@/utils/banned-terms'
 
 import type { Challenge } from '@/types/domain'
 
@@ -9,6 +11,8 @@ import type { Challenge } from '@/types/domain'
 export interface PostDraft {
   readonly caption: string
   readonly setCaption: (caption: string) => void
+  /** Banned term in the caption, which keeps the post from being sent. */
+  readonly bannedTerm: string | null
   /** Active challenges, plus the moment on air. */
   readonly challenges: readonly Challenge[]
   readonly challengeId: number | null
@@ -31,6 +35,7 @@ export function usePostDraft(initialChallengeId: number | null): PostDraft {
   const [chosenId, setChosenId] = useState<number | null>()
   const [showOnProjector, setShowOnProjector] = useState(true)
   const liveMoment = useLiveMoment()
+  const bannedTerms = useBannedTermList()
   // A photo of the moment may be posted just after it ends
   const [moment, setMoment] = useState<Challenge | null>(null)
   const challengeRepo = getChallengeRepository()
@@ -53,6 +58,7 @@ export function usePostDraft(initialChallengeId: number | null): PostDraft {
   return {
     caption,
     setCaption,
+    bannedTerm: findBannedTermInText(caption, bannedTerms),
     challenges,
     challengeId: chosenId !== undefined ? chosenId : (initialChallengeId ?? moment?.id ?? null),
     setChallengeId: setChosenId,

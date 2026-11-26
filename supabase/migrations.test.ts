@@ -163,18 +163,25 @@ describe('moments', () => {
   })
 })
 
-it('keeps banned terms out of reach for clients', async () => {
+it('lets clients read banned terms but not change them', async () => {
   for (const run of [anon, ana]) {
-    await expect(run('SELECT * FROM banned_terms')).rejects.toThrow('permission denied')
+    expect((await run('SELECT term FROM banned_terms')).length).toBeGreaterThan(0)
     await expect(run(`INSERT INTO banned_terms (term) VALUES ('x')`)).rejects.toThrow(
       'permission denied'
     )
+    await expect(run('DELETE FROM banned_terms')).rejects.toThrow('permission denied')
   }
   await as('service_role', `INSERT INTO banned_terms (term) VALUES ('x')`)
   await expect(as('service_role', `INSERT INTO banned_terms (term) VALUES ('')`)).rejects.toThrow(
     'check constraint'
   )
   await db.exec(`DELETE FROM banned_terms WHERE term = 'x'`)
+})
+
+it('leaves the projector to the banned terms until a moderator chooses', async () => {
+  await ana(insertPost(ANA))
+  const rows = await as('service_role', 'SELECT DISTINCT hidden_from_projector AS h FROM posts')
+  expect(rows).toEqual([{ h: null }])
 })
 
 it('seeds banned terms already normalized, as the admin stores them', async () => {
