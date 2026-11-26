@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { OnboardingSheet } from '@/components/common/OnboardingSheet'
 import { ChallengeCard } from '@/features/challenges/components/ChallengeCard'
 import { ChallengesBanner } from '@/features/challenges/components/ChallengesBanner'
 import { ChallengesError } from '@/features/challenges/components/ChallengesError'
@@ -11,12 +12,14 @@ import {
   findCompletedChallenges,
 } from '@/features/challenges/utils/challenge-progress'
 import { useGuestAuth } from '@/hooks/useGuestAuth'
+import { useOnboarding } from '@/hooks/useOnboarding'
 import { getGuestSession } from '@/utils/session'
 
 /** Photo challenges, the guest progress and the ranking of the party. */
 export function ChallengesPage() {
   const { challenges, posts, isLoading, hasError, retry } = useChallengeBoard()
   const { guestUser } = useGuestAuth()
+  const onboarding = useOnboarding('challenges')
   const { sessionId, guestName } = getGuestSession()
 
   const completedIds = useMemo(
@@ -46,6 +49,7 @@ export function ChallengesPage() {
           ))}
         </div>
       )}
+      <OnboardingSheet screen="challenges" onboarding={onboarding} />
     </div>
   )
 }

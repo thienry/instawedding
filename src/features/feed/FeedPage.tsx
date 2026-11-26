@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { GuestNameModal } from '@/components/common/GuestNameModal'
+import { OnboardingSheet } from '@/components/common/OnboardingSheet'
 import { PhotoLightboxModal } from '@/components/common/PhotoLightboxModal'
 import { TermsModal } from '@/components/common/TermsModal'
 import { ChallengeFilterPill } from '@/features/feed/components/ChallengeFilterPill'
@@ -31,6 +32,7 @@ import { usePullToRefresh } from '@/features/feed/hooks/usePullToRefresh'
 import { useDialog } from '@/hooks/useDialog'
 import { useFeedNotifications } from '@/hooks/useFeedNotifications'
 import { useLiveMoment } from '@/hooks/useLiveMoment'
+import { useOnboarding } from '@/hooks/useOnboarding'
 
 import type { FeedViewMode } from '@/features/feed/types'
 
@@ -46,6 +48,7 @@ export function FeedPage() {
   const { posts, likedPostIds, isLoading, isRefreshing, refresh } = feed
   const filter = useFeedFilter(posts, guest)
   const moment = useLiveMoment()
+  const onboarding = useOnboarding('feed', guest.authPrompt !== null || isTermsOpen)
   const likes = useLikes(feed, guest)
   const sharing = usePostSharing()
   const lightbox = useLightbox()
@@ -154,6 +157,7 @@ export function FeedPage() {
       <ShareToast message={sharing.toastMessage} />
       {dialog}
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+      <OnboardingSheet screen="feed" onboarding={onboarding} />
       <GuestNameModal
         isOpen={guest.authPrompt !== null}
         guestUser={guest.guestUser}

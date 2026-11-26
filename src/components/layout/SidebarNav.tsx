@@ -1,6 +1,7 @@
 import { Image as ImageIcon, Sparkles, Tv } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
+import { HelpButton } from '@/components/common/HelpButton'
 import { sidebarLabelClass } from '@/components/layout/sidebar-label'
 
 interface SidebarNavProps {
@@ -57,6 +58,13 @@ export function SidebarNav({ isCollapsed, unreadCount, canAccessProjector }: Sid
           <span className={labelTransitionClass}>Modo Telão</span>
         </Link>
       )}
+
+      <HelpButton
+        label={isCollapsed ? undefined : 'Como usar'}
+        className={`flex items-center w-full rounded-2xl text-sm font-semibold text-sage-800 hover:bg-sage-100 hover:text-sage-900 transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'justify-center px-3 py-3' : 'gap-3.5 px-4 py-3'
+        }`}
+      />
     </nav>
   )
 }

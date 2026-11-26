@@ -202,3 +202,10 @@ it('invites guests to the moment on air and filters its posts', async () => {
   await act(() => getChallengeRepository().setMomentLive(7, false))
   await waitFor(() => expect(screen.queryByText('Primeira Dança')).toBeNull())
 })
+
+it('greets a guest on the first visit', async () => {
+  localStorage.removeItem('instawedding_onboarding_seen')
+  open(1)
+  fireEvent.click(await screen.findByRole('button', { name: 'Entendi' }))
+  expect(screen.queryByRole('dialog', { name: /mural da festa/ })).toBeNull()
+})
