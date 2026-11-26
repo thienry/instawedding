@@ -50,7 +50,7 @@ Built around **frictionless guest onboarding**, attendees join instantly by scan
 
 ### 🛡️ Admin & Ceremonialist Dashboard
 
-- **Secure Authentication:** Passwordless OTP (One-Time Password) sent via email using Resend, backed by cryptographically signed HTTP-only JWT cookies.
+- **Secure Authentication:** Passwordless OTP (One-Time Password) sent via email through Gmail SMTP, backed by cryptographically signed HTTP-only JWT cookies.
 - **Live Content Moderation:** Hosts and ceremonial staff can review, approve, hide, or remove inappropriate posts in real time.
 - **Batch ZIP Export:** Download all original, high-resolution photos bundled into a single `.zip` archive for the couple's permanent archive.
 
@@ -105,7 +105,7 @@ flowchart TD
 | **Database**        | [Supabase](https://supabase.com/) (PostgreSQL)                                 | Structured data persistence (posts, challenges, likes, moderation status)       |
 | **Realtime Engine** | [Supabase Realtime](https://supabase.com/realtime)                             | WebSocket pub/sub for instantaneous projector and feed updates                  |
 | **Media Storage**   | [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/)             | High-performance, S3-compatible object storage with **$0 egress fees**          |
-| **Email & OTP**     | [Resend](https://resend.com/)                                                  | Transactional email delivery for administrator login verification codes         |
+| **Email & OTP**     | Gmail SMTP ([Nodemailer](https://nodemailer.com/))                             | Transactional email delivery for administrator login verification codes         |
 | **Hosting & CI/CD** | [Vercel](https://vercel.com/)                                                  | Global edge distribution and Node.js serverless functions                       |
 | **Code Quality**    | [Oxlint](https://oxc.rs/) + [Prettier](https://prettier.io/)                   | Next-generation ultra-fast linting and opinionated code formatting              |
 
@@ -159,9 +159,9 @@ R2_PUBLIC_DOMAIN="https://media.your-domain.com"
 ADMIN_EMAILS="groom@email.com,bride@email.com,coordinator@email.com"
 ADMIN_JWT_SECRET="generate-a-secure-string-with-openssl-rand-hex-32"
 
-# Resend (Email OTP)
-RESEND_API_KEY="re_your_resend_key"
-RESEND_FROM_EMAIL="onboarding@resend.dev"
+# Gmail (Email OTP)
+GMAIL_USER="yourwedding.support@gmail.com"
+GMAIL_APP_PASSWORD="your-16-character-app-password"
 ```
 
 > 💡 **Tip:** If the project is linked to Vercel, pull all production environment variables with:

@@ -2,7 +2,7 @@
 
 Follow the order: the code needs step 2, and step 5 breaks the old code.
 
-1. **Check Vercel variables** (Production and Preview): `ADMIN_JWT_SECRET`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`), `ADMIN_EMAILS`. Without them, admin login or uploads stop working.
+1. **Check Vercel variables** (Production and Preview): `ADMIN_JWT_SECRET`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`), `ADMIN_EMAILS`. Without them, admin login or uploads stop working.
 2. **Run** `supabase/migrations/20261123000000_rate_limits.sql` in the SQL Editor. It only adds objects.
 3. **Deploy** the code.
 4. **Test on the deployment:** admin login by email code, list and hide a photo, create a challenge, add and remove a ceremonialist; as a Google guest, post, like and delete a photo.

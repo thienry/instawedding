@@ -36,6 +36,11 @@ it('sends guests back to the feed', async () => {
   expect(link.getAttribute('href')).toBe('/')
 })
 
+it('offers the Google login, which needs no email delivery', async () => {
+  open()
+  await screen.findByRole('button', { name: 'Entrar com Google' })
+})
+
 it('rejects an unknown email', async () => {
   open()
   await requestCode('nobody@x.test')
