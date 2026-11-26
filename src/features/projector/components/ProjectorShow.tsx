@@ -6,6 +6,8 @@ import { EmptyStage } from '@/features/projector/components/EmptyStage'
 import { Filmstrip } from '@/features/projector/components/Filmstrip'
 import { GoldDust } from '@/features/projector/components/GoldDust'
 import { MainStage } from '@/features/projector/components/MainStage'
+import { MomentBadge } from '@/features/projector/components/MomentBadge'
+import { MomentIntro } from '@/features/projector/components/MomentIntro'
 import { NewPostBanner } from '@/features/projector/components/NewPostBanner'
 import { OperatorControls } from '@/features/projector/components/OperatorControls'
 import { Podium } from '@/features/projector/components/Podium'
@@ -19,13 +21,16 @@ import { useProjectorFeed } from '@/features/projector/hooks/useProjectorFeed'
 import { useProjectorReactions } from '@/features/projector/hooks/useProjectorReactions'
 import { useProjectorShortcuts } from '@/features/projector/hooks/useProjectorShortcuts'
 import { useSlideshow } from '@/features/projector/hooks/useSlideshow'
+import { useLiveMoment } from '@/hooks/useLiveMoment'
 import { useWakeLock } from '@/hooks/useWakeLock'
 
 /** Slideshow of the party, with the controls of the operator. */
 export function ProjectorShow() {
   const [isQrOpen, setIsQrOpen] = useState(false)
   const { posts, newPost } = useProjectorFeed()
-  const slideshow = useSlideshow(posts, newPost)
+  const moment = useLiveMoment()
+  const slideshow = useSlideshow(posts, newPost, moment?.id ?? null)
+  const hasMomentPosts = moment !== null && posts.some((post) => post.challengeId === moment.id)
   const fullscreen = useFullscreen()
   const reactions = useProjectorReactions()
   const controls = useAutoHideControls()
@@ -56,6 +61,7 @@ export function ProjectorShow() {
       <OperatorControls
         isVisible={controls.isVisible}
         postCount={posts.length}
+        isMomentLive={moment !== null}
         slideshow={slideshow}
         fullscreen={fullscreen}
         reactions={reactions}
@@ -67,6 +73,7 @@ export function ProjectorShow() {
           <section className="min-h-0 min-w-0 flex flex-col p-6 pb-4 lg:p-[3.2vh] lg:pb-[2.4vh] gap-[2.4vh]">
             <div className="relative flex-1 min-h-0">
               <MainStage slide={slide} newPostId={newPost?.id} />
+              {moment && <MomentBadge moment={moment} hasPosts={hasMomentPosts} />}
               <NewPostBanner post={newPost} />
             </div>
             <Filmstrip slideshow={slideshow} />
@@ -90,6 +97,7 @@ export function ProjectorShow() {
         className="floating-emoji-area absolute left-[1vw] bottom-[14vh] w-[16vw] min-w-24 h-[72vh] z-20 text-[7vh]"
       />
 
+      {moment && <MomentIntro key={`${moment.id}-${moment.liveSince}`} moment={moment} />}
       {isQrOpen && <QrModal onClose={closeQr} />}
     </div>
   )

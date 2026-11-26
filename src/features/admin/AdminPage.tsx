@@ -11,6 +11,7 @@ import { ChallengeList } from '@/features/admin/components/ChallengeList'
 import { LoadError } from '@/features/admin/components/LoadError'
 import { MetricsCards } from '@/features/admin/components/MetricsCards'
 import { ModerationGrid } from '@/features/admin/components/ModerationGrid'
+import { MomentList } from '@/features/admin/components/MomentList'
 import { useAdminData } from '@/features/admin/hooks/useAdminData'
 import { useAlbumExport } from '@/features/admin/hooks/useAlbumExport'
 import { useCeremonialists } from '@/features/admin/hooks/useCeremonialists'
@@ -38,6 +39,8 @@ export function AdminPage() {
   const challengeAdmin = useChallenges(data, dialog)
   const ceremonialistAdmin = useCeremonialists(isAdmin, dialog)
   const stats = useMemo(() => computeAdminStats(data.posts), [data.posts])
+  const moments = data.challenges.filter((challenge) => challenge.isMoment)
+  const challenges = data.challenges.filter((challenge) => !challenge.isMoment)
 
   if (isVerifying) {
     return (
@@ -81,9 +84,10 @@ export function AdminPage() {
 
       {activeTab === 'challenges' && (
         <div className="space-y-3 sm:space-y-6">
+          <MomentList moments={moments} challengeAdmin={challengeAdmin} isAdmin={isAdmin} />
           <ChallengeForm challengeAdmin={challengeAdmin} />
           <ChallengeList
-            challenges={data.challenges}
+            challenges={challenges}
             challengeAdmin={challengeAdmin}
             isAdmin={isAdmin}
           />

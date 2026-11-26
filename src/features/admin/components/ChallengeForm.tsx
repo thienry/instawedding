@@ -21,7 +21,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
       className="w-full bg-white rounded-3xl p-4 sm:p-6 border border-sage-200 shadow-xs space-y-4">
       <h4 className="text-sm font-bold uppercase tracking-wider text-sage-900 flex items-center gap-2">
         <Plus className="w-4 h-4 text-gold-600" />
-        <span>Criar Novo Desafio</span>
+        <span>Criar Desafio ou Momento</span>
       </h4>
 
       <div className="grid grid-cols-4 lg:grid-cols-12 gap-3 sm:gap-4">
@@ -71,6 +71,19 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
         </div>
       </div>
 
+      <label className="flex items-center gap-2.5 min-h-11 text-sm text-sage-900 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={draft.isMoment}
+          onChange={(event) => updateDraft({ isMoment: event.target.checked })}
+          className="w-5 h-5 accent-sage-900 shrink-0"
+        />
+        <span>
+          <span className="font-bold">Momento da festa</span>
+          <span className="text-sage-700"> · o cerimonial coloca no ar na hora</span>
+        </span>
+      </label>
+
       <button
         type="submit"
         disabled={isCreating}
@@ -83,7 +96,7 @@ export function ChallengeForm({ challengeAdmin }: ChallengeFormProps) {
         ) : (
           <>
             <Plus className="w-4 h-4" />
-            <span>Adicionar Desafio à Festa</span>
+            <span>{draft.isMoment ? 'Adicionar Momento' : 'Adicionar Desafio à Festa'}</span>
           </>
         )}
       </button>

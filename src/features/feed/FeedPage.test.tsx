@@ -5,7 +5,7 @@ import { expect, it, vi } from 'vitest'
 
 import { FeedPage } from '@/features/feed/FeedPage'
 import { OfflineQueueService } from '@/services/offline-queue.service'
-import { getPostRepository } from '@/services/repositories.factory'
+import { getChallengeRepository, getPostRepository } from '@/services/repositories.factory'
 import { setupBrowser } from '@/test/browser'
 
 import type { Post } from '@/types/domain'
@@ -186,4 +186,19 @@ it('does not open the photo again when going back', async () => {
   fireEvent.click(screen.getByLabelText('Fechar visualização'))
   fireEvent.click(screen.getByText('back'))
   expect(container.querySelector('[role=dialog]')).toBeNull()
+})
+
+it('invites guests to the moment on air and filters its posts', async () => {
+  open(2)
+  await getChallengeRepository().setMomentLive(7, true)
+  await screen.findByText('Primeira Dança')
+  expect(screen.getByRole('link', { name: /^Postar$/ }).getAttribute('href')).toBe(
+    '/capture?challengeId=7'
+  )
+  fireEvent.click(screen.getByRole('button', { name: /Ver posts/ }))
+  await screen.findByText(/Filtrando por:/)
+  screen.getByText('Nenhum post encontrado neste filtro')
+
+  await act(() => getChallengeRepository().setMomentLive(7, false))
+  await waitFor(() => expect(screen.queryByText('Primeira Dança')).toBeNull())
 })

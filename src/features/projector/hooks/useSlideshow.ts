@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 
 import { SLIDE_DURATION_MS } from '@/features/projector/constants'
 import { useReadySlide } from '@/features/projector/hooks/useReadySlide'
-import { selectSlides } from '@/features/projector/utils/projector-posts'
+import { selectMomentSlides, selectSlides } from '@/features/projector/utils/projector-posts'
 
 import type { ProjectorFilterMode, Slide } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
@@ -25,7 +25,7 @@ export interface Slideshow {
   /** Slide on display, or `null` without posts. */
   readonly slide: Slide | null
   readonly filterMode: ProjectorFilterMode
-  /** Changes the filter and starts over. */
+  /** Changes the filter and starts over. Applies once no moment is on air. */
   readonly setFilterMode: (mode: ProjectorFilterMode) => void
   readonly isPaused: boolean
   readonly togglePause: () => void
@@ -46,14 +46,29 @@ export interface Slideshow {
  *
  * @param newPost - Interrupts the sequence, which then goes on from where it
  *   was. Ignored while paused or when the filter leaves it out.
+ * @param momentId - Moment on air, whose posts replace the filter.
  */
-export function useSlideshow(posts: readonly Post[], newPost: Post | null): Slideshow {
+export function useSlideshow(
+  posts: readonly Post[],
+  newPost: Post | null,
+  momentId: number | null = null
+): Slideshow {
   const [filterMode, setMode] = useState<ProjectorFilterMode>('all')
   const [position, setPosition] = useState(START)
   const [isPaused, setIsPaused] = useState(false)
   const [lastNewPost, setLastNewPost] = useState(newPost)
+  const [lastMomentId, setLastMomentId] = useState(momentId)
 
-  const slides = useMemo(() => selectSlides(posts, filterMode), [posts, filterMode])
+  if (momentId !== lastMomentId) {
+    setLastMomentId(momentId)
+    setPosition(START)
+  }
+
+  const slides = useMemo(
+    () =>
+      momentId === null ? selectSlides(posts, filterMode) : selectMomentSlides(posts, momentId),
+    [posts, filterMode, momentId]
+  )
   const foundIndex = slides.findIndex(({ id }) => id === position.postId)
   const index =
     foundIndex >= 0 ? foundIndex : Math.max(0, Math.min(position.index, slides.length - 1))

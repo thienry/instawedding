@@ -4,7 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { ProjectorPage } from '@/features/projector/ProjectorPage'
-import { getPostRepository, getRealtimeService } from '@/services/repositories.factory'
+import {
+  getChallengeRepository,
+  getPostRepository,
+  getRealtimeService,
+} from '@/services/repositories.factory'
 import { setupBrowser } from '@/test/browser'
 
 import type { Post } from '@/types/domain'
@@ -108,6 +112,28 @@ it('shows a new post at once and announces it for 6 seconds', async () => {
   screen.getByText('Novo post ao vivo')
   await wait(6100)
   expect(screen.queryByText('Novo post ao vivo')).toBeNull()
+})
+
+it('shows only the posts of the moment on air, then goes back', async () => {
+  await open([...posts, post('4', { challengeId: 7 })])
+  expect(shown()).toBe('Foto por Author 1')
+
+  await act(() => getChallengeRepository().setMomentLive(7, true))
+  await wait(10)
+  screen.getByRole('dialog', { name: /Primeira Dança/ })
+  expect(shown()).toBe('Foto por Author 4')
+  await wait(10_100)
+  expect(screen.queryByRole('dialog')).toBeNull()
+  screen.getByText('Agora:')
+  expect(screen.getByText('Destaques', { selector: 'button *' }).closest('button')).toHaveProperty(
+    'disabled',
+    true
+  )
+
+  await act(() => getChallengeRepository().setMomentLive(7, false))
+  await wait(10)
+  expect(screen.queryByText('Agora:')).toBeNull()
+  expect(shown()).toBe('Foto por Author 1')
 })
 
 it('ignores a new post that opted out', async () => {

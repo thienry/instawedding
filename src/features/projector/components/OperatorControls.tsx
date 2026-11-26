@@ -70,6 +70,8 @@ function ControlButton({ title, Icon, onClick }: ControlButtonProps) {
 interface OperatorControlsProps {
   readonly isVisible: boolean
   readonly postCount: number
+  /** While a moment is on air, it chooses the posts instead of the filters. */
+  readonly isMomentLive: boolean
   readonly slideshow: Slideshow
   readonly fullscreen: ReturnType<typeof useFullscreen>
   readonly reactions: ProjectorReactions
@@ -80,6 +82,7 @@ interface OperatorControlsProps {
 export function OperatorControls({
   isVisible,
   postCount,
+  isMomentLive,
   slideshow,
   fullscreen,
   reactions,
@@ -102,9 +105,10 @@ export function OperatorControls({
           key={mode}
           type="button"
           onClick={() => slideshow.setFilterMode(mode)}
-          title={title}
+          disabled={isMomentLive}
+          title={isMomentLive ? 'Momento no ar: o telão mostra os posts dele' : title}
           aria-label={label}
-          aria-pressed={filterMode === mode}
+          aria-pressed={!isMomentLive && filterMode === mode}
           className="projector-control">
           <Icon className="w-4 h-4" />
           <span className="hidden md:inline">

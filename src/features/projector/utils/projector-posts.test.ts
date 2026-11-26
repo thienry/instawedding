@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import {
   getUpcomingPosts,
   isShownOnProjector,
+  selectMomentSlides,
   selectSlides,
 } from '@/features/projector/utils/projector-posts'
 
@@ -32,6 +33,11 @@ it('selects the slides of each mode without changing the input', () => {
   expect(ids(selectSlides(posts, 'highlights'))).toEqual(['b', 'c', 'a'])
   expect(ids(selectSlides(posts, 'challenges'))).toEqual(['c'])
   expect(ids(posts)).toEqual(['a', 'b', 'c'])
+})
+
+it('shows the posts of the moment, or every post until the first one', () => {
+  expect(ids(selectMomentSlides(posts, 1))).toEqual(['c'])
+  expect(ids(selectMomentSlides(posts, 7))).toEqual(['a', 'b', 'c'])
 })
 
 it('shows every post when there are no challenge posts', () => {

@@ -65,7 +65,7 @@ export class MockPostRepository implements PostRepository {
     const data = localStorage.getItem(POSTS_STORAGE_KEY)
     const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS]
 
-    const challenges = await this.challengeRepo.getChallenges()
+    const challenges = await this.challengeRepo.getAllChallenges()
     const challengeMap = new Map(challenges.map((c) => [c.id, c]))
 
     const enriched = rawPosts
@@ -185,7 +185,7 @@ export class MockPostRepository implements PostRepository {
     const data = localStorage.getItem(POSTS_STORAGE_KEY)
     const rawPosts: Post[] = data ? JSON.parse(data) : [...SEED_POSTS]
 
-    const challenges = await this.challengeRepo.getChallenges()
+    const challenges = await this.challengeRepo.getAllChallenges()
     const challengeMap = new Map(challenges.map((c) => [c.id, c]))
 
     return rawPosts

@@ -15,6 +15,8 @@ export interface ChallengeDraft {
   readonly icon: string
   readonly title: string
   readonly description: string
+  /** Whether it is a moment the ceremonial puts on air. */
+  readonly isMoment: boolean
 }
 
 /** Unsaved values of the ceremonialist form. */
