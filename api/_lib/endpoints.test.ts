@@ -161,8 +161,8 @@ type Case = [keyof typeof ENDPOINTS, Record<string, unknown>, number]
 const CASES: Case[] = [
   ['moderate', { action: 'list_posts' }, 200],
   ['moderate', { action: 'set_approval', postId: '1', isApproved: false }, 200],
-  ['moderate', { action: 'set_projector_hidden', postId: '1', isHidden: true }, 200],
-  ['moderate', { action: 'list_terms' }, 200],
+  ['moderate', { action: 'set_projector_hidden', postId: '1', isHidden: null }, 200],
+  ['moderate', { action: 'remove_term', term: 'bosta' }, 200],
   ['moderate', { action: 'add_term', term: 'Bosta' }, 200],
   ['moderate', { action: 'delete_post', postId: '1' }, 403],
   ['moderate', { action: 'clear_all' }, 403],

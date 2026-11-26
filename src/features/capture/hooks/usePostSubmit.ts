@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { OfflineQueueService } from '@/services/offline-queue.service'
+import { getBannedTermMessage } from '@/utils/banned-terms'
 import { getGuestSession, setTermsAccepted } from '@/utils/session'
 
 import type { MediaSelection } from '@/features/capture/hooks/useMediaSelection'
@@ -32,6 +33,11 @@ export function usePostSubmit(
   const submit = async (guestUser: GuestUser) => {
     setIsSubmitting(true)
     try {
+      if (draft.bannedTerm) {
+        onError(getBannedTermMessage(draft.bannedTerm))
+        setIsSubmitting(false)
+        return
+      }
       const file = await media.prepareFile()
       if (!file) {
         onError('Nenhuma mídia selecionada.')

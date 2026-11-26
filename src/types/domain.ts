@@ -32,8 +32,12 @@ export interface Post {
   readonly likesCount: number
   readonly isApproved: boolean
   readonly showOnProjector?: boolean
-  /** Taken off the projector by a moderator. The feed still shows it. */
-  readonly hiddenFromProjector?: boolean
+  /**
+   * Choice of the moderators about the projector, which never changes the
+   * feed: `true` takes the post off, `false` shows it even with a banned term,
+   * `null` leaves it to the banned terms.
+   */
+  readonly hiddenFromProjector?: boolean | null
   readonly createdAt: string
   readonly challenge?: Challenge
 }

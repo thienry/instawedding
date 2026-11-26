@@ -17,16 +17,26 @@ export function normalizeText(text: string): string {
 }
 
 /**
- * First banned term in the caption or the author name, or `null`. Matches
- * whole words, so a short term does not catch longer words that contain it.
+ * First banned term in the text, or `null`. Matches whole words, so a short
+ * term does not catch longer words that contain it.
  */
-export function findBannedTerm(post: Post, terms: readonly string[]): string | null {
+export function findBannedTermInText(text: string, terms: readonly string[]): string | null {
   if (terms.length === 0) return null
-  const text = ` ${normalizeText(`${post.authorName} ${post.caption ?? ''}`)} `
+  const padded = ` ${normalizeText(text)} `
   return (
     terms.find((term) => {
       const normalized = normalizeText(term)
-      return normalized !== '' && text.includes(` ${normalized} `)
+      return normalized !== '' && padded.includes(` ${normalized} `)
     }) ?? null
   )
+}
+
+/** First banned term in the caption or the author name, or `null`. */
+export function findBannedTerm(post: Post, terms: readonly string[]): string | null {
+  return findBannedTermInText(`${post.authorName} ${post.caption ?? ''}`, terms)
+}
+
+/** Tells the guest why the text cannot be posted. */
+export function getBannedTermMessage(term: string): string {
+  return `“${term}” não é permitido na festa. Troque o texto para publicar.`
 }

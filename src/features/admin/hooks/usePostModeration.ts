@@ -5,7 +5,7 @@ import {
   DESTRUCTIVE_DIALOG,
   POSTS_PER_PAGE,
 } from '@/features/admin/constants'
-import { getProjectorStatus } from '@/features/admin/utils/projector-status'
+import { getProjectorStatus, getProjectorToggle } from '@/features/admin/utils/projector-status'
 import { getPostRepository } from '@/services/repositories.factory'
 
 import type { AdminData } from '@/features/admin/hooks/useAdminData'
@@ -27,7 +27,7 @@ export interface PostModeration {
   /** Approved posts that the projector leaves out. */
   readonly offProjectorCount: number
   readonly toggleApproval: (post: Post) => Promise<void>
-  /** Takes a post off the projector, or puts it back, without changing the feed. */
+  /** Takes a post off the projector, or puts it back, even with a banned term. */
   readonly toggleProjector: (post: Post) => Promise<void>
   /** Deletes a post after confirmation. */
   readonly deletePost: (postId: string) => Promise<void>
@@ -67,8 +67,9 @@ export function usePostModeration(
     }
   }
 
-  const toggleProjector = async ({ id, hiddenFromProjector }: Post) => {
-    const isHidden = !hiddenFromProjector
+  const toggleProjector = async (target: Post) => {
+    const { id } = target
+    const isHidden = getProjectorToggle(target, bannedTerms)
     try {
       await postRepository.setPostProjectorHidden(id, isHidden)
       setPosts((prev) =>

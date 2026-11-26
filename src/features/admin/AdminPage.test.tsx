@@ -116,10 +116,13 @@ it('bans terms and takes posts off the projector, keeping them in the feed', asy
   screen.getByRole('button', { name: 'Fora do telão (1)' })
   screen.getByText('Visível')
 
-  fireEvent.click(screen.getByRole('button', { name: 'Remover bosta' }))
-  await waitFor(() => expect(screen.queryByText(/Termo banido/)).toBeNull())
+  fireEvent.click(screen.getByRole('button', { name: 'Voltar ao telão' }))
+  await screen.findByText(/Liberado no telão apesar de “bosta”/)
+  expect(screen.queryByText('Fora do telão')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Tirar do telão' }))
   await screen.findByText(/Tirado do telão pela moderação/)
-  fireEvent.click(screen.getByRole('button', { name: 'Voltar ao telão' }))
+
+  fireEvent.click(screen.getByRole('button', { name: 'Remover bosta' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Voltar ao telão' }))
   await waitFor(() => expect(screen.queryByText('Fora do telão')).toBeNull())
 })

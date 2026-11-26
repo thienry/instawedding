@@ -258,3 +258,19 @@ it('hides the post action from a guest who signs out', async () => {
   expect(screen.queryByText('Postar Foto')).toBeNull()
   screen.getByText('Voltar ao feed')
 })
+
+it('does not post a caption with a banned term', async () => {
+  localStorage.setItem('instawedding_mock_banned_terms', JSON.stringify(['faz o l']))
+  open()
+  select(photo)
+  await screen.findByAltText('Prévia da foto')
+  const caption = screen.getByPlaceholderText(/recado carinhoso/)
+  fireEvent.change(caption, { target: { value: 'Faz o L, pessoal!' } })
+  await screen.findByText('“faz o l” não é permitido na festa. Troque o texto para publicar.')
+  expect(document.querySelector('form button[type=submit]')).toHaveProperty('disabled', true)
+
+  fireEvent.change(caption, { target: { value: 'Que festa!' } })
+  await post()
+  await screen.findByText('feed')
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ caption: 'Que festa!' }))
+})

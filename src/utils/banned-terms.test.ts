@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { findBannedTerm, normalizeText } from '@/utils/banned-terms'
+import { findBannedTerm, findBannedTermInText, normalizeText } from '@/utils/banned-terms'
 
 import type { Post } from '@/types/domain'
 
@@ -30,4 +30,9 @@ it('checks the author name and posts without a caption', () => {
   expect(findBannedTerm(post(null, 'Zé Bosta'), ['bosta'])).toBe('bosta')
   expect(findBannedTerm(post(null), ['bosta'])).toBeNull()
   expect(findBannedTerm(post('bosta'), [])).toBeNull()
+})
+
+it('checks any text, such as the message of a card', () => {
+  expect(findBannedTermInText('Felicidades! Faz o L', ['faz o l'])).toBe('faz o l')
+  expect(findBannedTermInText('Felicidades!', ['faz o l'])).toBeNull()
 })

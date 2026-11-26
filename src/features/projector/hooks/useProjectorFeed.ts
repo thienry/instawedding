@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { isShownOnProjector } from '@/features/projector/utils/projector-posts'
+import { isShownOnProjector, passesBannedTerms } from '@/features/projector/utils/projector-posts'
 import { useRemovedPosts } from '@/hooks/useRemovedPosts'
 import {
   getBannedTermRepository,
   getPostRepository,
   getRealtimeService,
 } from '@/services/repositories.factory'
-import { findBannedTerm } from '@/utils/banned-terms'
 
 import type { Post } from '@/types/domain'
 
@@ -93,10 +92,10 @@ export function useProjectorFeed(): ProjectorFeed {
   }, [newPost])
 
   const allowedPosts = useMemo(
-    () => posts.filter((post) => findBannedTerm(post, bannedTerms) === null),
+    () => posts.filter((post) => passesBannedTerms(post, bannedTerms)),
     [posts, bannedTerms]
   )
-  const isNewPostAllowed = newPost !== null && findBannedTerm(newPost, bannedTerms) === null
+  const isNewPostAllowed = newPost !== null && passesBannedTerms(newPost, bannedTerms)
 
   return { posts: allowedPosts, newPost: isNewPostAllowed ? newPost : null }
 }

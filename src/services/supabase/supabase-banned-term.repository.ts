@@ -1,11 +1,17 @@
 import { adminRequest } from '@/services/api/api.client'
+import { getSupabaseClient } from '@/services/supabase/supabase.client'
 
 import type { BannedTermRepository } from '@/services/contracts/banned-term-repository.contract'
 
-export class ApiBannedTermRepository implements BannedTermRepository {
+/** Everyone reads the terms; only moderators change them, through the admin API. */
+export class SupabaseBannedTermRepository implements BannedTermRepository {
   async getTerms(): Promise<readonly string[]> {
-    const { terms } = await adminRequest<{ terms: string[] }>('moderate', { action: 'list_terms' })
-    return terms
+    const { data, error } = await getSupabaseClient()
+      .from('banned_terms')
+      .select('term')
+      .order('term')
+    if (error) throw new Error(`Failed to fetch banned terms: ${error.message}`)
+    return (data as { term: string }[]).map(({ term }) => term)
   }
 
   async addTerm(term: string): Promise<string> {

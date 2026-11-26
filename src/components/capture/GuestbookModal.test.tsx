@@ -22,6 +22,7 @@ const type = (value: string) => fireEvent.change(message(), { target: { value } 
 const clickSend = () => fireEvent.click(screen.getByRole('button', { name: 'Enviar recado' }))
 
 beforeEach(() => {
+  localStorage.setItem('instawedding_mock_banned_terms', JSON.stringify(['bolsonaro']))
   onSend.mockReset().mockResolvedValue(undefined)
   onClose.mockReset()
   vi.mocked(generateGuestbookCardFile).mockReset().mockResolvedValue(card)
@@ -75,4 +76,12 @@ it('confirms before discarding a typed message', async () => {
   type('')
   fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
   await waitFor(() => expect(onClose).toHaveBeenCalled())
+})
+
+it('does not send a card with a banned term', async () => {
+  type('Felicidades, e fora Bolsonaro!')
+  await screen.findByText(/“bolsonaro” não é permitido/)
+  expect(screen.getByRole('button', { name: 'Enviar recado' })).toHaveProperty('disabled', true)
+  type('Felicidades, casal lindo!')
+  expect(screen.queryByText(/não é permitido/)).toBeNull()
 })
