@@ -196,12 +196,6 @@
   animation: projector-arrival 6s var(--projector-ease) both;
 }
 
-/* Lasting version of the arrival banner, for the moment on air */
-.projector-arrival-static {
-  background: color-mix(in srgb, var(--projector-ground) 88%, transparent);
-  box-shadow: 0 0 6vh rgb(197 168 128 / 35%);
-}
-
 .projector-spark {
   position: absolute;
   top: 50%;
