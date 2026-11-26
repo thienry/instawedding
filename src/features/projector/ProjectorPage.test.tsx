@@ -114,17 +114,18 @@ it('shows a new post at once and announces it for 6 seconds', async () => {
   expect(screen.queryByText('Novo post ao vivo')).toBeNull()
 })
 
-it('shows only the posts of the moment on air, then goes back', async () => {
+it('opens the moment on air, shows only its posts, then goes back', async () => {
   await open([...posts, post('4', { challengeId: 7 })])
   expect(shown()).toBe('Foto por Author 1')
 
   await act(() => getChallengeRepository().setMomentLive(7, true))
   await wait(10)
-  screen.getByRole('dialog', { name: /Primeira Dança/ })
-  expect(shown()).toBe('Foto por Author 4')
+  screen.getByText('Registre esse momento')
+  expect(shown()).toBeUndefined()
   await wait(10_100)
-  expect(screen.queryByRole('dialog')).toBeNull()
-  screen.getByText('Agora:')
+  expect(screen.queryByText('Registre esse momento')).toBeNull()
+  expect(shown()).toBe('Foto por Author 4')
+  screen.getByText('1 post do momento')
   expect(screen.getByText('Destaques', { selector: 'button *' }).closest('button')).toHaveProperty(
     'disabled',
     true
@@ -132,8 +133,20 @@ it('shows only the posts of the moment on air, then goes back', async () => {
 
   await act(() => getChallengeRepository().setMomentLive(7, false))
   await wait(10)
-  expect(screen.queryByText('Agora:')).toBeNull()
+  expect(screen.queryByText(/do momento/)).toBeNull()
   expect(shown()).toBe('Foto por Author 1')
+})
+
+it('holds the stage until the first post of the moment', async () => {
+  const announce = await open(posts)
+  await act(() => getChallengeRepository().setMomentLive(7, true))
+  await wait(10_100)
+  screen.getByText('Seja o primeiro a mandar!')
+  expect(shown()).toBeUndefined()
+
+  await announce(post('0', { challengeId: 7 }))
+  expect(shown()).toBe('Foto por Author 0')
+  screen.getByText('Novo post ao vivo')
 })
 
 it('ignores a new post that opted out', async () => {

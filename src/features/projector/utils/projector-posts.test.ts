@@ -35,9 +35,9 @@ it('selects the slides of each mode without changing the input', () => {
   expect(ids(posts)).toEqual(['a', 'b', 'c'])
 })
 
-it('shows the posts of the moment, or every post until the first one', () => {
+it('shows only the posts of the moment', () => {
   expect(ids(selectMomentSlides(posts, 1))).toEqual(['c'])
-  expect(ids(selectMomentSlides(posts, 7))).toEqual(['a', 'b', 'c'])
+  expect(selectMomentSlides(posts, 7)).toEqual([])
 })
 
 it('shows every post when there are no challenge posts', () => {

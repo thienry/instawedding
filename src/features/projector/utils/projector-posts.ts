@@ -23,13 +23,9 @@ export function selectSlides(posts: readonly Post[], mode: ProjectorFilterMode):
   }
 }
 
-/**
- * Returns the posts of the moment on air, in display order. Until the first
- * one arrives, shows every post.
- */
+/** Returns the posts of the moment on air, in display order. */
 export function selectMomentSlides(posts: readonly Post[], momentId: number): readonly Post[] {
-  const momentPosts = posts.filter((post) => post.challengeId === momentId)
-  return momentPosts.length > 0 ? momentPosts : posts
+  return posts.filter((post) => post.challengeId === momentId)
 }
 
 /**
