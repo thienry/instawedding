@@ -30,6 +30,12 @@ async function submitCode(code: string) {
   fireEvent.click(screen.getByRole('button', { name: /^Confirmar/ }))
 }
 
+it('sends guests back to the feed', async () => {
+  open()
+  const link = await screen.findByRole('link', { name: /Voltar ao mural/ })
+  expect(link.getAttribute('href')).toBe('/')
+})
+
 it('rejects an unknown email', async () => {
   open()
   await requestCode('nobody@x.test')

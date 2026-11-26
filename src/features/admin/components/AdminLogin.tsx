@@ -1,4 +1,5 @@
-import { CheckCircle2, Lock, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Lock, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import { OtpCodeForm } from '@/features/admin/components/OtpCodeForm'
 import { OtpEmailForm } from '@/features/admin/components/OtpEmailForm'
@@ -26,24 +27,41 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
         <Lock className="w-7 h-7 text-sage-800" />
       </div>
 
-      <div className="space-y-1.5">
-        <h2 className="font-serif text-2xl font-bold text-sage-900">Acesso Restrito</h2>
-        <p className="text-xs text-sage-700 max-w-xs mx-auto">
+      <div className="space-y-2 max-w-sm">
+        <h2 className="font-serif text-2xl font-bold text-sage-900">
+          Área dos noivos e do cerimonial
+        </h2>
+        <p className="text-sm text-sage-800">
           {step === 'email'
-            ? 'Painel exclusivo para os Noivos (Administração) e Cerimonial (Moderação).'
-            : `Digite o código de ${OTP_LENGTH} dígitos enviado para ${email}.`}
+            ? 'Entre com o e-mail que os noivos cadastraram para receber um código de acesso.'
+            : `Digite o código de ${OTP_LENGTH} dígitos enviado para ${email}. Confira também o spam.`}
         </p>
       </div>
 
+      {step === 'email' && (
+        <div className="w-full max-w-sm p-4 rounded-2xl bg-gold-400/15 border border-gold-400/35 text-left space-y-3">
+          <p className="text-sm text-sage-900">
+            <span className="font-bold">É convidado?</span> Esta área não é para você. Suas fotos e
+            recados vão pelo mural.
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 min-h-11 px-4 rounded-full bg-sage-900 hover:bg-sage-800 text-white text-sm font-semibold transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar ao mural</span>
+          </Link>
+        </div>
+      )}
+
       {error && (
-        <div className="w-full max-w-xs p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 text-left">
+        <div className="w-full max-w-sm p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-2 text-left">
           <ShieldAlert className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {notice && (
-        <div className="w-full max-w-xs p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 text-left">
+        <div className="w-full max-w-sm p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2 text-left">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>{notice}</span>
         </div>
@@ -69,7 +87,7 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
         </div>
       )}
 
-      <div className="w-full max-w-xs space-y-4">
+      <div className="w-full max-w-sm space-y-4">
         {step === 'email' ? <OtpEmailForm login={login} /> : <OtpCodeForm login={login} />}
 
         <div className="pt-3 border-t border-sage-200/80">

@@ -51,11 +51,11 @@ async function open(path = '/', role?: UserRole) {
   }
 }
 
-it('shows the page, without the projector, to guests', async () => {
-  const { sidebar, header } = await open()
+it('shows the page, without the admin or the projector, to guests', async () => {
+  await open()
   screen.getByText('feed page')
-  sidebar.getByTitle('Painel de Moderação')
-  header.getByTitle('Painel de Moderação')
+  expect(screen.queryByRole('link', { name: /admin|moderação/i })).toBeNull()
+  expect(document.querySelector('a[href="/admin"]')).toBeNull()
   expect(screen.queryByTitle(/Modo Telão/)).toBeNull()
 })
 
@@ -85,7 +85,8 @@ it.each(['expanded sidebar', 'collapsed sidebar', 'mobile header'])(
           : sidebar.getByText('Sair')
     await act(async () => fireEvent.click(button))
     screen.getByText('feed page')
-    sidebar.getByTitle('Painel de Moderação')
+    expect(sidebar.queryByText('👑 Admin')).toBeNull()
+    expect(document.querySelector('a[href="/admin"]')).toBeNull()
     expect(sessionStorage.length).toBe(0)
   }
 )
