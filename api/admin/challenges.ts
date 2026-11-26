@@ -3,9 +3,11 @@ import { fail, json, readJson } from '../_lib/http.js'
 import { createServiceClient } from '../_lib/supabase.js'
 
 interface ChallengeBody {
-  action: 'create' | 'set_active' | 'delete'
+  action: 'create' | 'set_active' | 'set_live' | 'delete'
   id: number
   isActive: boolean
+  isLive: boolean
+  isMoment: boolean
   title: string
   description: string
   icon: string
@@ -20,17 +22,24 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = await readJson<ChallengeBody>(req)
   if (!body) return fail(400, 'Corpo da requisição inválido.')
-  const { action, id, isActive } = body
+  const { action, id, isActive, isLive } = body
 
   if (action === 'delete' && user.role !== 'admin') {
     return fail(403, 'Apenas administradores podem excluir desafios.')
   }
-  if ((action === 'set_active' || action === 'delete') && !Number.isInteger(id)) {
+  if (
+    (action === 'set_active' || action === 'set_live' || action === 'delete') &&
+    !Number.isInteger(id)
+  ) {
     return fail(400, 'id é obrigatório')
   }
 
   if (action === 'set_active' && typeof isActive !== 'boolean') {
     return fail(400, 'isActive é obrigatório')
+  }
+
+  if (action === 'set_live' && typeof isLive !== 'boolean') {
+    return fail(400, 'isLive é obrigatório')
   }
 
   try {
@@ -49,8 +58,9 @@ export async function POST(req: Request): Promise<Response> {
             description,
             icon: text(body.icon, 16) || '✨',
             is_active: true,
+            is_moment: body.isMoment === true,
           })
-          .select('id, title, description, icon, is_active, created_at')
+          .select('id, title, description, icon, is_active, created_at, is_moment, live_since')
           .single()
         if (error) throw error
         return json({ challenge: data })
@@ -62,6 +72,24 @@ export async function POST(req: Request): Promise<Response> {
           .select('id')
         if (error) throw error
         if (data.length === 0) return fail(404, 'Desafio não encontrado.')
+        return json({ success: true })
+      }
+      case 'set_live': {
+        // Only one moment is on air: end the others first
+        if (isLive) {
+          const { error } = await challenges()
+            .update({ live_since: null })
+            .eq('is_moment', true)
+            .select('id')
+          if (error) throw error
+        }
+        const { data, error } = await challenges()
+          .update({ live_since: isLive ? new Date().toISOString() : null })
+          .eq('id', id!)
+          .eq('is_moment', true)
+          .select('id')
+        if (error) throw error
+        if (data.length === 0) return fail(404, 'Momento não encontrado.')
         return json({ success: true })
       }
       case 'delete': {

@@ -5,12 +5,17 @@ export interface Challenge {
   readonly icon: string
   readonly isActive: boolean
   readonly createdAt: string
+  /** Moment of the party, such as the first dance, put on air by the ceremonial. */
+  readonly isMoment?: boolean
+  /** When the moment went on air, or `null` when it is not. See `src/utils/moments.ts`. */
+  readonly liveSince?: string | null
 }
 
 export interface CreateChallengeDTO {
   readonly title: string
   readonly description: string
   readonly icon: string
+  readonly isMoment?: boolean
 }
 
 export type PostMediaType = 'image' | 'video'

@@ -125,7 +125,11 @@ export function CapturePage() {
               onOpenGallery={() => galleryInputRef.current?.click()}
               onOpenGuestbook={() => setOpenModal('guestbook')}
             />
-            {preselectedChallengeId && <ChallengeHint />}
+            {draft.moment && draft.challengeId === draft.moment.id ? (
+              <ChallengeHint moment={draft.moment} />
+            ) : (
+              preselectedChallengeId && <ChallengeHint />
+            )}
           </div>
         </>
       ) : (

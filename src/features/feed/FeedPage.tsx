@@ -12,6 +12,7 @@ import { FeedSidebar } from '@/features/feed/components/FeedSidebar'
 import { FeedSkeleton } from '@/features/feed/components/FeedSkeleton'
 import { FeedToolbar } from '@/features/feed/components/FeedToolbar'
 import { FilterTabs } from '@/features/feed/components/FilterTabs'
+import { MomentBanner } from '@/features/feed/components/MomentBanner'
 import { NewPostsPill } from '@/features/feed/components/NewPostsPill'
 import { PostGrid } from '@/features/feed/components/PostGrid'
 import { PullIndicator } from '@/features/feed/components/PullIndicator'
@@ -29,6 +30,7 @@ import { usePostSharing } from '@/features/feed/hooks/usePostSharing'
 import { usePullToRefresh } from '@/features/feed/hooks/usePullToRefresh'
 import { useDialog } from '@/hooks/useDialog'
 import { useFeedNotifications } from '@/hooks/useFeedNotifications'
+import { useLiveMoment } from '@/hooks/useLiveMoment'
 
 import type { FeedViewMode } from '@/features/feed/types'
 
@@ -43,6 +45,7 @@ export function FeedPage() {
   const feed = useFeedPosts(guest)
   const { posts, likedPostIds, isLoading, isRefreshing, refresh } = feed
   const filter = useFeedFilter(posts, guest)
+  const moment = useLiveMoment()
   const likes = useLikes(feed, guest)
   const sharing = usePostSharing()
   const lightbox = useLightbox()
@@ -80,10 +83,20 @@ export function FeedPage() {
             <FilterTabs activeTab={filter.tab} onChange={filter.setTab} postCount={posts.length} />
           </div>
 
+          {moment && (
+            <MomentBanner
+              moment={moment}
+              isFiltered={filter.challengeId === moment.id}
+              onShowPosts={() => filter.selectChallenge(moment.id)}
+            />
+          )}
+
           {filter.challengeId !== null && (
             <ChallengeFilterPill
               challengeId={filter.challengeId}
-              challenge={filter.challenge}
+              challenge={
+                filter.challenge ?? (moment?.id === filter.challengeId ? moment : undefined)
+              }
               onClear={filter.clearChallenge}
             />
           )}

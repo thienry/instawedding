@@ -24,6 +24,15 @@ export function selectSlides(posts: readonly Post[], mode: ProjectorFilterMode):
 }
 
 /**
+ * Returns the posts of the moment on air, in display order. Until the first
+ * one arrives, shows every post.
+ */
+export function selectMomentSlides(posts: readonly Post[], momentId: number): readonly Post[] {
+  const momentPosts = posts.filter((post) => post.challengeId === momentId)
+  return momentPosts.length > 0 ? momentPosts : posts
+}
+
+/**
  * Returns the posts that come after the one at `index`, wrapping around at the
  * end and never including it.
  */

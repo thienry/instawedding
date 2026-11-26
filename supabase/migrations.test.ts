@@ -123,7 +123,7 @@ describe('posts', () => {
 })
 
 it('keeps challenges read-only', async () => {
-  expect((await anon('SELECT id FROM challenges')).length).toBe(5)
+  expect((await anon('SELECT id FROM challenges WHERE NOT is_moment')).length).toBe(5)
   expect(await ana('DELETE FROM challenges RETURNING id')).toEqual([])
   expect(await ana(`UPDATE challenges SET title = 'x' RETURNING id`)).toEqual([])
   await expect(
@@ -137,7 +137,27 @@ it('numbers new challenges after the seeded ones', async () => {
     `INSERT INTO challenges (title, description) VALUES ('a', 'b') RETURNING id`
   )
   expect(Number(rows[0]?.id)).toBeGreaterThan(5)
-  await db.exec('DELETE FROM challenges WHERE id > 5')
+  await db.exec(`DELETE FROM challenges WHERE id = ${Number(rows[0]?.id)}`)
+})
+
+describe('moments', () => {
+  const live = (id: string) =>
+    as('service_role', `UPDATE challenges SET live_since = now() WHERE id = ${id} RETURNING id`)
+  const moments = () => anon('SELECT id, live_since FROM challenges WHERE is_moment ORDER BY id')
+
+  it('come seeded, off air', async () => {
+    const rows = await moments()
+    expect(rows).toHaveLength(5)
+    expect(rows.every((row) => row.live_since === null)).toBe(true)
+  })
+
+  it('go on air one at a time, and only through the server', async () => {
+    const [first, second] = (await moments()).map((row) => String(row.id))
+    expect(await ana(`UPDATE challenges SET live_since = now() RETURNING id`)).toEqual([])
+    expect(await live(first!)).toHaveLength(1)
+    await expect(live(second!)).rejects.toThrow('duplicate key')
+    await db.exec('UPDATE challenges SET live_since = NULL')
+  })
 })
 
 it('hides ceremonialists and blocks self-promotion', async () => {

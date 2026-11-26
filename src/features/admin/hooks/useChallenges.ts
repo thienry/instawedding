@@ -9,7 +9,7 @@ import type { Dialog } from '@/hooks/useDialog'
 import type { Challenge } from '@/types/domain'
 
 const DEFAULT_ICON = '✨'
-const INITIAL_DRAFT: ChallengeDraft = { icon: '🥂', title: '', description: '' }
+const INITIAL_DRAFT: ChallengeDraft = { icon: '🥂', title: '', description: '', isMoment: false }
 
 /** Challenge form and actions, as returned by {@link useChallenges}. */
 export interface ChallengeAdmin {
@@ -22,6 +22,8 @@ export interface ChallengeAdmin {
   readonly toggleChallenge: (challenge: Challenge) => Promise<void>
   /** Deletes a challenge after confirmation. */
   readonly deleteChallenge: (id: number) => Promise<void>
+  /** Puts a moment on air, ending the one on air, or takes it off. */
+  readonly setMomentLive: (id: number, isLive: boolean) => Promise<void>
 }
 
 /**
@@ -50,9 +52,10 @@ export function useChallenges(
         title,
         description,
         icon: draft.icon.trim() || DEFAULT_ICON,
+        isMoment: draft.isMoment,
       })
       setChallenges((prev) => [...prev, created])
-      setDraft({ icon: DEFAULT_ICON, title: '', description: '' })
+      setDraft({ icon: DEFAULT_ICON, title: '', description: '', isMoment: draft.isMoment })
     } catch {
       void notify('Não foi possível criar o desafio. Tente novamente.')
     } finally {
@@ -89,6 +92,23 @@ export function useChallenges(
     }
   }
 
+  const setMomentLive = async (id: number, isLive: boolean) => {
+    try {
+      await challengeRepository.setMomentLive(id, isLive)
+      const liveSince = isLive ? new Date().toISOString() : null
+      setChallenges((prev) =>
+        prev.map((challenge) => {
+          if (challenge.id === id) return { ...challenge, liveSince }
+          return isLive && challenge.liveSince ? { ...challenge, liveSince: null } : challenge
+        })
+      )
+    } catch {
+      void notify(
+        isLive ? 'Não foi possível ativar o momento.' : 'Não foi possível encerrar o momento.'
+      )
+    }
+  }
+
   return {
     draft,
     updateDraft: (changes) => setDraft((prev) => ({ ...prev, ...changes })),
@@ -96,5 +116,6 @@ export function useChallenges(
     createChallenge,
     toggleChallenge,
     deleteChallenge,
+    setMomentLive,
   }
 }

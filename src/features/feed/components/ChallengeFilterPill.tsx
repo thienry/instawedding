@@ -15,8 +15,7 @@ export function ChallengeFilterPill({ challengeId, challenge, onClear }: Challen
       <div className="flex items-center gap-2 font-semibold">
         <Sparkles className="w-4 h-4 text-gold-600 shrink-0" />
         <span>
-          Filtrando por desafio:{' '}
-          {challenge ? `${challenge.icon} ${challenge.title}` : `#${challengeId}`}
+          Filtrando por: {challenge ? `${challenge.icon} ${challenge.title}` : `#${challengeId}`}
         </span>
       </div>
       <button
