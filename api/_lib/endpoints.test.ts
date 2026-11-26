@@ -44,7 +44,7 @@ vi.mock('./supabase.js', () => {
       then: (resolve: (value: unknown) => void) => resolve(rows()),
     }
     for (const read of ['select', 'order', 'in', 'limit', 'range']) builder[read] = () => builder
-    for (const write of ['insert', 'update', 'delete']) {
+    for (const write of ['insert', 'upsert', 'update', 'delete']) {
       builder[write] = () => {
         db.writes.push(`${table}.${write}`)
         return builder
@@ -161,6 +161,9 @@ type Case = [keyof typeof ENDPOINTS, Record<string, unknown>, number]
 const CASES: Case[] = [
   ['moderate', { action: 'list_posts' }, 200],
   ['moderate', { action: 'set_approval', postId: '1', isApproved: false }, 200],
+  ['moderate', { action: 'set_projector_hidden', postId: '1', isHidden: true }, 200],
+  ['moderate', { action: 'list_terms' }, 200],
+  ['moderate', { action: 'add_term', term: 'Bosta' }, 200],
   ['moderate', { action: 'delete_post', postId: '1' }, 403],
   ['moderate', { action: 'clear_all' }, 403],
   ['challenges', { action: 'create', title: 'a', description: 'b' }, 200],
@@ -194,6 +197,9 @@ it.each([
   ['moderate', { action: 'delete_post' }],
   ['moderate', { action: 'nope' }],
   ['moderate', { action: 'set_approval', postId: '1' }],
+  ['moderate', { action: 'set_projector_hidden', postId: '1' }],
+  ['moderate', { action: 'add_term', term: ' !! ' }],
+  ['moderate', { action: 'add_term', term: 'a'.repeat(41) }],
   ['challenges', { action: 'delete', id: '1 or 1=1' }],
   ['challenges', { action: 'set_active', id: 1 }],
   ['challenges', { action: 'set_live', id: 6 }],

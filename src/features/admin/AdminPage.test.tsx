@@ -87,3 +87,39 @@ it('counts down to a moment, then starts it early', async () => {
   fireEvent.click(within(card()).getByRole('button', { name: 'Encerrar' }))
   await within(card()).findByRole('button', { name: 'Em 2 min' })
 })
+
+it('bans terms and takes posts off the projector, keeping them in the feed', async () => {
+  localStorage.setItem(
+    'instawedding_mock_posts',
+    JSON.stringify([
+      {
+        id: 'p1',
+        authorName: 'Bia',
+        mediaUrl: '/media/a.webp',
+        caption: 'Que bosta de música',
+        challengeId: null,
+        likesCount: 0,
+        isApproved: true,
+        createdAt: '2026-12-12T22:00:00Z',
+      },
+    ])
+  )
+  open()
+  fireEvent.click(await screen.findByRole('button', { name: /^Equipe/ }))
+  await submitCode('123456')
+  await screen.findByText('Que bosta de música')
+  expect(screen.queryByText('Fora do telão')).toBeNull()
+
+  fireEvent.change(screen.getByLabelText('Novo termo'), { target: { value: 'Bosta' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
+  await screen.findByText(/Termo banido: “bosta”/)
+  screen.getByRole('button', { name: 'Fora do telão (1)' })
+  screen.getByText('Visível')
+
+  fireEvent.click(screen.getByRole('button', { name: 'Remover bosta' }))
+  await waitFor(() => expect(screen.queryByText(/Termo banido/)).toBeNull())
+  fireEvent.click(screen.getByRole('button', { name: 'Tirar do telão' }))
+  await screen.findByText(/Tirado do telão pela moderação/)
+  fireEvent.click(screen.getByRole('button', { name: 'Voltar ao telão' }))
+  await waitFor(() => expect(screen.queryByText('Fora do telão')).toBeNull())
+})

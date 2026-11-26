@@ -5,6 +5,7 @@ import {
   DESTRUCTIVE_DIALOG,
   POSTS_PER_PAGE,
 } from '@/features/admin/constants'
+import { getProjectorStatus } from '@/features/admin/utils/projector-status'
 import { getPostRepository } from '@/services/repositories.factory'
 
 import type { AdminData } from '@/features/admin/hooks/useAdminData'
@@ -23,7 +24,11 @@ export interface PostModeration {
   readonly filter: PhotoModerationFilter
   /** Selects a filter and goes back to its first page. */
   readonly setFilter: (filter: PhotoModerationFilter) => void
+  /** Approved posts that the projector leaves out. */
+  readonly offProjectorCount: number
   readonly toggleApproval: (post: Post) => Promise<void>
+  /** Takes a post off the projector, or puts it back, without changing the feed. */
+  readonly toggleProjector: (post: Post) => Promise<void>
   /** Deletes a post after confirmation. */
   readonly deletePost: (postId: string) => Promise<void>
   /** Deletes every post after the admin types the confirmation word. */
@@ -36,10 +41,12 @@ export interface PostModeration {
  *
  * @param data - Dashboard data that holds the posts.
  * @param dialog - Dialogs used to confirm actions and report failures.
+ * @param bannedTerms - Terms that keep a post off the projector.
  */
 export function usePostModeration(
   { posts, setPosts }: Pick<AdminData, 'posts' | 'setPosts'>,
-  { confirm, notify }: Dialog
+  { confirm, notify }: Dialog,
+  bannedTerms: readonly string[] = []
 ): PostModeration {
   const [filter, setFilterState] = useState<PhotoModerationFilter>('all')
   const [requestedPage, setPage] = useState(1)
@@ -57,6 +64,18 @@ export function usePostModeration(
       setPosts((prev) => prev.map((post) => (post.id === id ? { ...post, isApproved } : post)))
     } catch {
       void notify('Não foi possível alterar a visibilidade do post.')
+    }
+  }
+
+  const toggleProjector = async ({ id, hiddenFromProjector }: Post) => {
+    const isHidden = !hiddenFromProjector
+    try {
+      await postRepository.setPostProjectorHidden(id, isHidden)
+      setPosts((prev) =>
+        prev.map((post) => (post.id === id ? { ...post, hiddenFromProjector: isHidden } : post))
+      )
+    } catch {
+      void notify('Não foi possível alterar o post no telão.')
     }
   }
 
@@ -95,10 +114,19 @@ export function usePostModeration(
     }
   }
 
+  const offProjectorPosts = useMemo(
+    () =>
+      posts.filter(
+        (post) => post.isApproved && getProjectorStatus(post, bannedTerms).kind !== 'shown'
+      ),
+    [posts, bannedTerms]
+  )
+
   const filteredPosts = useMemo(() => {
     if (filter === 'all') return posts
+    if (filter === 'off-projector') return offProjectorPosts
     return posts.filter((post) => post.isApproved === (filter === 'approved'))
-  }, [posts, filter])
+  }, [posts, filter, offProjectorPosts])
 
   const pageCount = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
   // Moderating the last post of a page can leave the requested page out of range
@@ -112,7 +140,9 @@ export function usePostModeration(
     setPage,
     filter,
     setFilter,
+    offProjectorCount: offProjectorPosts.length,
     toggleApproval,
+    toggleProjector,
     deletePost,
     clearFeed,
   }

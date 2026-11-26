@@ -183,6 +183,22 @@ it('ignores a new post that opted out', async () => {
   expect(screen.queryByText('Novo post ao vivo')).toBeNull()
 })
 
+it('leaves out posts taken off by a moderator or with a banned term', async () => {
+  localStorage.setItem('instawedding_mock_banned_terms', JSON.stringify(['bosta']))
+  const announce = await open([
+    post('1', { hiddenFromProjector: true }),
+    post('2', { caption: 'Que BOSTA!' }),
+    post('3'),
+  ])
+  expect(shown()).toBe('Foto por Author 3')
+  expect(screen.queryByTitle('Post de Author 1')).toBeNull()
+  expect(screen.queryByTitle('Post de Author 2')).toBeNull()
+
+  await announce(post('0', { caption: 'bosta de festa' }))
+  expect(screen.queryByText('Novo post ao vivo')).toBeNull()
+  expect(shown()).toBe('Foto por Author 3')
+})
+
 it('skips broken media instead of stopping', async () => {
   await open(posts)
   vi.stubGlobal(

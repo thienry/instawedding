@@ -1,9 +1,12 @@
 import type { ProjectorFilterMode } from '@/features/projector/types'
 import type { Post } from '@/types/domain'
 
-/** Whether the guest agreed to show the post on the projector. */
+/**
+ * Whether the guest agreed to show the post on the projector and no moderator
+ * took it off.
+ */
 export function isShownOnProjector(post: Post): boolean {
-  return post.showOnProjector !== false
+  return post.showOnProjector !== false && post.hiddenFromProjector !== true
 }
 
 /**

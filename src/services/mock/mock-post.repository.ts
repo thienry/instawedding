@@ -84,6 +84,11 @@ export class MockPostRepository implements PostRepository {
     return new Set((await this.getPosts()).map(({ id }) => id))
   }
 
+  async getProjectorPostIds(): Promise<ReadonlySet<string>> {
+    const posts = await this.getPosts()
+    return new Set(posts.filter((post) => !post.hiddenFromProjector).map(({ id }) => id))
+  }
+
   async createPost(dto: CreatePostDTO): Promise<Post> {
     const rawPosts: Post[] =
       typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
@@ -204,6 +209,20 @@ export class MockPostRepository implements PostRepository {
         : []
 
     const updated = posts.map((p) => (p.id === postId ? { ...p, isApproved } : p))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated))
+    }
+  }
+
+  async setPostProjectorHidden(postId: string, isHidden: boolean): Promise<void> {
+    const posts: Post[] =
+      typeof localStorage !== 'undefined' && localStorage.getItem(POSTS_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(POSTS_STORAGE_KEY)!)
+        : []
+
+    const updated = posts.map((p) =>
+      p.id === postId ? { ...p, hiddenFromProjector: isHidden } : p
+    )
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(updated))
     }
