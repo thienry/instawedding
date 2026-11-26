@@ -12,14 +12,14 @@ flowchart LR
   Vercel["▲ Vercel Edge + Serverless (/api/*)"]
   Supabase[("⚡ Supabase (PostgreSQL + Realtime)")]
   R2[("☁️ Cloudflare R2 (Object Storage)")]
-  Resend["✉️ Resend API (OTP email)"]
+  Gmail["✉️ Gmail SMTP (OTP email)"]
 
   Guest -- "1. POST /api/upload-url" --> Vercel
   Vercel -- "2. Signs PutObject" --> R2
   Guest -- "3. Direct PUT (XHR)" --> R2
   Guest -- "4. INSERT / SELECT / Realtime" --> Supabase
   Guest -- "5. POST /api/admin/otp" --> Vercel
-  Vercel -- "6. Sends 6-digit code" --> Resend
+  Vercel -- "6. Sends 6-digit code" --> Gmail
 ```
 
 ### Components
@@ -28,7 +28,7 @@ flowchart LR
 - **Serverless API**: Vercel Functions in `api/upload-url.ts`, `api/admin/otp.ts`, `api/admin/auth.ts`, `api/admin/moderate.ts` and `api/admin/logout.ts`
 - **Database & Realtime**: Supabase PostgreSQL (`supabase/migrations/20260101000000_baseline.sql`)
 - **Photo Storage**: Cloudflare R2 (`src/services/r2/r2-storage.service.ts`)
-- **Admin/Ceremonialist Authentication**: OTP email via Resend + `HttpOnly` cookie signed with HMAC-SHA256 (`api/_lib/security.ts`)
+- **Admin/Ceremonialist Authentication**: OTP email via Gmail SMTP + `HttpOnly` cookie signed with HMAC-SHA256 (`api/_lib/security.ts`)
 
 ---
 
@@ -37,7 +37,7 @@ flowchart LR
 1. **Node.js 24 LTS** (`.nvmrc`) installed on your local machine (deployment is done directly through the **Vercel CLI**, with no GitHub needed).
 2. A [Supabase](https://supabase.com) account (the Free plan is enough).
 3. A [Cloudflare](https://dash.cloudflare.com) account with **R2** enabled (10 GB/month free).
-4. A [Resend](https://resend.com) account (3,000 emails/month free).
+4. A Gmail account to send the login codes (free, about 500 emails/day).
 5. A [Vercel](https://vercel.com) account (you can sign up with email or Google, without GitHub).
 
 ---
@@ -135,15 +135,14 @@ CORS is required because the guest's browser sends the image `PUT` directly to C
 
 ---
 
-## 5. Step 3 — Set Up OTP Email Delivery (Resend)
+## 5. Step 3 — Set Up OTP Email Delivery (Gmail)
 
-The admin dashboard (`/admin`) authenticates the couple and ceremonialists by emailing a disposable 6-digit code through `api/admin/otp.ts`. Guests see no link to it, so send the `/admin` address to the ceremonial before the party.
+The admin dashboard (`/admin`) authenticates the couple and ceremonialists by emailing a disposable 6-digit code through `api/admin/otp.ts`, which sends it with Gmail SMTP (`api/_lib/mail.ts`). Guests see no link to it, so send the `/admin` address to the ceremonial before the party. They can also use **Entrar com Google** with the Google account of their registered email.
 
-1. Open the [Resend Dashboard](https://resend.com).
-2. **Sender domain**:
-   - Under **Domains**, add your own domain (e.g. `yourwedding.com`) and configure the listed DNS records (DKIM/SPF), **or** use `onboarding@resend.dev` if you will only authenticate with the Resend account owner's email.
-   - Set `RESEND_FROM_EMAIL` (e.g. `InstaWedding <onboarding@resend.dev>`).
-3. Under **API Keys**, click **Create API Key** (`Sending access` permission) and copy the `re_...` key to `RESEND_API_KEY`.
+1. Create a Gmail account just for sending (e.g. `yourwedding.support@gmail.com`), so no personal address shows as the sender.
+2. In that account, turn on **2-Step Verification** (Google Account → Security).
+3. Open [App passwords](https://myaccount.google.com/apppasswords), create one named `InstaWedding` and copy the 16 characters.
+4. Set `GMAIL_USER` to the account address and `GMAIL_APP_PASSWORD` to the app password. Gmail sends up to about 500 emails a day.
 
 ---
 
@@ -187,8 +186,8 @@ Answer the `npx.cmd vercel link` questions:
 | `SUPABASE_URL`              | `https://xyzcompany.supabase.co`            | Serverless API |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOiJIUzI1NiIsInR5c...`              | Serverless API |
 | `ADMIN_JWT_SECRET`          | Random 64-character hex string              | Serverless API |
-| `RESEND_API_KEY`            | `re_123456789...`                           | Serverless API |
-| `RESEND_FROM_EMAIL`         | `InstaWedding <onboarding@resend.dev>`      | Serverless API |
+| `GMAIL_USER`                | `yourwedding.support@gmail.com`             | Serverless API |
+| `GMAIL_APP_PASSWORD`        | 16-character Google app password            | Serverless API |
 | `R2_ACCOUNT_ID`             | `a1b2c3d4e5f6...`                           | Serverless API |
 | `R2_ACCESS_KEY_ID`          | `9f8e7d6c5b4a...`                           | Serverless API |
 | `R2_SECRET_ACCESS_KEY`      | `1a2b3c4d5e6f7g8h...`                       | Serverless API |

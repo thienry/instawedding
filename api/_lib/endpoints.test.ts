@@ -21,6 +21,9 @@ const db = vi.hoisted(() => ({
   databaseDown: false,
 }))
 
+const sendOtpEmail = vi.hoisted(() => vi.fn(async () => true))
+vi.mock('./mail.js', () => ({ sendOtpEmail }))
+
 // Bearer tokens are just emails; queries record their writes.
 vi.mock('./supabase.js', () => {
   const query = (table: string) => {
@@ -92,7 +95,7 @@ beforeEach(() => {
   vi.stubEnv('ADMIN_EMAILS', ADMIN)
   vi.stubEnv('MODERATOR_EMAILS', '')
   vi.stubEnv('VITE_MODERATOR_EMAILS', '')
-  vi.stubEnv('RESEND_API_KEY', '')
+  sendOtpEmail.mockClear()
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'info').mockImplementation(() => {})
   db.ceremonialists = [{ email: MOD, name: 'Mia' }]
@@ -252,9 +255,6 @@ describe('OTP', () => {
 
   it('does not reveal which emails have access', async () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('RESEND_API_KEY', 're_test')
-    const send = vi.fn(async () => Response.json({}))
-    vi.stubGlobal('fetch', send)
     const payloadOf = (response: Response) =>
       JSON.parse(Buffer.from(challengeOf(response).split('.')[0]!, 'base64url').toString()) as {
         role: string
@@ -262,7 +262,7 @@ describe('OTP', () => {
       }
     const known = await request()
     const unknown = await request(GUEST)
-    expect(send).toHaveBeenCalledOnce()
+    expect(sendOtpEmail).toHaveBeenCalledOnce()
     expect(unknown.status).toBe(known.status)
     expect(payloadOf(unknown)).toMatchObject({
       role: payloadOf(known).role,
@@ -273,13 +273,11 @@ describe('OTP', () => {
 
   it('never exposes the code on deployments', async () => {
     vi.stubEnv('NODE_ENV', 'production')
+    sendOtpEmail.mockResolvedValueOnce(false)
     const response = await request()
     expect(response.status).toBe(502)
     expect(await response.text()).not.toMatch(/debugCode|\d{6}/)
-    expect(console.info).not.toHaveBeenCalled()
 
-    vi.stubEnv('RESEND_API_KEY', 're_test')
-    vi.stubGlobal('fetch', async () => Response.json({}))
     const sent = await request()
     expect(sent.status).toBe(200)
     expect(await sent.text()).not.toContain('debugCode')

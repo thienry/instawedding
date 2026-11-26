@@ -1,10 +1,21 @@
-import { ArrowLeft, CheckCircle2, Lock, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Lock,
+  RefreshCw,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { GoogleIcon } from '@/components/common/GoogleIcon'
 import { OtpCodeForm } from '@/features/admin/components/OtpCodeForm'
 import { OtpEmailForm } from '@/features/admin/components/OtpEmailForm'
 import { OTP_LENGTH } from '@/features/admin/constants'
 import { useOtpLogin } from '@/features/admin/hooks/useOtpLogin'
+import { useGuestAuth } from '@/hooks/useGuestAuth'
 
 interface AdminLoginProps {
   /** Ends any session left in the browser. */
@@ -15,6 +26,15 @@ interface AdminLoginProps {
 export function AdminLogin({ onClearSessions }: AdminLoginProps) {
   const login = useOtpLogin()
   const { step, email, error, notice, debugCode, setCode, restart } = login
+  const { isSigningIn, signIn } = useGuestAuth()
+  const [googleError, setGoogleError] = useState('')
+
+  // Returns to /admin, where the session picks up the Google account
+  const handleGoogle = async () => {
+    setGoogleError('')
+    const result = await signIn('/admin')
+    if (!result.success) setGoogleError(result.message || 'Não foi possível entrar com o Google.')
+  }
 
   const handleClearSessions = async () => {
     await onClearSessions()
@@ -53,10 +73,10 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
         </div>
       )}
 
-      {error && (
+      {(error || googleError) && (
         <div className="w-full max-w-sm p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-2 text-left">
           <ShieldAlert className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
+          <span>{error || googleError}</span>
         </div>
       )}
 
@@ -89,6 +109,20 @@ export function AdminLogin({ onClearSessions }: AdminLoginProps) {
 
       <div className="w-full max-w-sm space-y-4">
         {step === 'email' ? <OtpEmailForm login={login} /> : <OtpCodeForm login={login} />}
+
+        {step === 'email' && (
+          <div className="space-y-2">
+            <p className="text-xs text-sage-700">ou, se o e-mail cadastrado for uma conta Google</p>
+            <button
+              type="button"
+              disabled={isSigningIn}
+              onClick={() => void handleGoogle()}
+              className="w-full py-3.5 px-4 rounded-2xl bg-white border border-sage-200 hover:bg-sage-50 disabled:opacity-60 text-sage-900 text-sm font-semibold flex items-center justify-center gap-3 transition-all shadow-xs active:scale-[0.99]">
+              {isSigningIn ? <Loader2 className="w-5 h-5 animate-spin" /> : <GoogleIcon />}
+              <span>{isSigningIn ? 'Redirecionando...' : 'Entrar com Google'}</span>
+            </button>
+          </div>
+        )}
 
         <div className="pt-3 border-t border-sage-200/80">
           <button
