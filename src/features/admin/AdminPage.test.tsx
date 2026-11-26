@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, it } from 'vitest'
 
@@ -71,4 +71,19 @@ it('keeps the challenge draft when switching tabs', async () => {
   fireEvent.click(screen.getByRole('button', { name: /^Posts/ }))
   fireEvent.click(screen.getByRole('button', { name: /^Desafios/ }))
   expect(screen.getByLabelText<HTMLInputElement>('Título do Desafio').value).toBe('Brinde')
+})
+
+it('counts down to a moment, then starts it early', async () => {
+  open()
+  fireEvent.click(await screen.findByRole('button', { name: /^Equipe/ }))
+  await submitCode('123456')
+  fireEvent.click(await screen.findByRole('button', { name: /^Desafios/ }))
+  const card = () => screen.getByText('Buquê').closest('div.rounded-3xl') as HTMLElement
+  fireEvent.click(within(await waitFor(card)).getByRole('button', { name: 'Em 5 min' }))
+  await within(card()).findByText(/Começa em [45]:\d\d/)
+
+  fireEvent.click(within(card()).getByRole('button', { name: 'Começar agora' }))
+  await within(card()).findByText('No ar há 0 min')
+  fireEvent.click(within(card()).getByRole('button', { name: 'Encerrar' }))
+  await within(card()).findByRole('button', { name: 'Em 2 min' })
 })

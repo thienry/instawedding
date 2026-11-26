@@ -7,11 +7,15 @@ interface ChallengeBody {
   id: number
   isActive: boolean
   isLive: boolean
+  /** Countdown before the moment goes on air. */
+  delayMinutes?: number
   isMoment: boolean
   title: string
   description: string
   icon: string
 }
+
+const MAX_DELAY_MINUTES = 30
 
 const text = (value: unknown, max: number): string =>
   typeof value === 'string' ? value.trim().slice(0, max) : ''
@@ -40,6 +44,14 @@ export async function POST(req: Request): Promise<Response> {
 
   if (action === 'set_live' && typeof isLive !== 'boolean') {
     return fail(400, 'isLive é obrigatório')
+  }
+
+  const delayMinutes = body.delayMinutes ?? 0
+  if (
+    action === 'set_live' &&
+    (!Number.isInteger(delayMinutes) || delayMinutes < 0 || delayMinutes > MAX_DELAY_MINUTES)
+  ) {
+    return fail(400, 'Contagem regressiva inválida.')
   }
 
   try {
@@ -84,7 +96,9 @@ export async function POST(req: Request): Promise<Response> {
           if (error) throw error
         }
         const { data, error } = await challenges()
-          .update({ live_since: isLive ? new Date().toISOString() : null })
+          .update({
+            live_since: isLive ? new Date(Date.now() + delayMinutes * 60_000).toISOString() : null,
+          })
           .eq('id', id!)
           .eq('is_moment', true)
           .select('id')

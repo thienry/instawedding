@@ -187,8 +187,8 @@ export class MockChallengeRepository implements ChallengeRepository {
     return this.readAll().find((c) => c.isMoment && c.liveSince) ?? null
   }
 
-  async setMomentLive(id: number, isLive: boolean): Promise<void> {
-    const liveSince = new Date().toISOString()
+  async setMomentLive(id: number, isLive: boolean, delayMinutes = 0): Promise<void> {
+    const liveSince = new Date(Date.now() + delayMinutes * 60_000).toISOString()
     this.saveAll(
       this.readAll().map((c) => {
         if (c.id === id) return { ...c, liveSince: isLive && c.isMoment ? liveSince : null }

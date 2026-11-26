@@ -30,6 +30,14 @@ it('puts one moment on air at a time and tells the subscribers', async () => {
   expect(listener).toHaveBeenCalledTimes(3)
 })
 
+it('schedules a moment for after the countdown', async () => {
+  const repository = new MockChallengeRepository()
+  const before = Date.now()
+  await repository.setMomentLive(10, true, 5)
+  const start = Date.parse((await repository.getLiveMoment())?.liveSince ?? '')
+  expect(start - before).toBeGreaterThanOrEqual(5 * 60_000)
+})
+
 it('does not put a challenge on air', async () => {
   const repository = new MockChallengeRepository()
   await repository.setMomentLive(1, true)

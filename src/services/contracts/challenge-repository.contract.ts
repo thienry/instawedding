@@ -10,10 +10,17 @@ export interface ChallengeRepository {
   createChallenge(dto: CreateChallengeDTO): Promise<Challenge>
   setChallengeActive(id: number, isActive: boolean): Promise<void>
   deleteChallenge(id: number): Promise<void>
-  /** Moment marked as on air, even if it has timed out (see `src/utils/moments.ts`). */
+  /**
+   * Moment on air or counting down, even if it has timed out (see
+   * `src/utils/moments.ts`).
+   */
   getLiveMoment(): Promise<Challenge | null>
-  /** Puts a moment on air, ending any other, or takes it off. */
-  setMomentLive(id: number, isLive: boolean): Promise<void>
+  /**
+   * Puts a moment on air, ending any other, or takes it off.
+   *
+   * @param delayMinutes - Countdown before it goes on air.
+   */
+  setMomentLive(id: number, isLive: boolean, delayMinutes?: number): Promise<void>
   /** Calls back whenever a challenge or moment may have changed. */
   subscribeToChanges(callback: () => void): UnsubscribeFunction
 }

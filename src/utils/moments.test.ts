@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { getMinutesOnAir, isMomentLive, MOMENT_MAX_MS } from '@/utils/moments'
+import {
+  formatCountdown,
+  getMinutesOnAir,
+  getSecondsLeft,
+  isMomentLive,
+  isMomentUpcoming,
+  MOMENT_MAX_MS,
+} from '@/utils/moments'
 
 import type { Challenge } from '@/types/domain'
 
@@ -35,4 +42,19 @@ describe('isMomentLive', () => {
 it('counts whole minutes on air', () => {
   expect(getMinutesOnAir(moment(), START + 3.5 * 60_000)).toBe(3)
   expect(getMinutesOnAir(moment(), START - 5000)).toBe(0)
+})
+
+it('counts down to a moment scheduled for later', () => {
+  expect(isMomentUpcoming(moment(), START - 1)).toBe(true)
+  expect(isMomentLive(moment(), START - 1)).toBe(false)
+  expect(isMomentUpcoming(moment(), START)).toBe(false)
+  expect(isMomentLive(moment(), START)).toBe(true)
+  expect(isMomentUpcoming(moment({ liveSince: null }), START - 1)).toBe(false)
+})
+
+it('formats the seconds left', () => {
+  expect(getSecondsLeft(START, START - 4500)).toBe(5)
+  expect(getSecondsLeft(START, START + 1)).toBe(0)
+  expect(formatCountdown(245)).toBe('4:05')
+  expect(formatCountdown(9)).toBe('0:09')
 })
