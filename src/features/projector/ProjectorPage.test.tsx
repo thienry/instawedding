@@ -149,6 +149,33 @@ it('holds the stage until the first post of the moment', async () => {
   screen.getByText('Novo post ao vivo')
 })
 
+it('counts down to the moment, then puts it on air', async () => {
+  await open(posts)
+  await act(() => getChallengeRepository().setMomentLive(10, true, 2))
+  await wait(300)
+  screen.getByText('Daqui a pouco')
+  screen.getByText('2:00')
+  expect(shown()).toBe('Foto por Author 1')
+
+  await wait(110_000)
+  screen.getByText('10')
+  expect(shown()).toBeUndefined()
+
+  await wait(10_100)
+  expect(screen.queryByText('Daqui a pouco')).toBeNull()
+  screen.getByText('Seja o primeiro a mandar!')
+})
+
+it('goes back to the posts when the countdown is cancelled', async () => {
+  await open(posts)
+  await act(() => getChallengeRepository().setMomentLive(10, true, 2))
+  await wait(300)
+  await act(() => getChallengeRepository().setMomentLive(10, false))
+  await wait(300)
+  expect(screen.queryByText('Daqui a pouco')).toBeNull()
+  expect(shown()).toBe('Foto por Author 1')
+})
+
 it('ignores a new post that opted out', async () => {
   const announce = await open(posts)
   await announce(post('0', { showOnProjector: false }))

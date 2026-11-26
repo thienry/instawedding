@@ -92,8 +92,8 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
     return data ? this.mapRowToChallenge(data as SupabaseChallengeRow) : null
   }
 
-  async setMomentLive(id: number, isLive: boolean): Promise<void> {
-    await adminRequest('challenges', { action: 'set_live', id, isLive })
+  async setMomentLive(id: number, isLive: boolean, delayMinutes = 0): Promise<void> {
+    await adminRequest('challenges', { action: 'set_live', id, isLive, delayMinutes })
   }
 
   subscribeToChanges(callback: () => void): UnsubscribeFunction {

@@ -22,8 +22,11 @@ export interface ChallengeAdmin {
   readonly toggleChallenge: (challenge: Challenge) => Promise<void>
   /** Deletes a challenge after confirmation. */
   readonly deleteChallenge: (id: number) => Promise<void>
-  /** Puts a moment on air, ending the one on air, or takes it off. */
-  readonly setMomentLive: (id: number, isLive: boolean) => Promise<void>
+  /**
+   * Puts a moment on air, after an optional countdown in minutes, ending the
+   * one on air; or takes it off.
+   */
+  readonly setMomentLive: (id: number, isLive: boolean, delayMinutes?: number) => Promise<void>
 }
 
 /**
@@ -92,10 +95,10 @@ export function useChallenges(
     }
   }
 
-  const setMomentLive = async (id: number, isLive: boolean) => {
+  const setMomentLive = async (id: number, isLive: boolean, delayMinutes = 0) => {
     try {
-      await challengeRepository.setMomentLive(id, isLive)
-      const liveSince = isLive ? new Date().toISOString() : null
+      await challengeRepository.setMomentLive(id, isLive, delayMinutes)
+      const liveSince = isLive ? new Date(Date.now() + delayMinutes * 60_000).toISOString() : null
       setChallenges((prev) =>
         prev.map((challenge) => {
           if (challenge.id === id) return { ...challenge, liveSince }
